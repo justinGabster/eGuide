@@ -64,7 +64,7 @@ export default function Home() {
       </div>
 
       {/* Quick Access Buttons */}
-      <Link href="/map" style={{ display: 'block', marginBottom: '24px', borderRadius: '16px', overflow: 'hidden' }}>
+      <Link href="/map" style={{ display: 'block', marginBottom: '24px', borderRadius: '16px', overflow: 'hidden', background: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
         <img 
           src="/icons/quick_access_flat.png" 
           alt="Quick Access: Trains, Buses, PUVs, Report" 
