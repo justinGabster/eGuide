@@ -181,11 +181,11 @@ export const pasigFerry: TransitLine = {
     // --- Escolta Terminal ---
     [14.5964, 120.9775], 
 
-    // Path under Jones Bridge
-    [14.5958, 120.9790], 
+    // --- Escolta Ferry Terminal ---
+    [14.5966, 120.9786], 
 
-    // --- Lawton Terminal (South Bank) ---
-    [14.5958, 120.9815], 
+    // --- Lawton Ferry Terminal ---
+    [14.5952, 120.9810], 
 
     // Crossing water under MacArthur Bridge heading towards Quinta North Bank
     [14.5962, 120.9825], 
@@ -197,17 +197,25 @@ export const pasigFerry: TransitLine = {
     // Following Pasig River channel under Quezon Bridge towards PUP
     [14.5970, 120.9855], 
     [14.5960, 120.9875], 
-    [14.5947, 120.9880], 
+    [14.5947, 120.9880],
+    [14.5935, 120.9890], // Added
+    [14.5925, 120.9905], // Added
     [14.5921, 120.9926], 
+    [14.5930, 120.9945], // Added
     [14.5950, 120.9972], 
     [14.5953, 121.0016], 
+    [14.5955, 121.0050], // Added
+    [14.5956, 121.0080], // Added
     
     // --- PUP Ferry Terminal ---
     [14.5956, 121.0106], 
 
     // Following the river curve south past Beata/Pandacan
+    [14.5948, 121.0120], // Added (Curve start)
     [14.5930, 121.0128],
+    [14.5910, 121.0130], // Added (Mid-curve)
     [14.5890, 121.0125],
+    [14.5870, 121.0118], // Added (Mid-curve)
     [14.5855, 121.0108],
 
     // --- Sta. Ana Ferry Terminal (At the river bank bend) ---
@@ -215,26 +223,37 @@ export const pasigFerry: TransitLine = {
 
     // Curved path following river east towards Lambingan
     [14.5815, 121.0142],
+    [14.5820, 121.0155], // Added
     [14.5825, 121.0165],
+    [14.5835, 121.0175], // Added
     [14.5850, 121.0182],
 
     // --- Lambingan Ferry Terminal ---
     [14.5872, 121.0203],
 
     // Lambingan -> Valenzuela
+    [14.5840, 121.0210], // Added
     [14.5807, 121.0224],
+    [14.5775, 121.0245], // Added
     [14.5739, 121.0264], // Valenzuela
 
     // Valenzuela -> Hulo -> Guadalupe
+    [14.5720, 121.0300], // Added
     [14.5711, 121.0336], // Hulo
+    [14.5708, 121.0370], // Added
     [14.5702, 121.0398],
+    [14.5695, 121.0425], // Added
     [14.5681, 121.0453], // Guadalupe
 
     // Following Pasig River channel East
     [14.5668, 121.0505],
+    [14.5655, 121.0535], // Added
     [14.5645, 121.0560],
+    [14.5630, 121.0590], // Added
     [14.5615, 121.0620],
+    [14.5605, 121.0650], // Added
     [14.5595, 121.0680],
+    [14.5590, 121.0710], // Added
 
     // --- San Joaquin Ferry (On the River Channel) ---
     [14.5585, 121.0748], 
@@ -247,11 +266,17 @@ export const pasigFerry: TransitLine = {
 
     // Swirling East and South following the Napindan River bend
     [14.5580, 121.0845],
+    [14.5575, 121.0860], // Added
     [14.5565, 121.0872],
+    [14.5550, 121.0880], // Added
     [14.5538, 121.0888],
+    [14.5525, 121.0895], // Added
     [14.5510, 121.0895], // Sharp southward river turn
+    [14.5490, 121.0895], // Added
     [14.5470, 121.0892],
+    [14.5455, 121.0890], // Added
     [14.5445, 121.0890],
+    [14.5435, 121.0890], // Added
 
     // --- Nagpayong Ferry Terminal (Pinagbuhatan) ---
     [14.5420, 121.0890]

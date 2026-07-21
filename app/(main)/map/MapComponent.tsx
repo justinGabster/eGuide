@@ -15,6 +15,11 @@ interface VehicleState {
   boundFor: string;
   headingText: string;
   angle: number;
+  logicalFraction: number;
+  isForward: boolean;
+  isDwelling: boolean;
+  nextStationEtaMs: number;
+  totalLegMs: number;
 }
 
 export default function MapComponent() {
@@ -27,6 +32,16 @@ export default function MapComponent() {
   const [showLiveVehicles, setShowLiveVehicles] = useState<boolean>(true);
   const [directionFilter, setDirectionFilter] = useState<'ALL' | 'NB' | 'SB'>('ALL');
   const [vehicles, setVehicles] = useState<VehicleState[]>([]);
+  const [isLineViewOpen, setIsLineViewOpen] = useState(false);
+  const [lineViewConfig, setLineViewConfig] = useState<{ 
+    lineId: string, 
+    isForward: boolean,
+    originStationIdx?: number,
+    selectedVehicleId?: string 
+  }>({ lineId: 'lrt-1', isForward: true });
+  const [showPastStations, setShowPastStations] = useState(false);
+  const [isStationSelectionMode, setIsStationSelectionMode] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     fetch('/data/pasig-ferry.json')
@@ -81,13 +96,8 @@ export default function MapComponent() {
     return paths;
   }, []);
 
-  // TEMPORARY TESTING OVERRIDE (Comment out for production):
-  // Set time to 7:15 AM today to test morning rush hour train movement & arrival ETAs
   const getSimulatedTime = () => {
-    const testDate = new Date();
-    testDate.setHours(7, 15, 0, 0);
-    // return new Date(); // Production
-    return testDate;      // Development Override
+    return new Date();
   };
 
   const isSystemActive = () => {
@@ -275,6 +285,21 @@ export default function MapComponent() {
            statusText = `Standby at ${startName}`;
         }
 
+        // 5. Logical Route Progress (for Line View UI)
+        let logicalFraction = 0;
+        if (isForward) {
+          logicalFraction = (startStationIdx + progress) / M;
+        } else {
+          logicalFraction = (M - startStationIdx + progress) / M;
+        }
+
+        let nextStationEtaMs = 0;
+        if (isDwelling) {
+          nextStationEtaMs = (DWELL_MS - legTime) + TOTAL_LEG_MS;
+        } else {
+          nextStationEtaMs = TOTAL_LEG_MS - (legTime - DWELL_MS);
+        }
+
         return {
           id: spec.id,
           lineId: spec.lineId,
@@ -283,7 +308,12 @@ export default function MapComponent() {
           statusText,
           boundFor,
           headingText,
-          angle
+          angle,
+          logicalFraction,
+          isForward,
+          isDwelling,
+          nextStationEtaMs,
+          totalLegMs: TOTAL_LEG_MS
         };
       }).filter(Boolean) as VehicleState[];
 
@@ -459,8 +489,450 @@ export default function MapComponent() {
     };
   };
 
+  const getUpcomingDepartures = (lineId: string, stationIdx: number, isForward: boolean, count: number = 4) => {
+    const line = transitLines.find(l => l.id === lineId);
+    if (!line) return [];
+    
+    const M = line.stations.length - 1;
+    let TOTAL_LEG_MS = 210000;
+    if (lineId === 'pnr-south') TOTAL_LEG_MS = 3000000;
+    else if (lineId === 'pnr-bicol') TOTAL_LEG_MS = 2700000;
+    const DWELL_MS = 20000;
+    const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
+    const ROUND_TRIP_MS = 2 * M * LEG_CYCLE;
+    const now = getSimulatedTime().getTime();
+
+    const targetTime = isForward ? (stationIdx * LEG_CYCLE) : ((2 * M - stationIdx) * LEG_CYCLE);
+
+    const lineSpecs = vehicleSpecs.filter(spec => spec.lineId === lineId);
+    const departures = lineSpecs.map(spec => {
+      const t = (now + spec.offsetMs) % ROUND_TRIP_MS;
+      let diffMs = (targetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
+      return {
+        vehicleId: spec.id,
+        etaMs: diffMs,
+        etaMins: Math.max(1, Math.ceil(diffMs / 60000))
+      };
+    }).sort((a, b) => a.etaMs - b.etaMs);
+
+    return departures.slice(0, count);
+  };
+
+  const renderStationSelectionPrompt = () => {
+    const handleUseMyLocation = () => {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          let closestDist = Infinity;
+          let closestStationIdx = 0;
+          let closestLineId = 'lrt-1';
+          
+          const distSq = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+             const dLat = lat1 - lat2;
+             const dLng = lng1 - lng2;
+             return dLat * dLat + dLng * dLng;
+          };
+
+          transitLines.forEach(line => {
+             if (line.id === 'pnr-nscr') return;
+             line.stations.forEach((station, idx) => {
+                const d = distSq(lat, lng, station.coords[0], station.coords[1]);
+                if (d < closestDist) {
+                   closestDist = d;
+                   closestStationIdx = idx;
+                   closestLineId = line.id;
+                }
+             });
+          });
+
+          setLineViewConfig({
+            lineId: closestLineId,
+            isForward: true,
+            originStationIdx: closestStationIdx
+          });
+          setIsStationSelectionMode(false);
+          setShowPastStations(false);
+        },
+        (error) => {
+          console.error("Error getting location", error);
+          alert("Unable to retrieve your location. Please check browser permissions.");
+        }
+      );
+    };
+
+    const activeLine = transitLines.find(l => l.id === lineViewConfig.lineId) || transitLines[0];
+
+    return (
+      <div style={{ padding: '24px 20px 40px 20px', color: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: '#0f172a', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
+          <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+        </div>
+        
+        <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>
+          Where are you starting your journey?
+        </p>
+
+        <button 
+          onClick={handleUseMyLocation}
+          style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+        >
+          📍 Use My Location
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
+          <span style={{ padding: '0 12px', fontSize: '11px', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>OR SELECT MANUALLY</span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
+            <select 
+              value={lineViewConfig.lineId} 
+              onChange={e => setLineViewConfig(c => ({...c, lineId: e.target.value, originStationIdx: 0}))}
+              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+            >
+              {transitLines.filter(l => l.id !== 'pnr-nscr').map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
+            <select 
+              value={lineViewConfig.originStationIdx || 0} 
+              onChange={e => setLineViewConfig(c => ({...c, originStationIdx: parseInt(e.target.value)}))}
+              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+            >
+              {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
+            <div style={{ display: 'flex', backgroundColor: '#1e293b', borderRadius: '6px', padding: '4px', border: '1px solid #334155' }}>
+               <button 
+                  onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
+                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
+               >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}</button>
+               <button 
+                  onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
+                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: !lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
+               >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}</button>
+            </div>
+          </div>
+
+          <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
+            <button 
+              onClick={() => {
+                 if (lineViewConfig.originStationIdx === undefined) {
+                   setLineViewConfig(c => ({...c, originStationIdx: 0}));
+                 }
+                 setIsStationSelectionMode(false);
+                 setShowPastStations(false);
+              }}
+              style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
+            >
+              View Line Schedule &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLineViewContent = () => {
+    const line = transitLines.find(l => l.id === lineViewConfig.lineId);
+    if (!line) return null;
+
+    const M = line.stations.length - 1;
+    let TOTAL_LEG_MS = 210000;
+    if (line.id === 'pnr-south') TOTAL_LEG_MS = 3000000;
+    else if (line.id === 'pnr-bicol') TOTAL_LEG_MS = 2700000;
+    const DWELL_MS = 20000;
+    const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
+
+    let stations = line.stations;
+    if (!lineViewConfig.isForward) {
+      stations = [...stations].reverse();
+    }
+
+    const isContextual = lineViewConfig.originStationIdx !== undefined;
+    let originRenderIdx = 0;
+    if (isContextual) {
+      originRenderIdx = lineViewConfig.isForward 
+         ? lineViewConfig.originStationIdx! 
+         : M - lineViewConfig.originStationIdx!;
+    }
+
+    const activeVehicles = vehicles.filter(v => {
+       if (v.lineId !== line.id || v.isForward !== lineViewConfig.isForward) return false;
+       if (isContextual) {
+          const vehicleRenderIdx = v.logicalFraction * M;
+          // Hide trains that have already passed the origin station
+          if (vehicleRenderIdx > originRenderIdx) return false;
+       }
+       return true;
+    });
+
+    let departures: { vehicleId: string, etaMs: number, etaMins: number }[] = [];
+    let selectedDep: any = undefined;
+
+    if (isContextual) {
+       departures = getUpcomingDepartures(line.id, lineViewConfig.originStationIdx!, lineViewConfig.isForward, 4);
+       
+       if (lineViewConfig.selectedVehicleId) {
+          selectedDep = departures.find(d => d.vehicleId === lineViewConfig.selectedVehicleId) || { vehicleId: lineViewConfig.selectedVehicleId };
+       } else {
+          // Find the nearest incoming train physically behind the origin station
+          let nearestVehicleId = undefined;
+          let minDistance = Infinity;
+          for (const v of activeVehicles) {
+             const vehicleRenderIdx = v.logicalFraction * M;
+             const dist = originRenderIdx - vehicleRenderIdx;
+             // activeVehicles already filters out vehicleRenderIdx > originRenderIdx, so dist >= 0 is guaranteed
+             if (dist >= 0 && dist < minDistance) {
+                 minDistance = dist;
+                 nearestVehicleId = v.id;
+             }
+          }
+          
+          if (nearestVehicleId) {
+              selectedDep = departures.find(d => d.vehicleId === nearestVehicleId) || { vehicleId: nearestVehicleId };
+          }
+       }
+    }
+
+    let renderStations = stations;
+    let hiddenCount = 0;
+
+    if (isContextual) {
+      if (!showPastStations) {
+         let targetVehicleRenderIdx = originRenderIdx;
+         if (selectedDep) {
+            const sv = activeVehicles.find(v => v.id === selectedDep.vehicleId);
+            if (sv) {
+               targetVehicleRenderIdx = sv.logicalFraction * M;
+            }
+         }
+         
+         hiddenCount = Math.floor(targetVehicleRenderIdx);
+         // Don't hide more than the origin (so we always show the origin station)
+         hiddenCount = Math.min(hiddenCount, originRenderIdx);
+         
+         renderStations = stations.slice(hiddenCount);
+      }
+    }
+
+    const formatAbsoluteTime = (addedMs: number) => {
+       const d = new Date(getSimulatedTime().getTime() + addedMs);
+       return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    };
+
+    const headerTitle = isContextual 
+       ? `${line.name.split(' ')[0]} - ${stations[stations.length - 1].name}`
+       : `${line.name.split(' ')[0]} Schematic`;
+
+    return (
+      <>
+        {/* Header */}
+        <div style={{ padding: '20px', borderBottom: '1px solid #1e293b', backgroundColor: '#1e293b' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ backgroundColor: line.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block' }}></span>
+                {headerTitle}
+              </h2>
+              <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                {lineViewConfig.isForward 
+                  ? (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'EASTBOUND' : 'SOUTHBOUND') 
+                  : (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'WESTBOUND' : 'NORTHBOUND')}
+              </span>
+              {isContextual && (
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', marginLeft: '22px' }}>
+                  from <strong>{line.stations[lineViewConfig.originStationIdx!].name}</strong>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {isContextual && (
+                <button 
+                  onClick={() => setIsStationSelectionMode(true)}
+                  style={{ fontSize: '11px', background: '#334155', color: '#e2e8f0', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Change Station
+                </button>
+              )}
+              <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+            </div>
+          </div>
+          
+          {isContextual && departures.length > 0 && (
+             <div style={{ marginTop: '16px' }}>
+               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
+               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                 {departures.map((dep, idx) => {
+                    const isSelected = selectedDep?.vehicleId === dep.vehicleId;
+                    return (
+                      <button 
+                        key={dep.vehicleId}
+                        onClick={() => setLineViewConfig(c => ({...c, selectedVehicleId: dep.vehicleId}))}
+                        style={{ 
+                          padding: '8px 12px', 
+                          borderRadius: '6px', 
+                          border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
+                          background: isSelected ? `${line.color}20` : '#0f172a', 
+                          color: isSelected ? '#fff' : '#94a3b8', 
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          minWidth: '80px'
+                        }}
+                      >
+                        <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
+                        <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748b', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
+                      </button>
+                    );
+                 })}
+               </div>
+             </div>
+          )}
+        </div>
+
+        {/* Timeline Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', position: 'relative' }}>
+          {isContextual && hiddenCount > 0 && (
+             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                <button 
+                  onClick={() => setShowPastStations(true)}
+                  style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s' }}
+                >
+                  ↑ Show {hiddenCount} previous stops
+                </button>
+             </div>
+          )}
+
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: `${renderStations.length * 70}px`, zIndex: 5 }}>
+            {/* Vertical Track Line */}
+            <div style={{ position: 'absolute', top: '20px', bottom: '20px', left: '26px', transform: 'translateX(-50%)', width: '4px', backgroundColor: line.color, borderRadius: '2px', zIndex: -1 }}>
+               {activeVehicles.map(v => {
+                  const isFaded = isContextual && v.id !== selectedDep?.vehicleId;
+                  
+                  let topPct = v.logicalFraction * 100;
+                  
+                  if (hiddenCount > 0) {
+                     const startFrac = hiddenCount / M;
+                     topPct = (v.logicalFraction - startFrac) / (1 - startFrac) * 100;
+                  }
+                  
+                  if (topPct < 0 || topPct > 100) return null;
+
+                  return (
+                    <div key={v.id} style={{
+                      position: 'absolute',
+                      top: `${topPct}%`,
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      transition: 'top 1s linear',
+                      zIndex: isFaded ? 5 : 30,
+                      opacity: isFaded ? 0.15 : 1
+                    }}>
+                      <div style={{ 
+                        width: '28px', 
+                        height: '28px', 
+                        backgroundColor: line.color, 
+                        border: '2px solid #FFFFFF', 
+                        borderRadius: '50%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' 
+                      }}>
+                        {line.id === 'pasig-ferry' 
+                          ? <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.93V3c0-1.1-.9-2-2-2h-1c-1.1 0-2 .9-2 2v2h-1V3c0-1.1-.9-2-2-2H9C7.9 0 7 .9 7 2v5H6V3c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v7.93l-1.29.11c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM11 2h2v4h-2V2z"/></svg>
+                          : <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm4 0V6h5v4h-5zm1.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                        }
+                      </div>
+                    </div>
+                  );
+               })}
+            </div>
+            
+            {renderStations.map((st, i) => {
+              const globalRenderIdx = hiddenCount + i;
+              const originalIdx = lineViewConfig.isForward ? globalRenderIdx : (stations.length - 1 - globalRenderIdx);
+              
+              let etaText = '---';
+              
+              if (isContextual && selectedDep) {
+                 const legDiff = globalRenderIdx - originRenderIdx;
+                 const msDiff = legDiff * LEG_CYCLE;
+                 const stationEtaMs = selectedDep.etaMs + msDiff;
+                 etaText = formatAbsoluteTime(stationEtaMs);
+              } else if (!isContextual) {
+                 const arrivals = getUpcomingArrivals(line.id, originalIdx);
+                 if (arrivals) {
+                   const mins = lineViewConfig.isForward ? arrivals.forwardMins : arrivals.backwardMins;
+                   etaText = formatArrivalTime(mins);
+                 }
+              }
+
+              const isOrigin = isContextual && globalRenderIdx === originRenderIdx;
+
+              const approachingVehicle = activeVehicles.find(v => {
+                if (isContextual && v.id !== selectedDep?.vehicleId) return false;
+                const distance = v.logicalFraction * M - globalRenderIdx;
+                return distance >= -0.1 && distance <= 1.0;
+              });
+              const isApproaching = !!approachingVehicle;
+
+              return (
+                <div key={st.name} style={{ display: 'flex', alignItems: 'center', height: '40px', cursor: 'pointer', opacity: (isApproaching || isOrigin) ? 1 : 0.7, transition: 'opacity 0.2s' }} onClick={() => {
+                  if (mapRef.current) mapRef.current.flyTo(st.coords, 16);
+                }}>
+                  <div style={{ width: '52px', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5 }}>
+                    <div style={{ 
+                        width: isOrigin ? '14px' : '10px', 
+                        height: isOrigin ? '14px' : '10px', 
+                        backgroundColor: '#fff', 
+                        border: isOrigin ? `3px solid ${line.color}` : 'none', 
+                        borderRadius: '50%', 
+                        transition: 'all 0.3s', 
+                        transform: isApproaching && !isOrigin ? 'scale(1.3)' : (isOrigin ? 'scale(1.2)' : 'scale(1)'), 
+                        boxSizing: 'content-box',
+                        boxShadow: isOrigin ? '0 0 8px rgba(255,255,255,0.5)' : 'none'
+                    }}></div>
+                  </div>
+                  <div style={{ flex: 1, paddingLeft: '4px' }}>
+                    <div style={{ fontSize: (isApproaching || isOrigin) ? '15px' : '14px', fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal', color: (isApproaching || isOrigin) ? '#fff' : '#e2e8f0', transition: 'all 0.2s' }}>
+                      {st.name} {isOrigin && <span style={{ fontSize: '10px', backgroundColor: line.color, color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle' }}>ORIGIN</span>}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: isApproaching ? '#38bdf8' : (isOrigin ? '#fff' : '#94a3b8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
+                    {etaText}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+
       {/* Filter Control Overlay */}
       <div style={{
         position: 'absolute',
@@ -561,6 +1033,31 @@ export default function MapComponent() {
             >▼ SB/WB</button>
           </div>
         )}
+
+        {/* Toggle Line View Button */}
+        <button 
+          onClick={() => {
+            if (!isLineViewOpen) {
+              setIsStationSelectionMode(true); // Open directly to selection wizard when launched globally
+            }
+            setIsLineViewOpen(prev => !prev);
+          }}
+          style={{ 
+            marginTop: '8px',
+            width: '100%',
+            padding: '10px',
+            backgroundColor: isLineViewOpen ? '#3b82f6' : '#0f172a',
+            color: 'white',
+            border: '1px solid #334155',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            transition: 'background 0.2s'
+          }}
+        >
+          {isLineViewOpen ? 'Close Schematic' : '🗺️ Open Line View'}
+        </button>
       </div>
 
       <style>{`
@@ -602,7 +1099,26 @@ export default function MapComponent() {
         }
       `}</style>
 
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: isLineViewOpen ? 0 : '-380px',
+        width: '380px',
+        height: '100%',
+        backgroundColor: '#0f172a',
+        boxShadow: '4px 0 15px rgba(0,0,0,0.5)',
+        zIndex: 2000,
+        transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        display: 'flex',
+        flexDirection: 'column',
+        color: 'white',
+        borderRight: '1px solid #1e293b'
+      }}>
+        {isLineViewOpen && (isStationSelectionMode ? renderStationSelectionPrompt() : renderLineViewContent())}
+      </div>
+
       <MapContainer 
+        ref={mapRef}
         center={position} 
         zoom={12} 
         scrollWheelZoom={true} 
@@ -763,23 +1279,33 @@ export default function MapComponent() {
                         </div>
                       )}
 
-                      {/* Action Button */}
-                      <button 
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          backgroundColor: '#1e293b',
-                          color: '#f8fafc',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          transition: 'background 0.2s'
-                        }}
-                      >
-                        + Report Delay
-                      </button>
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                        {idx < line.stations.length - 1 && (
+                          <button 
+                            onClick={() => {
+                              setLineViewConfig({ lineId: line.id, isForward: true, originStationIdx: idx });
+                              setIsLineViewOpen(true);
+                              setShowPastStations(false);
+                            }}
+                            style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
+                          >
+                            ▼ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
+                          </button>
+                        )}
+                        {idx > 0 && (
+                          <button 
+                            onClick={() => {
+                              setLineViewConfig({ lineId: line.id, isForward: false, originStationIdx: idx });
+                              setIsLineViewOpen(true);
+                              setShowPastStations(false);
+                            }}
+                            style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
+                          >
+                            ▲ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </Popup>
                 </CircleMarker>
@@ -798,26 +1324,122 @@ export default function MapComponent() {
                 if (directionFilter === 'NB' && (dirCode === 'NB' || dirCode === 'EB')) return true;
                 if (directionFilter === 'SB' && (dirCode === 'SB' || dirCode === 'WB')) return true;
                 return false;
-              }).map(v => (
-                <Marker 
-                  key={v.id} 
-                  position={v.coords} 
-                  icon={createVehicleIcon(line.id, line.color, isFaded, v.headingText)}
-                  zIndexOffset={1000}
-                >
-                  <Tooltip direction="top" offset={[0, -15]} className="dark-station-tooltip">
-                    <span style={{ color: line.color, fontWeight: 'bold', fontSize: '12px' }}>
-                      {line.name.split(' ')[0]} • {v.headingText}
-                    </span>
-                    <span style={{ color: '#94a3b8', fontWeight: 'normal', fontSize: '11px', marginLeft: '6px' }}>
-                      (Bound for {v.boundFor})
-                    </span><br/>
-                    <span style={{ color: '#e2e8f0', fontWeight: 'normal', fontSize: '11px', marginTop: '4px', display: 'inline-block' }}>
-                      {v.statusText}
-                    </span>
-                  </Tooltip>
-                </Marker>
-              ))}
+              }).map(v => {
+                const M = line.stations.length - 1;
+                let nextIdx = v.isForward 
+                  ? Math.floor(v.logicalFraction * M) + 1 
+                  : Math.ceil(v.logicalFraction * M) - 1;
+                
+                if (nextIdx > M) nextIdx = M;
+                if (nextIdx < 0) nextIdx = 0;
+
+                const stops: { name: string, etaMs: number }[] = [];
+                const LEG_CYCLE = v.totalLegMs + 20000; // 20s dwell
+                let currentEta = v.nextStationEtaMs;
+                const dir = v.isForward ? 1 : -1;
+                let idxWalker = nextIdx;
+
+                while (idxWalker >= 0 && idxWalker <= M && stops.length < 4) {
+                  stops.push({ name: (line.id === 'pasig-ferry' && snappedFerryStations ? snappedFerryStations[idxWalker].name : line.stations[idxWalker].name), etaMs: currentEta });
+                  currentEta += LEG_CYCLE;
+                  idxWalker += dir;
+                }
+
+                // Speed calc
+                let baseSpeed = 45;
+                if (line.id.includes('pnr')) baseSpeed = 65;
+                else if (line.id === 'pasig-ferry') baseSpeed = 22;
+                
+                // Add tiny deterministic variance based on ID string
+                let hash = 0;
+                for (let i = 0; i < v.id.length; i++) hash = (hash << 5) - hash + v.id.charCodeAt(i);
+                const variance = Math.abs(hash) % 10 - 5;
+                const speed = v.isDwelling ? 0 : baseSpeed + variance;
+
+                return (
+                  <Marker 
+                    key={v.id} 
+                    position={v.coords} 
+                    icon={createVehicleIcon(line.id, line.color, isFaded, v.headingText)}
+                    zIndexOffset={1000}
+                  >
+                    <Tooltip direction="top" offset={[0, -15]} className="dark-station-tooltip">
+                      <span style={{ color: line.color, fontWeight: 'bold', fontSize: '12px' }}>
+                        {line.name.split(' ')[0]} • {v.headingText}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontWeight: 'normal', fontSize: '11px', marginLeft: '6px' }}>
+                        (Bound for {v.boundFor})
+                      </span><br/>
+                      <span style={{ color: '#e2e8f0', fontWeight: 'normal', fontSize: '11px', marginTop: '4px', display: 'inline-block' }}>
+                        {v.statusText}
+                      </span>
+                    </Tooltip>
+                    <Popup minWidth={260} className="custom-station-popup">
+                      <div style={{ padding: '2px', fontFamily: 'sans-serif', color: '#f8fafc' }}>
+                        {/* Header Row */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
+                              {line.id === 'pasig-ferry' ? 'Ferry Details' : 'Train Details'}
+                            </h3>
+                            <span style={{ backgroundColor: line.color, color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                              {line.id.toUpperCase()}
+                            </span>
+                          </div>
+                          <span style={{ backgroundColor: '#1e293b', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold', border: '1px solid #334155' }}>
+                            PREDICTED
+                          </span>
+                        </div>
+
+                        {/* Next Stops Block */}
+                        {stops.length > 0 && (
+                          <div style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: '1px solid #1e293b' }}>
+                            {/* Primary Stop */}
+                            <div style={{ borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '8px' }}>
+                              <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Next Stop</div>
+                              <div style={{ fontSize: '15px', fontWeight: 'bold', color: line.color }}>
+                                {stops[0].etaMs < 60000 
+                                  ? `${Math.floor(stops[0].etaMs / 1000)} sec to ${stops[0].name}`
+                                  : `${formatArrivalTime(Math.ceil(stops[0].etaMs / 60000))} to ${stops[0].name}`}
+                              </div>
+                            </div>
+                            
+                            {/* Subsequent Stops */}
+                            {stops.length > 1 && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {stops.slice(1).map((s, i) => (
+                                  <div key={i} style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#cbd5e1' }}>
+                                    <span style={{ color: '#475569', marginRight: '8px' }}>•</span>
+                                    <span>{formatArrivalTime(Math.ceil(s.etaMs / 60000))} to <strong>{s.name}</strong></span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Telemetry Grid */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                          <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>SPEED</div>
+                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{speed} km/h</div>
+                          </div>
+                          <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>DIRECTION</div>
+                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{v.headingText.split(' ')[0]}</div>
+                          </div>
+                        </div>
+
+                        {/* Footer Info */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#64748b', borderTop: '1px solid #cbd5e1', paddingTop: '8px' }}>
+                          <span>INFO</span>
+                          <span>Last Update: <strong>Just now</strong></span>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
             </div>
           );
         })}
