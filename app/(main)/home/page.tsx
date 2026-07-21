@@ -1,65 +1,116 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
 import AiChatWidget from '@/components/AiChatWidget';
 
 export default function Home() {
-  const [isZoomed, setIsZoomed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div>
-      <h2 className="title mb-4">Good Morning, Denisse!</h2>
-      
-      {/* National ID Card */}
-      <h3 className="mb-2 text-sm text-muted uppercase tracking-wider">Philippine ID</h3>
-      <div 
-        className="mb-6 cursor-pointer"
-        style={{ 
-          border: '4px solid black', 
-          borderRadius: '16px', 
-          overflow: 'hidden',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-          transition: 'transform 0.2s ease',
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#000'
-        }}
-        onClick={() => setIsZoomed(true)}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-      >
-        <img src="/nationalID.png" alt="National ID" style={{ width: '100%', height: 'auto', display: 'block' }} />
-        <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '24px', opacity: 0.8, background: 'rgba(255,255,255,0.7)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>🔎</div>
-      </div>
-
-      {/* Modal for Zoomed ID */}
-      {isZoomed && (
-        <div 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}
-          onClick={() => setIsZoomed(false)}
-        >
-          <div style={{ 
-            border: '4px solid black', 
-            borderRadius: '16px', 
-            overflow: 'hidden',
-            width: '100%',
-            maxWidth: '90vw',
-            maxHeight: '90vh',
-            transform: 'scale(1.05)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            backgroundColor: '#000',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <img src="/nationalID.png" alt="National ID Zoomed" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain', maxHeight: '80vh' }} />
-            <div style={{ textAlign: 'center', padding: '12px', fontSize: '14px', color: '#fff', background: 'rgba(0,0,0,0.8)' }}>
-              Tap anywhere to close
-            </div>
+    <div style={{ paddingBottom: '20px' }}>
+      {/* Top Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <span style={{ fontSize: '24px' }}>📍</span>
+          <div>
+            <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: 'var(--text-primary)' }}>CITY OF MANDALUYONG</h2>
+            <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-secondary)' }}>METRO MANILA</p>
           </div>
         </div>
-      )}
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'right' }}>
+          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+        </div>
+      </div>
+      
+      {/* Search Card */}
+      <div className="glass-card mb-6" style={{ padding: '24px 20px', backgroundColor: 'var(--card-bg)' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 'bold', textAlign: 'center', marginBottom: '16px', color: 'var(--text-primary)' }}>
+          Where are you headed?
+        </h3>
+        
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          <input 
+            type="text" 
+            placeholder="Search your drop-off"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '12px 16px', 
+              paddingRight: '40px',
+              borderRadius: '24px', 
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-color)',
+              color: 'var(--text-primary)',
+              boxShadow: 'var(--shadow-sm)',
+              outline: 'none',
+              fontSize: '14px'
+            }}
+          />
+          <span style={{ position: 'absolute', right: '16px', top: '10px', fontSize: '18px', color: 'var(--text-secondary)' }}>
+            🔍
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🕒</span> Araneta Center - Cubao
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🕒</span> SM North EDSA | The Annex
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Access Buttons */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', padding: '0 8px' }}>
+        {[
+          { name: 'Trains', icon: '🚆' },
+          { name: 'Buses', icon: '🚌' },
+          { name: 'PUVs', icon: '🚙' },
+          { name: 'Report', icon: '🚔' }
+        ].map((btn, idx) => (
+          <Link key={idx} href="/map" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'var(--text-primary)' }}>
+            <div style={{ 
+              width: '64px', 
+              height: '64px', 
+              borderRadius: '50%', 
+              backgroundColor: 'var(--card-bg)',
+              border: '1px solid var(--border-color)', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              fontSize: '32px',
+              marginBottom: '8px',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              {btn.icon}
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: '500' }}>{btn.name}</span>
+          </Link>
+        ))}
+      </div>
+
+      {/* Recent Notification Card */}
+      <div className="glass-card mb-6" style={{ padding: '20px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--text-primary)' }}>
+          Recent Notification
+        </h3>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {[1, 2, 3].map((_, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                11:26 PM
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                Lorem ipsum dolor sit amet consectetur adipiscing.
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div style={{ marginTop: '24px' }}>
         <AiChatWidget />
