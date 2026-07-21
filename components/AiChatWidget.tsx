@@ -70,14 +70,15 @@ export default function AiChatWidget() {
       </div>
 
       {/* Messages Area */}
-      <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: '#F8FAFC' }}>
+      <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-color)' }}>
         {messages.map((msg, idx) => (
           <div 
             key={idx} 
             style={{ 
               alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              background: msg.role === 'user' ? 'var(--primary-color)' : '#E2E8F0',
+              background: msg.role === 'user' ? 'var(--primary-color)' : 'var(--card-bg)',
               color: msg.role === 'user' ? 'white' : 'var(--text-primary)',
+              border: msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
               padding: '10px 14px',
               borderRadius: '12px',
               maxWidth: '85%',
@@ -97,7 +98,7 @@ export default function AiChatWidget() {
       </div>
 
       {/* Input Area */}
-      <div style={{ padding: '12px', background: 'white', display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)' }}>
+      <div style={{ padding: '12px', background: 'var(--card-bg)', display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)' }}>
         <input 
           type="text" 
           value={input}
@@ -109,7 +110,7 @@ export default function AiChatWidget() {
             padding: '10px', 
             borderRadius: '20px', 
             border: '1px solid var(--border-color)', 
-            background: '#F8FAFC', 
+            background: 'var(--bg-color)', 
             color: 'var(--text-primary)',
             fontSize: '13px'
           }}
