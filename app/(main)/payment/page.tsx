@@ -40,6 +40,28 @@ export default function RideAndPay() {
     }
   }, []);
 
+  // Poll the backend to see if a physical phone scanned the QR Code
+  useEffect(() => {
+    if (activeTab !== 'TICKET' || !userId) return;
+    
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/everify/status?uid=${userId}`);
+        const data = await res.json();
+        
+        if (data.scanned && data.url) {
+          clearInterval(interval);
+          setSimulatingScan(true);
+          window.location.href = data.url;
+        }
+      } catch (e) {
+        // Ignore polling errors
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [activeTab, userId]);
+
   const getCalculatedFare = () => {
     const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
     const baseFare = matrix[originIndex][destIndex];

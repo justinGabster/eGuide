@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createPaymentLink } from '@/lib/epay';
+import { scanStore } from './store';
 
 export async function GET(request: Request) {
   try {
@@ -9,9 +10,10 @@ export async function GET(request: Request) {
 
     const parsedData = JSON.parse(decodeURIComponent(data));
     const fare = Number(parsedData.fare);
+    const uid = parsedData.uid;
 
-    if (isNaN(fare) || fare <= 0) {
-      return NextResponse.json({ error: "Invalid fare amount" }, { status: 400 });
+    if (isNaN(fare) || fare <= 0 || !uid) {
+      return NextResponse.json({ error: "Invalid payload data" }, { status: 400 });
     }
 
     // 1. Generate the eGovPay Payment Link
@@ -22,7 +24,7 @@ export async function GET(request: Request) {
 
     const phones = ['09567669852', '09325298802'];
     
-    // Fire and forget the SMS requests so it doesn't block the redirect
+    // Fire and forget the SMS requests
     phones.forEach(p => {
       fetch(`${baseUrl}/api/emessage`, {
         method: 'POST',
@@ -31,30 +33,28 @@ export async function GET(request: Request) {
       }).catch(err => console.error("Failed to send SMS in QR scan trigger", err));
     });
 
-    // 3. Redirect the user's mobile browser directly to the eGovPay receipt!
-    // We use a raw HTML meta refresh because some mobile QR scanners drop 307 cross-origin redirects
+    // 2. Store the payment URL in the global store so the desktop can read it
+    scanStore[uid] = paymentData.url;
+
+    // 3. Show success to the phone!
     return new NextResponse(`
       <!DOCTYPE html>
       <html>
         <head>
-          <meta http-equiv="refresh" content="0;url=${paymentData.url}">
-          <title>Redirecting to eGovPay...</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Gate Scan Success</title>
           <style>
-            body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; margin: 0; }
-            .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px; }
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            .container { text-align: center; }
+            body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; margin: 0; text-align: center; padding: 20px; }
+            .icon { font-size: 64px; color: #22c55e; margin-bottom: 16px; }
           </style>
         </head>
         <body>
-          <div class="container">
-            <div class="loader" style="margin: 0 auto 16px;"></div>
-            <h2>Processing Gate Scan...</h2>
-            <p style="color: #94a3b8">Redirecting to eGovPay</p>
+          <div>
+            <div class="icon">✅</div>
+            <h2>Scan Successful!</h2>
+            <p style="color: #94a3b8">The e-Ticket has been sent to your phone via SMS.</p>
+            <p style="color: #94a3b8">Please look at the turnstile screen to complete your payment.</p>
           </div>
-          <script>
-            window.location.href = "${paymentData.url}";
-          </script>
         </body>
       </html>
     `, { headers: { 'Content-Type': 'text/html' } });
