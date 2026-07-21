@@ -68,6 +68,7 @@ export default function Home() {
         <img 
           src="/icons/quick_access_flat.png" 
           alt="Quick Access: Trains, Buses, PUVs, Report" 
+          className="dark-invert"
           style={{ width: '100%', height: 'auto', display: 'block' }} 
         />
       </Link>

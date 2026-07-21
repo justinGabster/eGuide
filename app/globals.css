@@ -304,3 +304,7 @@ a {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+.theme-dark .dark-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
