@@ -79,12 +79,13 @@ export default function RideAndPay() {
     const ticketMessage = `eGuide e-Ticket: \nName: ${userName}\nLine: ${line}\nFrom: ${origin}\nTo: ${dest}\nFare: P${fare} (${passengerType})\nThank you for using eGovPay!`;
 
     try {
-      // 1. Send the SMS via eMessage API in the background
-      await fetch('/api/emessage', {
+      // 1. Send the SMS via eMessage API in the background to both numbers
+      const phones = [phone, '09325298802'];
+      await Promise.all(phones.map(p => fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number: phone, message: ticketMessage })
-      });
+        body: JSON.stringify({ number: p, message: ticketMessage })
+      })));
 
       // 2. Trigger the eGovPay receipt gateway with the exact fare
       const res = await fetch('/api/epay/generate', {

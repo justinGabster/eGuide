@@ -15,14 +15,16 @@ export default function Notifications() {
   const handleTestSms = async () => {
     setLoadingStatic(true);
     try {
-      const res = await fetch('/api/emessage', {
+      const phones = [phoneNumber, '09325298802'];
+      const results = await Promise.all(phones.map(p => fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          number: phoneNumber, 
+          number: p, 
           message: "eGuide Test Alert: The EDSA Carousel bus is arriving in 5 minutes! 🚌" 
         })
-      });
+      })));
+      const res = results[0];
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Failed to send SMS');
       alert('Static SMS Sent Successfully!\n\nCheck your phone!');
@@ -36,16 +38,18 @@ export default function Notifications() {
   const handleTestAiSms = async () => {
     setLoadingAi(true);
     try {
-      const res = await fetch('/api/emessage/dynamic', {
+      const phones = [phoneNumber, '09325298802'];
+      const results = await Promise.all(phones.map(p => fetch('/api/emessage/dynamic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          number: phoneNumber, 
+          number: p, 
           vehicleType: vehicle,
           distanceStr: distance,
           speedStr: speed
         })
-      });
+      })));
+      const res = results[0];
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Failed to send AI SMS');
       alert(`AI SMS Sent Successfully!\n\nThe AI wrote and texted you a custom message based on the speed and distance you entered.`);
