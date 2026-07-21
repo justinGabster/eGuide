@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import AiChatWidget from '@/components/AiChatWidget';
 
 export default function Home() {
   const [isZoomed, setIsZoomed] = useState(false);

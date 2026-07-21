@@ -2,12 +2,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/components/ThemeProvider';
+
+import SplashScreen from '@/components/SplashScreen';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     fetch('/api/ai-credits')
@@ -35,6 +39,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { label: 'Privacy Notice', icon: '🛡️' },
     { label: 'Contact Us', icon: '📞' },
     { label: 'Rate our app', icon: '👍' },
+    { label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, icon: theme === 'light' ? '🌙' : '☀️', action: toggleTheme },
     { label: 'Settings', icon: '⚙️', action: () => setIsSettingsOpen(true) },
     { label: 'Log out', icon: '🚪', path: '/' },
   ];
@@ -59,6 +64,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <main className="mobile-container id-pattern-bg" style={{ position: 'relative' }}>
+      <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
