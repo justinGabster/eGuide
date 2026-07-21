@@ -202,10 +202,10 @@ export default function RideAndPay() {
       </div>
 
       {activeTab === 'TICKET' && (
-        <div className="glass-card fade-in">
+        <div className="glass-card fade-in" style={{ padding: '16px' }}>
           
           {/* Conjoined QR Code Display */}
-          <div style={{ background: '#F8FAFC', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid var(--border-color)' }}>
+          <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', textAlign: 'center', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
               Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
             </div>

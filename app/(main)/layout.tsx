@@ -3,8 +3,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
-import AiChatWidget from '@/components/AiChatWidget';
-
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -98,7 +96,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </nav>
 
       {/* Global AI Chat Widget */}
-      <AiChatWidget />
 
       {/* Profile Drawer Overlay */}
       {isProfileOpen && (
