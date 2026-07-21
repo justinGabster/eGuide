@@ -17,6 +17,16 @@ export default function PaymentCallback() {
     const verifyPayment = async () => {
       try {
         await new Promise(r => setTimeout(r, 2000));
+        
+        // Process the topup locally for demo purposes
+        const pendingAmount = localStorage.getItem('pending_topup');
+        if (pendingAmount) {
+          const currentBalance = Number(localStorage.getItem('mock_balance')) || 500.00;
+          const newBalance = currentBalance + Number(pendingAmount);
+          localStorage.setItem('mock_balance', newBalance.toFixed(2));
+          localStorage.removeItem('pending_topup');
+        }
+
         setStatus('success');
       } catch (err) {
         setStatus('failed');

@@ -21,11 +21,10 @@ export default function RideAndPay() {
   
   const [simulatingScan, setSimulatingScan] = useState(false);
 
-  // TOPUP State
   const [amount, setAmount] = useState('100');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const balance = 450.00;
+  const [balance, setBalance] = useState(500.00);
 
   useEffect(() => {
     const saved = localStorage.getItem('egov_user');
@@ -37,6 +36,11 @@ export default function RideAndPay() {
       } catch (e) {
         console.error("Error parsing egov user", e);
       }
+    }
+
+    const savedBalance = localStorage.getItem('mock_balance');
+    if (savedBalance) {
+      setBalance(Number(savedBalance));
     }
   }, []);
 
@@ -81,6 +85,10 @@ export default function RideAndPay() {
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || data.message || 'Failed to generate link');
+      
+      // Store pending amount so callback page knows what to add to balance
+      localStorage.setItem('pending_topup', amount);
+      
       window.location.href = data.url;
     } catch (err: any) {
       setError(err.message);
