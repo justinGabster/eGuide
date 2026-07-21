@@ -22,7 +22,7 @@ export const lrt1: TransitLine = {
   name: 'LRT-1 (Green Line)',
   color: '#00B140', // or #28a745
   stations: [
-    { name: 'Roosevelt', coords: [14.6576, 121.0211] },
+    { name: 'Fernando Poe Jr. (Roosevelt)', coords: [14.6576, 121.0211] },
     { name: 'Balintawak', coords: [14.6575, 121.0041] },
     { name: 'Monumento', coords: [14.6540, 120.9839] },
     { name: '5th Ave', coords: [14.6443, 120.9836] },
@@ -115,22 +115,48 @@ const pnrExtendedStations: Station[] = [
   { name: 'Calamba', coords: [14.2044, 121.1650] }
 ];
 
-export const pnr: TransitLine = {
-  id: 'pnr',
-  name: 'PNR Metro Commuter (Orange Line)',
+export const pnrNscr: TransitLine = {
+  id: 'pnr-nscr',
+  name: 'PNR Metro (Suspended)',
   color: '#E65100', // or #FF6F00
-  // All stations for rendering markers
-  stations: [...pnrActiveStations, ...pnrExtendedStations.slice(1)], // slice(1) to avoid duplicate Alabang marker
+  stations: [...pnrActiveStations, ...pnrExtendedStations.slice(1)],
   segments: [
     {
       stations: pnrActiveStations,
-      isDashed: false
+      isDashed: true
     },
     {
       stations: pnrExtendedStations,
       isDashed: true
     }
   ]
+};
+
+const pnrSouthStations: Station[] = [
+  { name: 'Calamba', coords: [14.2044, 121.1650] },
+  { name: 'Pansol', coords: [14.1793, 121.1895] },
+  { name: 'San Pablo', coords: [14.0720, 121.3260] },
+  { name: 'Lucena', coords: [13.9269, 121.6131] }
+];
+
+export const pnrSouth: TransitLine = {
+  id: 'pnr-south',
+  name: 'PNR South (Active)',
+  color: '#E65100',
+  stations: pnrSouthStations
+};
+
+const pnrBicolStations: Station[] = [
+  { name: 'Lupi Viejo', coords: [13.7883, 122.9075] },
+  { name: 'Sipocot', coords: [13.7690, 122.9776] },
+  { name: 'Naga', coords: [13.6196, 123.1859] }
+];
+
+export const pnrBicol: TransitLine = {
+  id: 'pnr-bicol',
+  name: 'PNR Bicol (Active)',
+  color: '#E65100',
+  stations: pnrBicolStations
 };
 
 export const pasigFerry: TransitLine = {
@@ -232,4 +258,4 @@ export const pasigFerry: TransitLine = {
   ]
 };
 
-export const transitLines = [lrt1, lrt2, mrt3, pnr, pasigFerry];
+export const transitLines = [lrt1, lrt2, mrt3, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
