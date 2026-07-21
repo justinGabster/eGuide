@@ -61,7 +61,22 @@ export default function Ekyc() {
       const verifyData = await verifyRes.json();
 
       if (!verifyRes.ok) {
-        throw new Error(verifyData.details || verifyData.error || 'Identity verification failed');
+        // Parse the various error structures that eGov APIs use
+        let errorMsg = verifyData.details 
+                    || verifyData.error_description 
+                    || verifyData.message 
+                    || verifyData.error 
+                    || 'Identity verification failed';
+        
+        // If there are validation errors (like 422 Unprocessable Entity)
+        if (verifyData.errors) {
+          const firstKey = Object.keys(verifyData.errors)[0];
+          if (firstKey) {
+             errorMsg = verifyData.errors[firstKey][0] || errorMsg;
+          }
+        }
+        
+        throw new Error(errorMsg);
       }
 
       setStatusText('Identity Verified Successfully! Redirecting...');
