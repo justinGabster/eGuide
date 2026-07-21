@@ -7,7 +7,7 @@ type PassengerType = 'REGULAR' | 'STUDENT' | 'SENIOR' | 'PWD';
 
 export default function RideAndPay() {
   const [activeTab, setActiveTab] = useState<'RIDE' | 'TOPUP'>('RIDE');
-  const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
+  const [passengerType, setPassengerType] = useState<PassengerType>('SENIOR');
   const [userName, setUserName] = useState<string>('Commuter');
   const [userId, setUserId] = useState<string>('eG-12345');
   const [isSeniorLock, setIsSeniorLock] = useState(false);
@@ -156,39 +156,10 @@ export default function RideAndPay() {
                passengerType === 'STUDENT' ? 'Student' : 'PWD'}
             </div>
 
-            {/* Discount Upload Logic */}
-            {isSeniorLock ? (
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                ✅ Verified Senior Citizen via eGovPH SSO. Discount permanently unlocked.
-              </div>
-            ) : passengerType === 'REGULAR' ? (
-              <div style={{ marginTop: '16px' }}>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Apply for a 20% discount:</p>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  style={{ display: 'none' }} 
-                />
-                
-                {uploadState === 'VERIFYING' ? (
-                  <div style={{ textAlign: 'center', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '24px', animation: 'spin 1s linear infinite' }}>⏳</div>
-                    <div style={{ fontSize: '12px', marginTop: '8px', color: 'var(--primary-color)' }}>Verifying {applyingFor} ID with eVerify AI...</div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleUploadClick('STUDENT')} className="btn-secondary" style={{ flex: 1, fontSize: '12px', padding: '8px' }}>Upload Student ID</button>
-                    <button onClick={() => handleUploadClick('PWD')} className="btn-secondary" style={{ flex: 1, fontSize: '12px', padding: '8px' }}>Upload PWD ID</button>
-                  </div>
-                )}
-              </div>
-            ) : uploadState === 'VERIFIED' ? (
-              <div style={{ fontSize: '12px', color: 'var(--success)' }}>
-                ✅ ID Uploaded and Verified by eVerify AI.
-              </div>
-            ) : null}
+            {/* Discount Logic */}
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              ✅ Verified Senior Citizen via eGovPH SSO. 20% Discount permanently unlocked.
+            </div>
           </div>
         </div>
       )}
