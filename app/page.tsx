@@ -93,9 +93,27 @@ export default function Login() {
           onClick={handleSSOLogin} 
           disabled={loading || !exchangeCode}
           className="btn-primary"
-          style={{ width: '100%', opacity: (loading || !exchangeCode) ? 0.7 : 1 }}
+          style={{ width: '100%', opacity: (loading || !exchangeCode) ? 0.7 : 1, marginBottom: '12px' }}
         >
           {loading ? 'Authenticating...' : 'Login via eGovPH SSO'}
+        </button>
+
+        <button 
+          onClick={() => router.push('/home')} 
+          disabled={loading}
+          style={{ 
+            width: '100%', 
+            padding: '14px 24px', 
+            borderRadius: '12px', 
+            background: 'transparent', 
+            color: 'var(--text-secondary)', 
+            border: '1px solid var(--border-color)',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}
+        >
+          Skip to Home (Simulate)
         </button>
       </div>
     </main>
