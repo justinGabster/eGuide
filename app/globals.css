@@ -71,7 +71,7 @@ body {
   overflow: hidden;
 }
 
-.mobile-container {
+.layout-container {
   width: 100%;
   height: 100vh;
   background-color: var(--bg-color);
@@ -303,4 +303,8 @@ a {
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+.theme-dark .dark-invert {
+  filter: invert(1) hue-rotate(180deg);
 }
