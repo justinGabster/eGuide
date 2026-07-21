@@ -17,6 +17,8 @@ export default function Ekyc() {
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState('');
   const [selectedOption, setSelectedOption] = useState<1 | 2 | 3>(1);
+  const [qrValue, setQrValue] = useState('');
+  const router = useRouter();
 
   const handleQrCheck = async () => {
     if (!qrValue) {
