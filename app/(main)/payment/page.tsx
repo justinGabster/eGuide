@@ -144,6 +144,26 @@ export default function RideAndPay() {
       {activeTab === 'TICKET' && (
         <div className="glass-card fade-in">
           
+          {/* Conjoined QR Code Display (MOVED TO TOP) */}
+          <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
+              Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
+            </div>
+            
+            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px' }}>
+              <QRCode value={qrData} size={150} level="H" />
+            </div>
+
+            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
+              ₱{getCalculatedFare().toFixed(2)}
+            </div>
+            {passengerType !== 'REGULAR' && (
+              <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
+                50% Discount Applied
+              </div>
+            )}
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ margin: 0 }}>Ticket Calculator</h3>
             <select 
@@ -196,26 +216,6 @@ export default function RideAndPay() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Conjoined QR Code Display */}
-          <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid #1e293b' }}>
-            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
-              Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
-            </div>
-            
-            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px' }}>
-              <QRCode value={qrData} size={150} level="H" />
-            </div>
-
-            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
-              ₱{getCalculatedFare().toFixed(2)}
-            </div>
-            {passengerType !== 'REGULAR' && (
-              <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
-                50% Discount Applied
-              </div>
-            )}
           </div>
 
           {error && <div style={{ color: '#ef4444', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>⚠️ {error}</div>}
