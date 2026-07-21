@@ -59,14 +59,14 @@ export default function Transactions() {
           const timeStr = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
           return (
-            <div key={tx.id} className="glass-card mb-4 fade-in" style={{ padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 'bold' }}>{tx.type}</div>
-                  <div className="text-xs text-muted mt-1">{tx.desc}</div>
-                  <div className="text-xs text-muted mt-1">{dateStr} • {timeStr}</div>
+            <div key={tx.id} className="glass-card mb-4 fade-in" style={{ padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tx.type}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tx.desc}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>{dateStr} • {timeStr}</div>
                 </div>
-                <div style={{ fontWeight: 'bold', fontSize: '16px', color: tx.isAddition ? 'var(--success)' : 'var(--danger)' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: tx.isAddition ? 'var(--success)' : 'var(--danger)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                   {tx.isAddition ? '+' : '-'} ₱{tx.amount.toFixed(2)}
                 </div>
               </div>

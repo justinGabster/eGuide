@@ -11,8 +11,11 @@ export default function Home() {
     <div style={{ paddingBottom: '20px' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <span style={{ fontSize: '24px' }}>📍</span>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: 'var(--text-primary)' }}>CITY OF MANDALUYONG</h2>
             <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-secondary)' }}>METRO MANILA</p>

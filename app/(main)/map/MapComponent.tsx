@@ -652,7 +652,11 @@ export default function MapComponent() {
           onClick={handleUseMyLocation}
           style={{ width: '100%', padding: '14px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
         >
-          📍 Use My Location
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          Use My Location
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
@@ -1161,7 +1165,18 @@ export default function MapComponent() {
                 transition: 'background 0.2s'
               }}
             >
-              {isLineViewOpen ? 'Close Schematic' : '🗺️ Open Line View'}
+              {isLineViewOpen ? (
+                'Close Schematic'
+              ) : (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+                    <line x1="9" y1="3" x2="9" y2="18"></line>
+                    <line x1="15" y1="6" x2="15" y2="21"></line>
+                  </svg>
+                  Open Line View
+                </span>
+              )}
             </button>
           </div>
         )}
