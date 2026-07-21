@@ -604,7 +604,7 @@ export default function MapComponent() {
     const activeLine = transitLines.find(l => l.id === lineViewConfig.lineId) || transitLines[0];
 
     return (
-      <div style={{ padding: '24px 20px 40px 20px', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: 'var(--card-bg)', overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 110px 20px', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: 'var(--card-bg)', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
           <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
@@ -840,7 +840,7 @@ export default function MapComponent() {
         </div>
 
         {/* Timeline Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', position: 'relative' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 110px 20px', position: 'relative' }}>
           {isContextual && hiddenCount > 0 && (
              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                 <button 

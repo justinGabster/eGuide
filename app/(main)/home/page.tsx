@@ -91,13 +91,16 @@ export default function Home() {
         </h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {[1, 2, 3].map((_, idx) => (
+          {[
+            { title: 'Approaching Bus', message: 'EDSA Carousel bus is 5 mins away from your pinned stop (Ayala).', time: 'Just now' },
+            { title: 'Service Advisory', message: 'MRT-3 operating on limited capacity due to technical issue.', time: '2h ago' }
+          ].map((notif, idx) => (
             <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                11:26 PM
+              <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                {notif.time}
               </div>
               <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                Lorem ipsum dolor sit amet consectetur adipiscing.
+                <strong>{notif.title}</strong>: {notif.message}
               </div>
             </div>
           ))}
