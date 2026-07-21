@@ -59,10 +59,8 @@ export default function SplashScreen() {
         playsInline
         style={{ width: '200px', height: '200px', objectFit: 'contain', borderRadius: '50%' }}
       />
-      <h2 style={{ marginTop: '24px', color: 'var(--text-primary)', fontSize: '24px', fontWeight: 'bold' }}>
-        eGuide Kita!
-      </h2>
-      <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
+      <img src="/logo.png" alt="eGuide Logo" style={{ marginTop: '24px', height: '40px', objectFit: 'contain' }} />
+      <p style={{ color: 'var(--text-secondary)', marginTop: '16px' }}>
         Authenticating via eGovPH...
       </p>
     </div>
