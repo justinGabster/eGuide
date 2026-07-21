@@ -10,7 +10,7 @@ type Message = {
 export default function AiChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', text: 'Hi! I am your eGuide AI Assistant. How can I help you navigate the Philippines today?' }
+    { role: 'ai', text: 'Hi! I am e.G. How can I help you navigate the Philippines today?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -88,7 +88,7 @@ export default function AiChatWidget() {
           {/* Header */}
           <div style={{ background: 'var(--primary-color)', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0, fontSize: '14px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🤖</span> eGov AI Assistant
+              <img src="/e.G.png" alt="e.G Mascot" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} /> e.G
             </h3>
             <button 
               onClick={() => setIsOpen(false)}
@@ -182,7 +182,7 @@ export default function AiChatWidget() {
           padding: 0
         }}
       >
-        {isOpen ? '✕' : '🤖'}
+        {isOpen ? '✕' : <img src="/e.G.png" alt="e.G" style={{ width: '50px', height: '50px', borderRadius: '25px', objectFit: 'cover' }} />}
       </button>
     </div>
   );

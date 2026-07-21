@@ -61,7 +61,10 @@ export default function Home() {
       )}
 
       <div className="glass-card mb-4">
-        <h3 className="mb-2">eGovAI Transit Assistant</h3>
+        <h3 className="mb-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src="/e.G.png" alt="e.G Mascot" style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} /> 
+          e.G
+        </h3>
         <p className="text-sm text-muted mb-4">Ask me anything about your commute.</p>
         <div style={{ background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', fontStyle: 'italic' }}>
           "Where is the nearest P2P bus stop to BGC?"
