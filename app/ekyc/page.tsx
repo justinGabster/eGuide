@@ -16,9 +16,7 @@ declare global {
 export default function Ekyc() {
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState('');
-  const [useQr, setUseQr] = useState(false);
-  const [qrValue, setQrValue] = useState('');
-  const router = useRouter();
+  const [selectedOption, setSelectedOption] = useState<1 | 2 | 3>(1);
 
   const handleQrCheck = async () => {
     if (!qrValue) {
@@ -68,8 +66,8 @@ export default function Ekyc() {
 
       let verifyRes;
 
-      if (useQr) {
-        // Send QR code and face session to QR Verify endpoint
+      if (selectedOption === 3) {
+        // Option 3: Send QR code and face session to QR Verify endpoint
         verifyRes = await fetch('/api/everify/qr-verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,11 +77,10 @@ export default function Ekyc() {
           })
         });
       } else {
-        // Grab user demographic data saved from SSO step
+        // Option 1: Grab user demographic data saved from SSO step
         const savedUser = localStorage.getItem('egov_user');
         const user = savedUser ? JSON.parse(savedUser) : {};
 
-        // Send to our backend proxy to securely exchange for verification status
         verifyRes = await fetch('/api/everify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -101,14 +98,12 @@ export default function Ekyc() {
       const verifyData = await verifyRes.json();
 
       if (!verifyRes.ok) {
-        // Parse the various error structures that eGov APIs use
         let errorMsg = verifyData.details 
                     || verifyData.error_description 
                     || verifyData.message 
                     || verifyData.error 
                     || 'Identity verification failed';
         
-        // If there are validation errors (like 422 Unprocessable Entity)
         if (verifyData.errors) {
           const firstKey = Object.keys(verifyData.errors)[0];
           if (firstKey) {
@@ -125,7 +120,6 @@ export default function Ekyc() {
       }, 1500);
 
     } catch (err: any) {
-      // Handle cases where the SDK throws a raw object or string instead of an Error instance
       const errorText = err instanceof Error ? err.message : (typeof err === 'object' ? JSON.stringify(err) : String(err));
       console.warn("eVerify SDK Event:", errorText);
       alert(`Verification Failed: ${errorText}`);
@@ -138,74 +132,103 @@ export default function Ekyc() {
     <>
       <Script src="https://hackathon-everify-face-liveness.e.gov.ph/js/everify-liveness-sdk.min.js" strategy="lazyOnload" />
       <main className="mobile-container flex-center">
-        <div className="glass-card text-center fade-in">
-          <h1 className="title mb-2">Identity Verification</h1>
-          <p className="subtitle mb-6">eVerify Face Liveness</p>
+        <div className="glass-card fade-in" style={{ padding: '24px', width: '100%', maxWidth: '400px' }}>
+          <h1 className="title mb-2 text-center">Identity Verification</h1>
+          <p className="subtitle mb-6 text-center">Select Verification Method</p>
           
-          <div className="glass-card mb-6" style={{ background: 'rgba(0,0,0,0.2)' }}>
-            <div style={{ height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--border-color)', borderRadius: '8px' }}>
-              <p className="text-muted" style={{ fontWeight: 'bold' }}>
-                {statusText || 'Ready for Camera Scan'}
-              </p>
-            </div>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+            <button 
+              onClick={() => setSelectedOption(1)}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 1 ? 'var(--primary-color)' : 'rgba(0,0,0,0.3)', color: 'white' }}
+            >
+              1. Standard
+            </button>
+            <button 
+              onClick={() => setSelectedOption(2)}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 2 ? 'var(--primary-color)' : 'rgba(0,0,0,0.3)', color: 'white' }}
+            >
+              2. Decode QR
+            </button>
+            <button 
+              onClick={() => setSelectedOption(3)}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 3 ? 'var(--primary-color)' : 'rgba(0,0,0,0.3)', color: 'white' }}
+            >
+              3. Full QR
+            </button>
           </div>
 
-          <p className="text-sm text-muted mb-6">
-            Real-time biometric face liveness check against the PhilSys National ID registry is required.
-          </p>
+          <div className="glass-card mb-6" style={{ background: 'rgba(0,0,0,0.2)', padding: '16px' }}>
+            {selectedOption === 1 && (
+              <div className="fade-in">
+                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Standard SSO & Face Scan</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                  Compares the profile data you authorized during SSO login against a real-time live biometric face scan.
+                </p>
+                <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
+                  <p className="text-muted" style={{ fontWeight: 'bold' }}>{statusText || 'Ready for Camera Scan'}</p>
+                </div>
+                <button 
+                  onClick={handleVerification} 
+                  disabled={loading}
+                  className="btn-primary block"
+                  style={{ width: '100%', opacity: loading ? 0.7 : 1 }}
+                >
+                  {loading ? 'Processing...' : 'Start Camera Scan'}
+                </button>
+              </div>
+            )}
 
-          <div style={{ marginBottom: '16px', textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
-              <input type="checkbox" checked={useQr} onChange={(e) => setUseQr(e.target.checked)} />
-              Verify using National ID QR Code instead of SSO profile
-            </label>
-
-            {useQr && (
-              <div style={{ marginTop: '12px' }} className="fade-in">
+            {selectedOption === 2 && (
+              <div className="fade-in">
+                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Decode National ID QR</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                  Simulate scanning a physical National ID card to decrypt its hidden profile data. Does not require a face scan.
+                </p>
                 <input 
                   type="text" 
                   value={qrValue}
                   onChange={(e) => setQrValue(e.target.value)}
                   placeholder="Paste RAW_QR_CODE_VALUE here..."
-                  style={{ 
-                    width: '100%', 
-                    padding: '10px', 
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'rgba(0,0,0,0.3)',
-                    color: 'white',
-                    fontSize: '12px',
-                    marginBottom: '8px'
-                  }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: '12px', marginBottom: '16px' }}
                 />
                 <button 
                   onClick={handleQrCheck}
                   disabled={loading || !qrValue}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '6px',
-                    background: 'rgba(255,255,255,0.1)',
-                    color: 'white',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    fontSize: '12px',
-                    cursor: 'pointer'
-                  }}
+                  className="btn-primary block"
+                  style={{ width: '100%', opacity: loading || !qrValue ? 0.7 : 1 }}
                 >
-                  Test QR Check (Decode Only)
+                  {loading ? 'Processing...' : 'Test QR Check (Decode)'}
+                </button>
+              </div>
+            )}
+
+            {selectedOption === 3 && (
+              <div className="fade-in">
+                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Full QR & Face Verification</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                  The highest tier of verification. Compares a scanned National ID QR code against a live face scan.
+                </p>
+                <input 
+                  type="text" 
+                  value={qrValue}
+                  onChange={(e) => setQrValue(e.target.value)}
+                  placeholder="Paste RAW_QR_CODE_VALUE here..."
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: '12px', marginBottom: '16px' }}
+                />
+                <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
+                  <p className="text-muted" style={{ fontWeight: 'bold' }}>{statusText || 'Ready for Camera Scan'}</p>
+                </div>
+                <button 
+                  onClick={handleVerification} 
+                  disabled={loading || !qrValue}
+                  className="btn-primary block"
+                  style={{ width: '100%', opacity: loading || !qrValue ? 0.7 : 1 }}
+                >
+                  {loading ? 'Processing...' : 'Verify with QR + Face'}
                 </button>
               </div>
             )}
           </div>
-
-          <button 
-            onClick={handleVerification} 
-            disabled={loading || (useQr && !qrValue)}
-            className="btn-primary block"
-            style={{ width: '100%', opacity: loading || (useQr && !qrValue) ? 0.7 : 1, marginBottom: '12px' }}
-          >
-            {loading ? 'Processing...' : (useQr ? 'Verify with QR + Face' : 'Start Camera Scan')}
-          </button>
           
           <button 
             onClick={() => router.push('/home')} 
