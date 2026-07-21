@@ -66,7 +66,7 @@ export default function Home() {
       {/* Quick Access Buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', padding: '0 8px' }}>
         {[
-          { name: 'Trains', icon: '🚆' },
+          { name: 'Trains', icon: <img src="/logo.png" alt="Trains" style={{ width: '32px', height: '32px', objectFit: 'contain' }} /> },
           { name: 'Buses', icon: '🚌' },
           { name: 'PUVs', icon: '🚙' },
           { name: 'Report', icon: '🚔' }
