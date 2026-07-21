@@ -53,9 +53,31 @@ export default function RideAndPay() {
         const res = await fetch(`/api/everify/status?uid=${userId}`);
         const data = await res.json();
         
-        if (data.scanned && data.url) {
+        if (data.scanned && data.url && data.payload) {
           clearInterval(interval);
           setSimulatingScan(true);
+
+          // Log the transaction
+          const txsStr = localStorage.getItem('mock_transactions');
+          const txs = txsStr ? JSON.parse(txsStr) : [];
+          
+          const fareAmount = Number(data.payload.fare);
+          
+          txs.unshift({
+             id: Date.now().toString(),
+             type: 'Single Journey Ticket',
+             desc: `${data.payload.line} (${data.payload.origin} to ${data.payload.dest})`,
+             amount: fareAmount,
+             date: new Date().toISOString(),
+             isAddition: false
+          });
+          localStorage.setItem('mock_transactions', JSON.stringify(txs));
+
+          // Deduct from Wallet Balance
+          const currentBalance = Number(localStorage.getItem('mock_balance')) || 500.00;
+          const newBalance = currentBalance - fareAmount;
+          localStorage.setItem('mock_balance', newBalance.toFixed(2));
+
           window.location.href = data.url;
         }
       } catch (e) {
@@ -70,7 +92,8 @@ export default function RideAndPay() {
     const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
     const baseFare = matrix[originIndex][destIndex];
     if (passengerType === 'REGULAR') return baseFare;
-    return baseFare * 0.5;
+    // Official Student/Senior/PWD discount is 20%
+    return baseFare * 0.8;
   };
 
   const handleTopup = async () => {
@@ -229,7 +252,7 @@ export default function RideAndPay() {
                 </div>
                 {passengerType !== 'REGULAR' && (
                   <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
-                    50% Discount Applied
+                    20% Discount Applied
                   </div>
                 )}
               </>
@@ -260,9 +283,9 @@ export default function RideAndPay() {
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)' }}
               >
                 <option value="REGULAR">Regular Passenger</option>
-                <option value="STUDENT">Student (50% Off)</option>
-                <option value="SENIOR">Senior Citizen (50% Off)</option>
-                <option value="PWD">PWD (50% Off)</option>
+                <option value="STUDENT">Student (20% Off)</option>
+                <option value="SENIOR">Senior Citizen (20% Off)</option>
+                <option value="PWD">PWD (20% Off)</option>
               </select>
           </div>
 

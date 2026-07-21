@@ -10,9 +10,9 @@ export async function GET(request: Request) {
   }
 
   if (scanStore[uid]) {
-    const paymentUrl = scanStore[uid];
+    const { url, payload } = scanStore[uid];
     delete scanStore[uid]; // Clear it after reading once
-    return NextResponse.json({ scanned: true, url: paymentUrl });
+    return NextResponse.json({ scanned: true, url, payload });
   }
 
   return NextResponse.json({ scanned: false });

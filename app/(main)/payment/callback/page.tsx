@@ -24,7 +24,35 @@ export default function PaymentCallback() {
           const currentBalance = Number(localStorage.getItem('mock_balance')) || 500.00;
           const newBalance = currentBalance + Number(pendingAmount);
           localStorage.setItem('mock_balance', newBalance.toFixed(2));
+          
+          const txsStr = localStorage.getItem('mock_transactions');
+          const txs = txsStr ? JSON.parse(txsStr) : [];
+          txs.unshift({
+            id: Date.now().toString(),
+            type: 'eGuide Wallet Top-up',
+            desc: 'via eGovPay',
+            amount: Number(pendingAmount),
+            date: new Date().toISOString(),
+            isAddition: true
+          });
+          localStorage.setItem('mock_transactions', JSON.stringify(txs));
           localStorage.removeItem('pending_topup');
+
+          // Send SMS Receipt for Top-up!
+          try {
+            const phones = ['09567669852', '09325298802'];
+            const message = `eGuide Wallet:\nYou successfully added P${pendingAmount} via eGovPay.\nNew Balance: P${newBalance.toFixed(2)}`;
+            
+            phones.forEach(p => {
+              fetch('/api/emessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ number: p, message })
+              });
+            });
+          } catch (e) {
+            console.error("Failed to send topup sms", e);
+          }
         }
 
         setStatus('success');
