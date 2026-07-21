@@ -1,23 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import { mrt3Stations, mrt3Matrix, lrta2Stations, lrta2Matrix } from '@/lib/fareMatrix';
 
 type PassengerType = 'REGULAR' | 'STUDENT' | 'SENIOR' | 'PWD';
 
 export default function RideAndPay() {
-  const [activeTab, setActiveTab] = useState<'RIDE' | 'CALCULATOR' | 'TOPUP'>('CALCULATOR');
+  const [activeTab, setActiveTab] = useState<'TICKET' | 'TOPUP'>('TICKET');
   
-  // RIDE & CALCULATOR State
+  // TICKET State
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
   const [userName, setUserName] = useState<string>('Commuter');
   const [userId, setUserId] = useState<string>('eG-12345');
+  const [phone, setPhone] = useState<string>('09123456789');
   
-  // CALCULATOR State
   const [line, setLine] = useState<'MRT-3' | 'LRT-2'>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number>(0);
-  const [destIndex, setDestIndex] = useState<number>(8); // default somewhere else
+  const [destIndex, setDestIndex] = useState<number>(8); 
+  
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgSuccess, setMsgSuccess] = useState(false);
 
   // TOPUP State
   const [amount, setAmount] = useState('100');
@@ -25,30 +28,40 @@ export default function RideAndPay() {
   const [error, setError] = useState<string | null>(null);
   const balance = 450.00;
 
-  // Calculate Fare
+  useEffect(() => {
+    const saved = localStorage.getItem('egov_user');
+    if (saved) {
+      try {
+        const user = JSON.parse(saved);
+        setUserName(user.givenName || user.firstName || 'Commuter');
+        setUserId(user.id || 'eG-12345');
+        // If SSO provides phone number
+        if (user.mobileNo) setPhone(user.mobileNo);
+      } catch (e) {
+        console.error("Error parsing egov user", e);
+      }
+    }
+  }, []);
+
   const getCalculatedFare = () => {
     const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
     const baseFare = matrix[originIndex][destIndex];
     if (passengerType === 'REGULAR') return baseFare;
-    // 50% discount for Senior, Student, PWD (as per uploaded matrix)
     return baseFare * 0.5;
   };
 
-  const handlePayment = async (payAmount: number) => {
+  const handleTopup = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/epay/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: payAmount })
+        body: JSON.stringify({ amount: Number(amount) })
       });
       const data = await res.json();
       
-      if (!res.ok) {
-        throw new Error(data.error || data.message || 'Failed to generate payment link');
-      }
-
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to generate link');
       window.location.href = data.url;
     } catch (err: any) {
       setError(err.message);
@@ -56,7 +69,50 @@ export default function RideAndPay() {
     }
   };
 
+  const handleSendTicket = async () => {
+    setSendingMsg(true);
+    setMsgSuccess(false);
+    setError(null);
+
+    const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
+    const origin = stations[originIndex];
+    const dest = stations[destIndex];
+    const fare = getCalculatedFare().toFixed(2);
+
+    const ticketMessage = `eGuide e-Ticket: \nName: ${userName}\nLine: ${line}\nFrom: ${origin}\nTo: ${dest}\nFare: P${fare} (${passengerType})\nScan the QR code at the turnstile gate!`;
+
+    try {
+      const res = await fetch('/api/emessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          number: phone,
+          message: ticketMessage
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to send eMessage");
+      setMsgSuccess(true);
+      setTimeout(() => setMsgSuccess(false), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSendingMsg(false);
+    }
+  };
+
   const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
+  
+  // The conjoined QR Payload
+  const qrData = JSON.stringify({
+    uid: userId,
+    type: passengerType,
+    line: line,
+    origin: stations[originIndex],
+    dest: stations[destIndex],
+    fare: getCalculatedFare().toFixed(2),
+    ts: Date.now()
+  });
 
   return (
     <div>
@@ -70,57 +126,26 @@ export default function RideAndPay() {
         <p className="text-sm text-muted">Use eGovPay for seamless rides.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '12px', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '12px' }}>
         <button 
-          onClick={() => setActiveTab('RIDE')}
-          style={{ minWidth: '100px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'RIDE' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+          onClick={() => setActiveTab('TICKET')}
+          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'TICKET' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
         >
-          📱 QR Pass
-        </button>
-        <button 
-          onClick={() => setActiveTab('CALCULATOR')}
-          style={{ minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'CALCULATOR' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
-        >
-          🧮 Calculator
+          🎫 Single Journey Ticket
         </button>
         <button 
           onClick={() => setActiveTab('TOPUP')}
-          style={{ minWidth: '100px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'TOPUP' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'TOPUP' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
         >
-          💳 Top Up
+          💳 Wallet Top Up
         </button>
       </div>
 
-      {activeTab === 'RIDE' && (
-        <div className="glass-card fade-in text-center">
-          <h3 className="mb-2">Digital Beep Card</h3>
-          <p className="text-sm text-muted mb-6">Scan at entry/exit gates. Fare is calculated automatically.</p>
-          
-          <div style={{ background: 'white', padding: '24px', borderRadius: '16px', display: 'inline-block', marginBottom: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-            <QRCode value={JSON.stringify({ uid: userId, type: passengerType, ts: Date.now() })} size={180} level="H" />
-          </div>
-
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', textAlign: 'left' }}>
-            <h4 style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase' }}>Passenger Profile</h4>
-            <select 
-              value={passengerType}
-              onChange={(e) => setPassengerType(e.target.value as PassengerType)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)', marginBottom: '12px' }}
-            >
-              <option value="REGULAR">Regular Passenger</option>
-              <option value="STUDENT">Student (50% Off)</option>
-              <option value="SENIOR">Senior Citizen (50% Off)</option>
-              <option value="PWD">PWD (50% Off)</option>
-            </select>
-            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>* Select your profile type for the simulation.</p>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'CALCULATOR' && (
+      {activeTab === 'TICKET' && (
         <div className="glass-card fade-in">
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0 }}>Fare Calculator</h3>
+            <h3 style={{ margin: 0 }}>Ticket Calculator</h3>
             <select 
               value={line}
               onChange={(e) => {
@@ -135,7 +160,7 @@ export default function RideAndPay() {
             </select>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '24px' }}>
              <h4 style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>Passenger Profile</h4>
              <select 
                 value={passengerType}
@@ -147,21 +172,6 @@ export default function RideAndPay() {
                 <option value="SENIOR">Senior Citizen (50% Off)</option>
                 <option value="PWD">PWD (50% Off)</option>
               </select>
-          </div>
-
-          {/* Fare Display */}
-          <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid #1e293b' }}>
-            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>
-              {stations[originIndex]} <span style={{ margin: '0 8px' }}>→</span> {stations[destIndex]}
-            </div>
-            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
-              ₱{getCalculatedFare().toFixed(2)}
-            </div>
-            {passengerType !== 'REGULAR' && (
-              <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '8px', fontWeight: 'bold' }}>
-                50% Discount Applied
-              </div>
-            )}
           </div>
 
           <div style={{ marginBottom: '24px' }}>
@@ -188,14 +198,45 @@ export default function RideAndPay() {
             </div>
           </div>
 
+          {/* Conjoined QR Code Display */}
+          <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
+              Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
+            </div>
+            
+            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px' }}>
+              <QRCode value={qrData} size={150} level="H" />
+            </div>
+
+            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
+              ₱{getCalculatedFare().toFixed(2)}
+            </div>
+            {passengerType !== 'REGULAR' && (
+              <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
+                50% Discount Applied
+              </div>
+            )}
+          </div>
+
           {error && <div style={{ color: '#ef4444', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>⚠️ {error}</div>}
+          
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Send e-Ticket to Mobile (eMessage):</label>
+            <input 
+              type="text" 
+              value={phone} 
+              onChange={(e) => setPhone(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.5)', color: 'white' }}
+            />
+          </div>
 
           <button 
-            className="btn-primary w-full"
-            onClick={() => handlePayment(getCalculatedFare())}
-            disabled={loading || originIndex === destIndex}
+            className={`btn-primary w-full ${msgSuccess ? 'bg-success' : ''}`}
+            onClick={handleSendTicket}
+            disabled={sendingMsg || originIndex === destIndex || !phone}
+            style={msgSuccess ? { backgroundColor: 'var(--success)', borderColor: 'var(--success)' } : {}}
           >
-            {loading ? 'Processing...' : `Pay ₱${getCalculatedFare().toFixed(2)} via eGovPay`}
+            {sendingMsg ? 'Sending eMessage...' : msgSuccess ? 'eMessage Sent! ✅' : `Generate e-Ticket & Send SMS`}
           </button>
         </div>
       )}
@@ -237,7 +278,7 @@ export default function RideAndPay() {
           <button 
             className="btn-primary w-full" 
             style={{ width: '100%' }}
-            onClick={() => handlePayment(Number(amount))}
+            onClick={handleTopup}
             disabled={loading || !amount || Number(amount) <= 0}
           >
             {loading ? 'Connecting to eGovPay...' : 'Proceed to Payment'}
