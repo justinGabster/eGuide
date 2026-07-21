@@ -125,7 +125,7 @@ export default function Login() {
         </button>
 
         <button 
-          onClick={() => router.push('/home')} 
+          onClick={() => router.push('/ekyc')} 
           disabled={loading}
           style={{ 
             width: '100%', 
@@ -139,7 +139,7 @@ export default function Login() {
             fontWeight: '600'
           }}
         >
-          Skip to Home (Simulate)
+          Skip to eVerify (Simulate)
         </button>
       </div>
     </main>
