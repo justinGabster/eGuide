@@ -236,27 +236,29 @@ export default function RideAndPay() {
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Leaving From</p>
-            <div style={{ display: 'flex', overflowX: 'auto', padding: '16px 0', gap: '24px', borderBottom: '1px solid var(--border-color)' }} className="hide-scrollbar">
-              {stations.map((st, i) => (
-                <div key={i} onClick={() => setOriginIndex(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: '60px' }}>
-                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `3px solid ${originIndex === i ? 'var(--primary-color)' : 'var(--border-color)'}`, background: originIndex === i ? 'var(--primary-color)' : 'transparent', marginBottom: '8px' }} />
-                  <span style={{ fontSize: '11px', textAlign: 'center', color: originIndex === i ? 'white' : 'var(--text-secondary)', fontWeight: originIndex === i ? 'bold' : 'normal' }}>{st}</span>
-                </div>
-              ))}
-            </div>
+             <h4 style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>Leaving From</h4>
+             <select 
+                value={originIndex}
+                onChange={(e) => setOriginIndex(Number(e.target.value))}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)' }}
+              >
+                {stations.map((st, i) => (
+                  <option key={i} value={i}>{st}</option>
+                ))}
+              </select>
           </div>
 
           <div style={{ marginBottom: '32px' }}>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Going To</p>
-            <div style={{ display: 'flex', overflowX: 'auto', padding: '16px 0', gap: '24px', borderBottom: '1px solid var(--border-color)' }} className="hide-scrollbar">
-              {stations.map((st, i) => (
-                <div key={i} onClick={() => setDestIndex(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: '60px' }}>
-                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `3px solid ${destIndex === i ? '#ef4444' : 'var(--border-color)'}`, background: destIndex === i ? '#ef4444' : 'transparent', marginBottom: '8px' }} />
-                  <span style={{ fontSize: '11px', textAlign: 'center', color: destIndex === i ? 'white' : 'var(--text-secondary)', fontWeight: destIndex === i ? 'bold' : 'normal' }}>{st}</span>
-                </div>
-              ))}
-            </div>
+             <h4 style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>Going To</h4>
+             <select 
+                value={destIndex}
+                onChange={(e) => setDestIndex(Number(e.target.value))}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)' }}
+              >
+                {stations.map((st, i) => (
+                  <option key={i} value={i}>{st}</option>
+                ))}
+              </select>
           </div>
 
           {error && <div style={{ color: '#ef4444', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>⚠️ {error}</div>}
