@@ -101,7 +101,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/logo.png" alt="eGuide Logo" style={{ height: '24px', objectFit: 'contain' }} />
+          <img 
+            src="/logo.png" 
+            alt="eGuide Logo" 
+            style={{ 
+              height: '32px', 
+              objectFit: 'contain',
+              filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
+            }} 
+          />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 
