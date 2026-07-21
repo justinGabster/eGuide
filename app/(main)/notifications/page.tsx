@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function Notifications() {
-  const phoneNumber = '09567669852';
+  const phoneNumber = '09201057839';
   const [loadingStatic, setLoadingStatic] = useState(false);
   
   // AI Dynamic States
@@ -15,7 +15,7 @@ export default function Notifications() {
   const handleTestSms = async () => {
     setLoadingStatic(true);
     try {
-      const phones = [phoneNumber, '09325298802'];
+      const phones = [phoneNumber];
       const results = await Promise.all(phones.map(p => fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,7 +38,7 @@ export default function Notifications() {
   const handleTestAiSms = async () => {
     setLoadingAi(true);
     try {
-      const phones = [phoneNumber, '09325298802'];
+      const phones = [phoneNumber];
       const results = await Promise.all(phones.map(p => fetch('/api/emessage/dynamic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

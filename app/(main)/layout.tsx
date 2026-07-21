@@ -73,9 +73,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             style={{ textAlign: 'right', flexDirection: 'row-reverse', cursor: 'pointer' }}
             onClick={() => setIsProfileOpen(true)}
           >
-            <div className="profile-avatar">J</div>
+            <div className="profile-avatar">D</div>
             <div>
-              <div style={{ fontWeight: 'bold' }}>JUSTIN</div>
+              <div style={{ fontWeight: 'bold' }}>DENISSE</div>
               <div className="verified-badge" style={{ justifyContent: 'flex-end' }}>
                 ✓ eGovPH Verified
               </div>
@@ -117,9 +117,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 👤
               </div>
               <div style={{ color: 'black' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, JUSTIN</h3>
-                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639325298802</p>
-                <p style={{ color: '#4b5563', fontSize: '14px' }}>ajosejustingabriel@gmail.com</p>
+                <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
+                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
+                <p style={{ color: '#4b5563', fontSize: '14px' }}>dendenissejane@gmail.com</p>
+                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
                 {aiCredits !== null && (
                   <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
                     <span style={{ color: '#10b981', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining

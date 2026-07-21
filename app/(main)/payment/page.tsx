@@ -11,9 +11,9 @@ export default function RideAndPay() {
   
   // TICKET State
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
-  const [userName, setUserName] = useState<string>('Commuter');
+  const [userName, setUserName] = useState<string>('Denisse Jane Karim');
   const [userId, setUserId] = useState<string>('eG-12345');
-  const phone = '09567669852'; // Static number for all eMessage calls
+  const phone = '09201057839'; // Static number for all eMessage calls
   
   const [line, setLine] = useState<'MRT-3' | 'LRT-2'>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number>(0);
@@ -133,7 +133,7 @@ export default function RideAndPay() {
 
     try {
       // 1. Send the SMS via eMessage API in the background to both numbers (Fire and Forget)
-      const phones = [phone, '09325298802'];
+      const phones = [phone];
       phones.forEach(p => {
         fetch('/api/emessage', {
           method: 'POST',

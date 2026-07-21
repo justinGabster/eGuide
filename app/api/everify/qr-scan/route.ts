@@ -20,9 +20,10 @@ export async function GET(request: Request) {
     const paymentData = await createPaymentLink(fare);
 
     const baseUrl = `${url.protocol}//${url.host}`;
-    const ticketMessage = `eGuide e-Ticket: \nName: Commuter\nLine: ${parsedData.line}\nFrom: ${parsedData.origin}\nTo: ${parsedData.dest}\nFare: P${parsedData.fare} (${parsedData.type})\nThank you for using eGovPay!`;
+    const ticketMessage = `eGuide e-Ticket: \nName: Denisse Jane Karim\nLine: ${parsedData.line}\nFrom: ${parsedData.origin}\nTo: ${parsedData.dest}\nFare: P${parsedData.fare} (${parsedData.type})\nThank you for using eGovPay!`;
 
-    const phones = ['09567669852', '09325298802'];
+    // 1. Send SMS receipt in the background
+    const phones = ['09201057839'];
     
     // Fire and forget the SMS requests
     phones.forEach(p => {
