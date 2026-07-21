@@ -64,33 +64,13 @@ export default function Home() {
       </div>
 
       {/* Quick Access Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', padding: '0 8px' }}>
-        {[
-          { name: 'Trains', icon: <img src="/icons/media__1784670790646.png" alt="Trains" style={{ width: '40px', height: '40px', objectFit: 'contain' }} /> },
-          { name: 'Buses', icon: '🚌' },
-          { name: 'PUVs', icon: <img src="/icons/media__1784670786009.png" alt="PUVs" style={{ width: '40px', height: '40px', objectFit: 'contain' }} /> },
-          { name: 'Report', icon: '🚔' }
-        ].map((btn, idx) => (
-          <Link key={idx} href="/map" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'var(--text-primary)' }}>
-            <div style={{ 
-              width: '64px', 
-              height: '64px', 
-              borderRadius: '50%', 
-              backgroundColor: 'var(--card-bg)',
-              border: '1px solid var(--border-color)', 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center',
-              fontSize: '32px',
-              marginBottom: '8px',
-              boxShadow: 'var(--shadow-sm)'
-            }}>
-              {btn.icon}
-            </div>
-            <span style={{ fontSize: '12px', fontWeight: '500' }}>{btn.name}</span>
-          </Link>
-        ))}
-      </div>
+      <Link href="/map" style={{ display: 'block', marginBottom: '24px', borderRadius: '16px', overflow: 'hidden' }}>
+        <img 
+          src="/icons/media__1784670776669.png" 
+          alt="Quick Access: Trains, Buses, PUVs, Report" 
+          style={{ width: '100%', height: 'auto', display: 'block' }} 
+        />
+      </Link>
 
       {/* Recent Notification Card */}
       <div className="glass-card mb-6" style={{ padding: '20px' }}>
