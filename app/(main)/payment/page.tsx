@@ -205,8 +205,8 @@ export default function RideAndPay() {
         <div className="glass-card fade-in" style={{ padding: '16px' }}>
           
           {/* Conjoined QR Code Display */}
-          <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', textAlign: 'center', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
+          <div style={{ background: 'var(--bg-color)', padding: '16px', borderRadius: '12px', textAlign: 'center', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
             </div>
             
@@ -242,8 +242,12 @@ export default function RideAndPay() {
                     Scanning at Turnstile...
                   </div>
                 ) : (
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>
-                    👆 Tap QR Code to simulate gate scan
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+                      <path d="M13 13l6 6"></path>
+                    </svg>
+                    Tap QR Code to simulate gate scan
                   </div>
                 )}
 
@@ -268,7 +272,7 @@ export default function RideAndPay() {
                 setOriginIndex(0);
                 setDestIndex(1);
               }}
-              style={{ padding: '8px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}
+              style={{ padding: '8px', borderRadius: '8px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}
             >
               <option value="MRT-3">MRT-3</option>
               <option value="LRT-2">LRTA-2</option>
@@ -280,7 +284,7 @@ export default function RideAndPay() {
              <select 
                 value={passengerType}
                 onChange={(e) => setPassengerType(e.target.value as PassengerType)}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
               >
                 <option value="REGULAR">Regular Passenger</option>
                 <option value="STUDENT">Student (20% Off)</option>
@@ -294,7 +298,7 @@ export default function RideAndPay() {
              <select 
                 value={originIndex}
                 onChange={(e) => setOriginIndex(Number(e.target.value))}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
               >
                 {stations.map((st, i) => (
                   <option key={i} value={i}>{st}</option>
@@ -307,7 +311,7 @@ export default function RideAndPay() {
              <select 
                 value={destIndex}
                 onChange={(e) => setDestIndex(Number(e.target.value))}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
               >
                 {stations.map((st, i) => (
                   <option key={i} value={i}>{st}</option>
@@ -337,7 +341,7 @@ export default function RideAndPay() {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#F8FAFC', color: 'var(--text-primary)', fontSize: '24px', textAlign: 'center' }}
+              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', fontSize: '24px', textAlign: 'center' }}
             />
           </div>
 
@@ -346,7 +350,7 @@ export default function RideAndPay() {
               <button 
                 key={val}
                 onClick={() => setAmount(val.toString())}
-                style={{ flex: 1, padding: '10px 0', background: amount === val.toString() ? 'rgba(59, 130, 246, 0.1)' : '#F8FAFC', border: `1px solid ${amount === val.toString() ? 'var(--primary-color)' : 'var(--border-color)'}`, color: amount === val.toString() ? 'var(--primary-color)' : 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ flex: 1, padding: '10px 0', background: amount === val.toString() ? 'var(--border-color)' : 'var(--bg-color)', border: `1px solid ${amount === val.toString() ? 'var(--primary-color)' : 'var(--border-color)'}`, color: amount === val.toString() ? 'var(--primary-color)' : 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 ₱{val}
               </button>

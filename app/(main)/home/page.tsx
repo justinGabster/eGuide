@@ -11,8 +11,11 @@ export default function Home() {
     <div style={{ paddingBottom: '20px' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <span style={{ fontSize: '24px' }}>📍</span>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: 'var(--text-primary)' }}>CITY OF MANDALUYONG</h2>
             <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-secondary)' }}>METRO MANILA</p>
@@ -48,23 +51,34 @@ export default function Home() {
               fontSize: '14px'
             }}
           />
-          <span style={{ position: 'absolute', right: '16px', top: '10px', fontSize: '18px', color: 'var(--text-secondary)' }}>
-            🔍
+          <span style={{ position: 'absolute', right: '16px', top: '11px', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
           </span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🕒</span> Araneta Center - Cubao
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Araneta Center - Cubao
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🕒</span> SM North EDSA | The Annex
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            SM North EDSA | The Annex
           </div>
         </div>
       </div>
 
       {/* Quick Access Buttons */}
-      <Link href="/map" style={{ display: 'block', marginBottom: '24px', borderRadius: '16px', overflow: 'hidden' }}>
+      <Link href="/map" style={{ display: 'block', marginTop: '24px', marginBottom: '24px', borderRadius: '16px', overflow: 'hidden', background: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
         <img 
           src="/icons/quick_access_flat.png" 
           alt="Quick Access: Trains, Buses, PUVs, Report" 
@@ -80,13 +94,16 @@ export default function Home() {
         </h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {[1, 2, 3].map((_, idx) => (
+          {[
+            { title: 'Approaching Bus', message: 'EDSA Carousel bus is 5 mins away from your pinned stop (Ayala).', time: 'Just now' },
+            { title: 'Service Advisory', message: 'MRT-3 operating on limited capacity due to technical issue.', time: '2h ago' }
+          ].map((notif, idx) => (
             <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                11:26 PM
+              <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                {notif.time}
               </div>
               <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                Lorem ipsum dolor sit amet consectetur adipiscing.
+                <strong>{notif.title}</strong>: {notif.message}
               </div>
             </div>
           ))}

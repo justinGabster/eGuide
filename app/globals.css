@@ -1,7 +1,7 @@
 /* Default/Light Theme */
 .theme-light {
   /* Canvas / Background */
-  --bg-color: #F4F6F9;
+  --bg-color: #F8FAFC;
   
   /* Card Surfaces */
   --card-bg: #FFFFFF;
@@ -17,31 +17,47 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   
   /* Accents / Primary Colors */
-  --primary-color: #3b82f6; /* Trust blue */
+  --primary-color: #2563eb; /* Accessible blue */
   --accent-magenta: #d946ef;
   
   /* Status Colors */
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
+
+  /* Accessible Badge / Status Tokens */
+  --status-success-bg: rgba(16, 185, 129, 0.1);
+  --status-success-text: #059669;
+  --status-danger-bg: rgba(239, 68, 68, 0.1);
+  --status-danger-text: #dc2626;
+  --status-warning-bg: rgba(245, 158, 11, 0.1);
+  --status-warning-text: #d97706;
 }
 
 /* Dark Theme (Original) */
 .theme-dark {
-  --bg-color: #0f172a;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.1);
+  --bg-color: #0F172A;
+  --card-bg: #1E293B;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --border-color: rgba(255, 255, 255, 0.08);
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
   
-  --primary-color: #3b82f6;
-  --accent-magenta: #d946ef;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
+  --primary-color: #38bdf8; /* Accessible cyan/blue in dark mode */
+  --accent-magenta: #e879f9;
+  --success: #34d399;
+  --danger: #f87171;
+  --warning: #fbbf24;
+
+  /* Accessible Badge / Status Tokens */
+  --status-success-bg: rgba(52, 211, 153, 0.15);
+  --status-success-text: #34d399;
+  --status-danger-bg: rgba(248, 113, 113, 0.15);
+  --status-danger-text: #f87171;
+  --status-warning-bg: rgba(251, 191, 36, 0.15);
+  --status-warning-text: #fbbf24;
 }
 
 /* Subtly patterned geometric background (Guilloche style) for Light Mode */
@@ -215,7 +231,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  padding-bottom: 90px; /* space for bottom nav */
+  padding-bottom: 120px; /* space for bottom nav */
 }
 
 .theme-light .bottom-nav {
@@ -307,6 +323,7 @@ a {
 
 .theme-dark .dark-invert {
   filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: screen;
 }
 
 /* Force hide Leaflet attribution overlay and prefix elements */

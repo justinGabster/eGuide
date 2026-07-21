@@ -34,9 +34,38 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProfileImage(base64String);
-        localStorage.setItem('profileImage', base64String);
+        const img = new Image();
+        img.src = reader.result as string;
+        img.onload = () => {
+          const maxDim = 200;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            setProfileImage(compressedBase64);
+            try {
+              localStorage.setItem('profileImage', compressedBase64);
+            } catch (err) {
+              console.error("LocalStorage write failed:", err);
+            }
+          }
+        };
       };
       reader.readAsDataURL(file);
     }
@@ -57,7 +86,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { label: 'Privacy Notice', icon: '🛡️' },
     { label: 'Contact Us', icon: '📞' },
     { label: 'Rate our app', icon: '👍' },
-    { label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, icon: theme === 'light' ? '🌙' : '☀️', action: toggleTheme },
+    { label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, icon: theme === 'light' ? (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: 'var(--text-primary)' }}>
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    ) : (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: 'var(--text-primary)' }}>
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    ), action: toggleTheme },
     { label: 'Settings', icon: '⚙️', action: () => setIsSettingsOpen(true) },
     { label: 'Log out', icon: '🚪', path: '/' },
   ];
@@ -85,7 +130,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/logo.png" alt="eGuide Logo" style={{ height: '24px', objectFit: 'contain' }} />
+          <img 
+            src="/logo.png" 
+            alt="eGuide Logo" 
+            style={{ 
+              height: '24px', 
+              objectFit: 'contain',
+              filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
+            }} 
+          />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 
@@ -107,7 +160,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             }}
             title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
           >
-            {theme === 'light' ? '🌙' : '☀️'}
+            {theme === 'light' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            )}
           </button>
           
           <div 
@@ -140,6 +209,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               <img 
                 src={item.iconSrc} 
                 alt={item.name} 
+                className={item.name !== 'Map' ? 'dark-invert' : ''}
                 style={item.name === 'Map' ? { 
                   width: '56px', 
                   height: '56px', 
@@ -180,7 +250,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
               <div 
-                style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d1d5db', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
+                style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--border-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {profileImage ? (
@@ -201,12 +271,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               />
               <div style={{ color: 'var(--text-primary)' }}>
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
-                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
-                <p style={{ color: '#4b5563', fontSize: '14px' }}>dendenissejane@gmail.com</p>
-                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>dendenissejane@gmail.com</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
                 {aiCredits !== null && (
-                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
-                    <span style={{ color: '#10b981', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
+                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--status-success-bg)', color: 'var(--status-success-text)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                    <span style={{ color: 'var(--success)', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
                   </div>
                 )}
               </div>
@@ -219,14 +289,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <ItemWrapper 
                     key={idx} 
                     href={item.path || '#'}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f3f4f6', color: 'var(--text-primary)', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
                     onClick={item.action ? item.action : undefined}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                       <span style={{ fontSize: '20px' }}>{item.icon}</span>
                       {item.label}
                     </div>
-                    <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '20px' }}>›</span>
+                    <span style={{ color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '20px' }}>›</span>
                   </ItemWrapper>
                 );
               })}
@@ -249,19 +319,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             
             {settingsSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '32px' }}>
-                <h4 style={{ color: '#9ca3af', fontSize: '12px', letterSpacing: '1px', marginBottom: '16px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                <h4 style={{ color: 'var(--text-secondary)', fontSize: '12px', letterSpacing: '1px', marginBottom: '16px', textTransform: 'uppercase', fontWeight: 'bold' }}>
                   {section.title}
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', color: 'var(--text-primary)' }}>
+                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                         <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         {item.label}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {item.value && <span style={{ color: '#6b7280', fontSize: '14px' }}>{item.value}</span>}
-                        <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '20px' }}>›</span>
+                        {item.value && <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{item.value}</span>}
+                        <span style={{ color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '20px' }}>›</span>
                       </div>
                     </div>
                   ))}

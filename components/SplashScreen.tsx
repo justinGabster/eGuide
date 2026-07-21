@@ -52,14 +52,23 @@ export default function SplashScreen() {
       }}
     >
       <video 
-        src="/e.G gif.mp4" 
+        src="/e.G_gif.mp4" 
         autoPlay 
         loop 
         muted 
         playsInline
         style={{ width: '200px', height: '200px', objectFit: 'contain', borderRadius: '50%' }}
       />
-      <img src="/logo.png" alt="eGuide Logo" style={{ marginTop: '24px', height: '40px', objectFit: 'contain' }} />
+      <img 
+        src="/logo.png" 
+        alt="eGuide Logo" 
+        style={{ 
+          marginTop: '24px', 
+          height: '32px', 
+          objectFit: 'contain',
+          filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
+        }} 
+      />
       <p style={{ color: 'var(--text-secondary)', marginTop: '16px' }}>
         Authenticating via eGovPH...
       </p>
