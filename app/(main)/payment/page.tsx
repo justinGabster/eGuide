@@ -107,7 +107,8 @@ export default function RideAndPay() {
 
   const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
   
-  const qrData = JSON.stringify({
+  // Convert to URL so physical phone cameras can scan and open it!
+  const baseJsonData = {
     uid: userId,
     type: passengerType,
     line: line,
@@ -115,7 +116,8 @@ export default function RideAndPay() {
     dest: stations[destIndex],
     fare: getCalculatedFare().toFixed(2),
     ts: Date.now()
-  });
+  };
+  const qrData = `http://192.168.68.208:3000/api/everify/qr-scan?data=${encodeURIComponent(JSON.stringify(baseJsonData))}`;
 
   return (
     <div>
