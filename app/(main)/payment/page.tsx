@@ -13,7 +13,7 @@ export default function RideAndPay() {
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
   const [userName, setUserName] = useState<string>('Commuter');
   const [userId, setUserId] = useState<string>('eG-12345');
-  const [phone, setPhone] = useState<string>('09325298802');
+  const phone = '09567669852'; // Static number for all eMessage calls
   
   const [line, setLine] = useState<'MRT-3' | 'LRT-2'>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number>(0);
@@ -34,7 +34,6 @@ export default function RideAndPay() {
         const user = JSON.parse(saved);
         setUserName(user.givenName || user.firstName || 'Commuter');
         setUserId(user.id || 'eG-12345');
-        if (user.mobileNo) setPhone(user.mobileNo);
       } catch (e) {
         console.error("Error parsing egov user", e);
       }
