@@ -44,3 +44,24 @@ export async function sendTransitAlert(phoneNumber: string, message: string) {
 
   return data;
 }
+
+/**
+ * AI-Powered Dynamic Transit Alert
+ * 
+ * Uses the eGov AI Assistant to generate a natural, context-aware message based on 
+ * live transit data, and instantly sends it via SMS.
+ */
+import { generateDynamicAlert } from './egovAi';
+
+export async function sendDynamicTransitAlert(
+  phoneNumber: string,
+  vehicleType: string,
+  distanceStr: string,
+  speedStr: string
+) {
+  // Step 1: Generate the natural language message using AI
+  const aiMessage = await generateDynamicAlert(vehicleType, distanceStr, speedStr);
+  
+  // Step 2: Send the AI-generated message via eMessage SMS
+  return await sendTransitAlert(phoneNumber, aiMessage);
+}

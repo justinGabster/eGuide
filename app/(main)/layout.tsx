@@ -1,12 +1,26 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+import AiChatWidget from '@/components/AiChatWidget';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [aiCredits, setAiCredits] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/ai-credits')
+      .then(res => res.json())
+      .then(data => {
+        if (data.credits_remaining !== undefined) {
+          setAiCredits(data.credits_remaining);
+        }
+      })
+      .catch(err => console.error("Failed to load credits", err));
+  }, []);
   
   const navItems = [
     { name: 'Home', path: '/home', icon: '🏠' },
@@ -46,11 +60,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <main className="mobile-container">
+    <main className="mobile-container" style={{ position: 'relative' }}>
       <header className="header fade-in">
-        <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
-          ⎋ Sign Out
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
+            ⎋ Sign Out
+          </Link>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div 
             className="header-profile" 
@@ -81,6 +97,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         ))}
       </nav>
 
+      {/* Global AI Chat Widget */}
+      <AiChatWidget />
+
       {/* Profile Drawer Overlay */}
       {isProfileOpen && (
         <div className="profile-drawer slide-up">
@@ -101,6 +120,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, JUSTIN</h3>
                 <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639325298802</p>
                 <p style={{ color: '#4b5563', fontSize: '14px' }}>ajosejustingabriel@gmail.com</p>
+                {aiCredits !== null && (
+                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                    <span style={{ color: '#10b981', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
+                  </div>
+                )}
               </div>
             </div>
 
