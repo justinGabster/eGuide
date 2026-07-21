@@ -308,3 +308,13 @@ a {
 .theme-dark .dark-invert {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* Force hide Leaflet attribution overlay and prefix elements */
+.leaflet-control-attribution,
+.leaflet-bottom.leaflet-right,
+.leaflet-control-attribution.leaflet-control {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

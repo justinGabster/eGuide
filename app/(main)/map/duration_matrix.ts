@@ -69,5 +69,13 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     fleetSizeOffPeak: 4,
     dwellTimeSec: 30,
     legDurations: [300, 320, 400, 250, 350, 280, 290, 310, 420, 380, 270] // 11 legs
+  },
+  'edsa-carousel': {
+    peakHeadwaySec: 180, // 3 mins
+    offPeakHeadwaySec: 360, // 6 mins
+    fleetSizePeak: 25,
+    fleetSizeOffPeak: 15,
+    dwellTimeSec: 20,
+    legDurations: [280, 280, 220, 160, 280, 280, 280, 220, 160, 220, 280, 220, 220, 220, 400, 460] // 16 legs
   }
 };

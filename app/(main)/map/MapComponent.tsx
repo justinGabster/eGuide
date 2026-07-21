@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSO
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 import { transitLines } from './transitData';
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
@@ -29,6 +30,12 @@ export default function MapComponent() {
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const currentTileUrl = isDark ? DARK_TILES : LIGHT_TILES;
+
   const [pasigFerryData, setPasigFerryData] = useState<any>(null);
   const [selectedLine, setSelectedLine] = useState<string>('all');
   const [showAllLabels, setShowAllLabels] = useState<boolean>(false);
@@ -52,6 +59,26 @@ export default function MapComponent() {
   const [tick, setTick] = useState(0);
 
   const mapRef = useRef<any>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 200);
+
+    const handleResize = () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchFerryData = async () => {
@@ -339,7 +366,10 @@ export default function MapComponent() {
     else if (headingText.includes('Eastbound')) dirCode = 'EB';
     else if (headingText.includes('Westbound')) dirCode = 'WB';
 
-    // High-contrast direction badge pill (Option B)
+    const isBus = lineId === 'edsa-carousel';
+    const displayCode = isBus ? `🚌 ${dirCode}` : dirCode;
+
+    // High-contrast direction badge pill
     const dirBadge = `<div style="
       position: absolute;
       top: -8px;
@@ -354,12 +384,13 @@ export default function MapComponent() {
       border: 1.5px solid ${color};
       box-shadow: 0 2px 4px rgba(0,0,0,0.5);
       z-index: 10;
-    ">${dirCode}</div>`;
+    ">${displayCode}</div>`;
 
-    if (isTrain || isFerry) {
+    if (isTrain || isFerry || isBus) {
       const trainSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2.23v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm6 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z"/></svg>`;
       const ferrySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg>`;
-      const iconSvg = isFerry ? ferrySvg : trainSvg;
+      const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v6z"/></svg>`;
+      const iconSvg = isFerry ? ferrySvg : (isBus ? busSvg : trainSvg);
 
       return L.divIcon({
         className: 'custom-vehicle-marker',
@@ -605,80 +636,207 @@ export default function MapComponent() {
     const activeLine = transitLines.find(l => l.id === lineViewConfig.lineId) || transitLines[0];
 
     return (
-      <div style={{ padding: '24px 20px 40px 20px', color: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: '#0f172a', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
-          <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          backgroundColor: '#0B1120',
+          color: '#FFFFFF',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '20px',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+          fontFamily: 'sans-serif'
+        }}
+      >
+        {/* Modal Header */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid #1E293B',
+            paddingBottom: '16px',
+            marginBottom: '20px'
+          }}
+        >
+          <div>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94A3B8' }}>Where are you starting your journey?</p>
+          </div>
+          <button
+            onClick={() => setIsLineViewOpen(false)}
+            style={{
+              background: '#1E293B',
+              border: '1px solid #334155',
+              color: '#FFFFFF',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              fontSize: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            ✕
+          </button>
         </div>
-        
-        <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>
-          Where are you starting your journey?
-        </p>
 
-        <button 
+        {/* Location Button */}
+        <button
           onClick={handleUseMyLocation}
-          style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+          style={{
+            width: '100%',
+            height: '46px',
+            backgroundColor: '#2563EB',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '10px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            marginBottom: '16px'
+          }}
         >
           📍 Use My Location
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
-          <span style={{ padding: '0 12px', fontSize: '11px', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>OR SELECT MANUALLY</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
+        {/* Divider */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '20px'
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#1E293B' }} />
+          <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748B', letterSpacing: '1px' }}>
+            OR SELECT MANUALLY
+          </span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#1E293B' }} />
         </div>
 
+        {/* Form Fields Container */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Line Select */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
-            <select 
-              value={lineViewConfig.lineId} 
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94A3B8', marginBottom: '6px', textTransform: 'uppercase' }}>
+              Transit Line
+            </label>
+            <select
+              value={lineViewConfig.lineId}
               onChange={e => setLineViewConfig(c => ({...c, lineId: e.target.value, originStationIdx: 0}))}
-              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+              style={{
+                width: '100%',
+                height: '44px',
+                backgroundColor: '#1E293B',
+                color: '#FFFFFF',
+                border: '1px solid #334155',
+                borderRadius: '10px',
+                padding: '0 12px',
+                fontSize: '14px',
+                outline: 'none'
+              }}
             >
               {transitLines.filter(l => l.id !== 'pnr-nscr').map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
 
+          {/* Origin Station Select */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
-            <select 
-              value={lineViewConfig.originStationIdx || 0} 
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94A3B8', marginBottom: '6px', textTransform: 'uppercase' }}>
+              Origin Station
+            </label>
+            <select
+              value={lineViewConfig.originStationIdx || 0}
               onChange={e => setLineViewConfig(c => ({...c, originStationIdx: parseInt(e.target.value)}))}
-              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+              style={{
+                width: '100%',
+                height: '44px',
+                backgroundColor: '#1E293B',
+                color: '#FFFFFF',
+                border: '1px solid #334155',
+                borderRadius: '10px',
+                padding: '0 12px',
+                fontSize: '14px',
+                outline: 'none'
+              }}
             >
               {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
             </select>
           </div>
 
+          {/* Direction Selector */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
-            <div style={{ display: 'flex', backgroundColor: '#1e293b', borderRadius: '6px', padding: '4px', border: '1px solid #334155' }}>
-               <button 
-                  onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
-               >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}</button>
-               <button 
-                  onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: !lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
-               >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}</button>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94A3B8', marginBottom: '6px', textTransform: 'uppercase' }}>
+              Travel Direction
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', backgroundColor: '#1E293B', padding: '4px', borderRadius: '10px' }}>
+              <button
+                onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
+                style={{
+                  height: '38px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  backgroundColor: lineViewConfig.isForward ? '#2563EB' : 'transparent',
+                  color: lineViewConfig.isForward ? '#FFFFFF' : '#94A3B8',
+                  cursor: 'pointer'
+                }}
+              >
+                {activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
+              </button>
+              <button
+                onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
+                style={{
+                  height: '38px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  backgroundColor: !lineViewConfig.isForward ? '#2563EB' : 'transparent',
+                  color: !lineViewConfig.isForward ? '#FFFFFF' : '#94A3B8',
+                  cursor: 'pointer'
+                }}
+              >
+                {activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
+              </button>
             </div>
           </div>
 
-          <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
-            <button 
-              onClick={() => {
-                 if (lineViewConfig.originStationIdx === undefined) {
-                   setLineViewConfig(c => ({...c, originStationIdx: 0}));
-                 }
-                 setIsStationSelectionMode(false);
-                 setShowPastStations(false);
-              }}
-              style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
-            >
-              View Line Schedule &rarr;
-            </button>
-          </div>
+          {/* View Line Schedule Button */}
+          <button
+            onClick={() => {
+               if (lineViewConfig.originStationIdx === undefined) {
+                 setLineViewConfig(c => ({...c, originStationIdx: 0}));
+               }
+               setIsStationSelectionMode(false);
+               setShowPastStations(false);
+            }}
+            style={{
+              width: '100%',
+              height: '48px',
+              backgroundColor: '#059669',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '15px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              marginTop: '12px'
+            }}
+          >
+            View Line Schedule →
+          </button>
         </div>
       </div>
     );
@@ -772,73 +930,176 @@ export default function MapComponent() {
        : `${line.name.split(' ')[0]} Schematic`;
 
     return (
-      <>
-        {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid #1e293b', backgroundColor: '#1e293b' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          backgroundColor: '#0B1120',
+          color: '#FFFFFF',
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+          fontFamily: 'sans-serif'
+        }}
+      >
+        {/* Sticky Top Header */}
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            backgroundColor: '#0F172A',
+            borderBottom: '1px solid #1E293B',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            zIndex: 100
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={() => setIsStationSelectionMode(true)}
+              style={{
+                background: '#1E293B',
+                border: '1px solid #334155',
+                color: '#FFFFFF',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
+            >
+              ← Back
+            </button>
+
             <div>
-              <h2 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ backgroundColor: line.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block' }}></span>
-                {headerTitle}
-              </h2>
-              <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                {lineViewConfig.isForward 
-                  ? (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'EASTBOUND' : 'SOUTHBOUND') 
-                  : (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'WESTBOUND' : 'NORTHBOUND')}
-              </span>
-              {isContextual && (
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', marginLeft: '22px' }}>
-                  from <strong>{line.stations[lineViewConfig.originStationIdx!].name}</strong>
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {isContextual && (
-                <button 
-                  onClick={() => setIsStationSelectionMode(true)}
-                  style={{ fontSize: '11px', background: '#334155', color: '#e2e8f0', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    backgroundColor: line.color,
+                    color: '#FFFFFF',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    padding: '2px 6px',
+                    borderRadius: '4px'
+                  }}
                 >
-                  Change Station
-                </button>
-              )}
-              <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+                  {line.id.toUpperCase()}
+                </span>
+                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+                  {isContextual ? `${line.stations[lineViewConfig.originStationIdx!].name} Station` : `${headerTitle}`}
+                </h2>
+              </div>
+              <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Next train arrivals & schedule</p>
             </div>
           </div>
-          
-          {isContextual && departures.length > 0 && (
-             <div style={{ marginTop: '16px' }}>
-               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
-               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-                 {departures.map((dep, idx) => {
-                    const isSelected = selectedDep?.vehicleId === dep.vehicleId;
-                    return (
-                      <button 
-                        key={dep.vehicleId}
-                        onClick={() => setLineViewConfig(c => ({...c, selectedVehicleId: dep.vehicleId}))}
-                        style={{ 
-                          padding: '8px 12px', 
-                          borderRadius: '6px', 
-                          border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
-                          background: isSelected ? `${line.color}20` : '#0f172a', 
-                          color: isSelected ? '#fff' : '#94a3b8', 
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          minWidth: '80px'
-                        }}
-                      >
-                        <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
-                        <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748b', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
-                      </button>
-                    );
-                 })}
-               </div>
-             </div>
-          )}
+
+          <button
+            onClick={() => setIsLineViewOpen(false)}
+            style={{
+              background: '#1E293B',
+              border: '1px solid #334155',
+              color: '#FFFFFF',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              fontSize: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            ✕
+          </button>
         </div>
+
+        {/* Direction Toggle Row */}
+        <div style={{ padding: '16px 20px 8px 20px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '8px',
+              backgroundColor: '#1E293B',
+              padding: '4px',
+              borderRadius: '10px'
+            }}
+          >
+            <button
+              onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
+              style={{
+                height: '36px',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                backgroundColor: lineViewConfig.isForward ? '#2563EB' : 'transparent',
+                color: lineViewConfig.isForward ? '#FFFFFF' : '#94A3B8',
+                cursor: 'pointer'
+              }}
+            >
+              {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
+            </button>
+
+            <button
+              onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
+              style={{
+                height: '36px',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                backgroundColor: !lineViewConfig.isForward ? '#2563EB' : 'transparent',
+                color: !lineViewConfig.isForward ? '#FFFFFF' : '#94A3B8',
+                cursor: 'pointer'
+              }}
+            >
+              {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
+            </button>
+          </div>
+        </div>
+
+        {/* Upcoming Departures Slider */}
+        {isContextual && departures.length > 0 && (
+           <div style={{ padding: '0 20px', marginTop: '8px' }}>
+             <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
+             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+               {departures.map((dep, idx) => {
+                  const isSelected = selectedDep?.vehicleId === dep.vehicleId;
+                  return (
+                    <button 
+                      key={dep.vehicleId}
+                      onClick={() => setLineViewConfig(c => ({...c, selectedVehicleId: dep.vehicleId}))}
+                      style={{ 
+                        padding: '8px 12px', 
+                        borderRadius: '6px', 
+                        border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
+                        background: isSelected ? `${line.color}20` : '#0F172A', 
+                        color: isSelected ? '#FFFFFF' : '#94A3B8', 
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        minWidth: '80px'
+                      }}
+                    >
+                      <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
+                      <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748B', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
+                    </button>
+                  );
+               })}
+             </div>
+           </div>
+        )}
 
         {/* Timeline Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', position: 'relative' }}>
@@ -954,7 +1215,7 @@ export default function MapComponent() {
                       {st.name} {isOrigin && <span style={{ fontSize: '10px', backgroundColor: line.color, color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle' }}>ORIGIN</span>}
                     </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: isApproaching ? '#38bdf8' : (isOrigin ? '#fff' : '#94a3b8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
+                  <div style={{ fontSize: '12px', color: isApproaching ? '#38BDF8' : (isOrigin ? '#FFFFFF' : '#94A3B8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
                     {etaText}
                   </div>
                 </div>
@@ -962,195 +1223,157 @@ export default function MapComponent() {
             })})()}
           </div>
         </div>
-      </>
+      </div>
     );
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', borderRadius: '16px' }}>
 
-      {/* Filter Control Overlay */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000,
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        border: '1px solid var(--border-color)',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-        transition: 'all 0.3s ease-in-out',
-        width: isPanelCollapsed ? 'auto' : '260px'
-      }}>
-        <label htmlFor="line-filter" style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-          HIGHLIGHT LINE
-        </label>
-        <select 
-          id="line-filter"
-          value={selectedLine}
-          onChange={(e) => setSelectedLine(e.target.value)}
+      {/* Floating Filter Card */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          zIndex: 1000,
+          width: '240px',
+          backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+          color: isDark ? '#FFFFFF' : '#0F172A',
+          border: isDark ? '1px solid #334155' : '1px solid #E2E8F0',
+          borderRadius: '12px',
+          padding: '12px',
+          boxShadow: isDark 
+            ? '0 10px 25px -5px rgba(0, 0, 0, 0.6)' 
+            : '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+          fontFamily: 'sans-serif'
+        }}
+      >
+        {/* Header */}
+        <div
           style={{
-            background: '#F4F6F9',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            padding: '8px',
-            fontSize: '14px',
-            outline: 'none',
-            cursor: 'pointer'
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: isPanelCollapsed ? '0px' : '10px',
+            borderBottom: isPanelCollapsed ? 'none' : '1px solid #334155',
+            paddingBottom: isPanelCollapsed ? '0px' : '8px'
           }}
         >
-          <option value="all">All Lines</option>
-          {transitLines.map(l => (
-            <option key={l.id} value={l.id}>{l.name}</option>
-          ))}
-        </select>
-        {/* Toggle Station Names */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-          <input 
-            id="label-toggle"
-            type="checkbox" 
-            checked={showAllLabels}
-            onChange={(e) => setShowAllLabels(e.target.checked)}
-            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
-          />
-          <label 
-            htmlFor="label-toggle"
-            style={{ 
-              color: 'var(--text-primary)', 
-              fontSize: '13px', 
-              cursor: 'pointer',
-              userSelect: 'none'
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94A3B8', textTransform: 'uppercase' }}>
+              Filters
+            </span>
+            <span
+              style={{
+                fontSize: '10px',
+                backgroundColor: '#064E3B',
+                color: '#34D399',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontWeight: '600'
+              }}
+            >
+              {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} Live
+            </span>
+          </div>
+
+          <button
+            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+            style={{
+              background: '#1E293B',
+              border: '1px solid #334155',
+              color: '#94A3B8',
+              fontSize: '11px',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer'
             }}
-            onMouseOver={(e) => e.currentTarget.style.color = 'white'}
-            onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
-            aria-label="Toggle Panel"
           >
-            {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            {isPanelCollapsed ? 'Expand ▾' : 'Minimize ▴'}
           </button>
         </div>
 
+        {/* Body */}
         {!isPanelCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-            <select 
-              id="line-filter"
-              value={selectedLine}
-              onChange={(e) => setSelectedLine(e.target.value)}
-              style={{
-                background: '#0f172a',
-                color: '#f8fafc',
-                border: '1px solid #475569',
-                borderRadius: '4px',
-                padding: '8px',
-                fontSize: '13px',
-                outline: 'none',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <option value="all">All Lines</option>
-              {transitLines.map(l => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-            
-            {/* Toggle Station Names */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-              <input 
-                id="label-toggle"
-                type="checkbox" 
-                checked={showAllLabels}
-                onChange={(e) => setShowAllLabels(e.target.checked)}
-                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
-              />
-              <label 
-                htmlFor="label-toggle"
-                style={{ 
-                  color: '#f8fafc', 
-                  fontSize: '13px', 
-                  cursor: 'pointer',
-                  userSelect: 'none'
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '10px', color: '#94A3B8', marginBottom: '4px', textTransform: 'uppercase' }}>
+                Highlight Line
+              </label>
+              <select
+                value={selectedLine}
+                onChange={(e) => setSelectedLine(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '32px',
+                  backgroundColor: '#1E293B',
+                  color: '#FFFFFF',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  outline: 'none'
                 }}
               >
+                <option value="all">All Lines</option>
+                {transitLines.map(l => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                id="showStations"
+                checked={showAllLabels}
+                onChange={(e) => setShowAllLabels(e.target.checked)}
+                style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+              />
+              <label htmlFor="showStations" style={{ fontSize: '12px', color: '#E2E8F0', cursor: 'pointer', userSelect: 'none' }}>
                 Show Station Names
               </label>
             </div>
 
-            {/* Toggle Live Vehicles */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  type="checkbox" 
-                  id="liveVehiclesToggle"
-                  checked={showLiveVehicles}
-                  onChange={(e) => setShowLiveVehicles(e.target.checked)}
-                  style={{ cursor: 'pointer', accentColor: '#38bdf8', width: '16px', height: '16px' }}
-                />
-                <label 
-                  htmlFor="liveVehiclesToggle" 
-                  style={{ 
-                    color: '#f8fafc', 
-                    fontSize: '13px', 
-                    cursor: 'pointer',
-                    userSelect: 'none' 
-                  }}
-                >
-                  Show Live Vehicles
-                </label>
-              </div>
-              
-              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                🟢 {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
+              <select
+                value={directionFilter}
+                onChange={(e) => setDirectionFilter(e.target.value)}
+                style={{
+                  height: '30px',
+                  backgroundColor: '#1E293B',
+                  color: '#FFFFFF',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '0 4px',
+                  fontSize: '11px'
+                }}
+              >
+                <option value="ALL">All Directions</option>
+                <option value="NB">NB / EB</option>
+                <option value="SB">SB / WB</option>
+              </select>
+
+              <button
+                onClick={() => {
+                  if (!isLineViewOpen) setIsStationSelectionMode(true);
+                  setIsLineViewOpen(!isLineViewOpen);
+                }}
+                style={{
+                  height: '30px',
+                  backgroundColor: isLineViewOpen ? '#1D4ED8' : '#2563EB',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                🗺️ {isLineViewOpen ? 'Close View' : 'Line View'}
+              </button>
             </div>
-
-            {/* Direction Filter */}
-            {showLiveVehicles && (
-              <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155', marginTop: '4px' }}>
-                <button 
-                  onClick={() => setDirectionFilter('ALL')}
-                  style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'ALL' ? '#3b82f6' : 'transparent', color: directionFilter === 'ALL' ? 'white' : '#94a3b8' }}
-                >All</button>
-                <button 
-                  onClick={() => setDirectionFilter('NB')}
-                  style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', borderLeft: '1px solid #334155', borderRight: '1px solid #334155', cursor: 'pointer', backgroundColor: directionFilter === 'NB' ? '#3b82f6' : 'transparent', color: directionFilter === 'NB' ? 'white' : '#94a3b8' }}
-                >▲ NB/EB</button>
-                <button 
-                  onClick={() => setDirectionFilter('SB')}
-                  style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'SB' ? '#3b82f6' : 'transparent', color: directionFilter === 'SB' ? 'white' : '#94a3b8' }}
-                >▼ SB/WB</button>
-              </div>
-            )}
-
-            {/* Toggle Line View Button */}
-            <button 
-              onClick={() => {
-                if (!isLineViewOpen) {
-                  setIsStationSelectionMode(true); // Open directly to selection wizard when launched globally
-                }
-                setIsLineViewOpen(prev => !prev);
-              }}
-              style={{ 
-                marginTop: '6px',
-                width: '100%',
-                padding: '10px',
-                backgroundColor: isLineViewOpen ? '#3b82f6' : '#0f172a',
-                color: 'white',
-                border: '1px solid #334155',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '13px',
-                transition: 'background 0.2s'
-              }}
-            >
-              {isLineViewOpen ? 'Close Schematic' : '🗺️ Open Line View'}
-            </button>
           </div>
         )}
       </div>
@@ -1218,12 +1441,13 @@ export default function MapComponent() {
         center={position} 
         zoom={12} 
         scrollWheelZoom={true} 
+        attributionControl={false}
         style={{ width: '100%', height: '100%', background: 'var(--bg-color)' }}
       >
-        {/* Light mode tiles using CartoDB Light Matter */}
+        {/* Dynamic Theme Tiles */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url={currentTileUrl}
         />
 
         {transitLines.map((line) => {
@@ -1258,7 +1482,7 @@ export default function MapComponent() {
                       color: lineColor, 
                       weight: lineWeight,
                       opacity: lineOpacity,
-                      dashArray: (segment.isDashed || line.id === 'pnr') ? '6, 8' : undefined
+                      dashArray: (segment.isDashed || line.id.includes('pnr')) ? '6, 8' : (line.id === 'edsa-carousel' ? '4, 6' : undefined)
                     }}
                   />
                 ))
@@ -1269,7 +1493,7 @@ export default function MapComponent() {
                     color: lineColor, 
                     weight: lineWeight,
                     opacity: lineOpacity,
-                    dashArray: line.id === 'pnr' ? '6, 8' : undefined
+                    dashArray: line.id.includes('pnr') ? '6, 8' : (line.id === 'edsa-carousel' ? '4, 6' : undefined)
                   }}
                 />
               )}
@@ -1486,9 +1710,9 @@ export default function MapComponent() {
                         {/* Header Row */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
-                              {line.id === 'pasig-ferry' ? 'Ferry Details' : 'Train Details'}
-                            </h3>
+                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>
+                              {line.id === 'pasig-ferry' ? 'Ferry Details' : (line.id === 'edsa-carousel' ? 'Bus Details' : 'Train Details')}
+                            </div>
                             <span style={{ backgroundColor: line.color, color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                               {line.id.toUpperCase()}
                             </span>
