@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ChevronUp, ChevronDown } from 'lucide-react';
 import { transitLines } from './transitData';
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
@@ -987,51 +986,30 @@ export default function MapComponent() {
         transition: 'all 0.3s ease-in-out',
         width: isPanelCollapsed ? 'auto' : '260px'
       }}>
-        <label htmlFor="line-filter" style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-          HIGHLIGHT LINE
-        </label>
-        <select 
-          id="line-filter"
-          value={selectedLine}
-          onChange={(e) => setSelectedLine(e.target.value)}
-          style={{
-            background: '#F4F6F9',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            padding: '8px',
-            fontSize: '14px',
-            outline: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="all">All Lines</option>
-          {transitLines.map(l => (
-            <option key={l.id} value={l.id}>{l.name}</option>
-          ))}
-        </select>
-        {/* Toggle Station Names */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-          <input 
-            id="label-toggle"
-            type="checkbox" 
-            checked={showAllLabels}
-            onChange={(e) => setShowAllLabels(e.target.checked)}
-            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
-          />
-          <label 
-            htmlFor="label-toggle"
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: isPanelCollapsed ? 'center' : 'space-between', gap: '12px' }}>
+          {!isPanelCollapsed && (
+            <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>
+              TRANSIT CONTROL
+            </span>
+          )}
+          <button 
+            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
             style={{ 
-              color: 'var(--text-primary)', 
-              fontSize: '13px', 
-              cursor: 'pointer',
-              userSelect: 'none'
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer', 
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              color: 'var(--text-primary)'
             }}
-            onMouseOver={(e) => e.currentTarget.style.color = 'white'}
-            onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
             aria-label="Toggle Panel"
           >
-            {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            {isPanelCollapsed ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            )}
           </button>
         </div>
 
