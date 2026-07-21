@@ -2,14 +2,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/components/ThemeProvider';
 
-import AiChatWidget from '@/components/AiChatWidget';
+import SplashScreen from '@/components/SplashScreen';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     fetch('/api/ai-credits')
@@ -23,11 +25,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, []);
   
   const navItems = [
-    { name: 'Home', path: '/home', icon: '🏠' },
-    { name: 'Ride & Pay', path: '/payment', icon: '💳' },
-    { name: 'Map', path: '/map', icon: '🗺️' },
-    { name: 'Alerts', path: '/notifications', icon: '🔔' },
-    { name: 'Transactions', path: '/transactions', icon: '🧾' },
+    { name: 'Home', path: '/home', iconSrc: '/icons/eGuide UI-UX_g61-6.png' },
+    { name: 'Ride & Pay', path: '/payment', iconSrc: '/icons/nav_wallet.png' },
+    { name: 'Map', path: '/map', iconSrc: '/icons/nav_map.png' },
+    { name: 'Alerts', path: '/notifications', iconSrc: '/icons/nav_bell.png' },
+    { name: 'Transactions', path: '/transactions', iconSrc: '/icons/nav_doc.png' },
   ];
 
   const menuItems = [
@@ -37,6 +39,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { label: 'Privacy Notice', icon: '🛡️' },
     { label: 'Contact Us', icon: '📞' },
     { label: 'Rate our app', icon: '👍' },
+    { label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, icon: theme === 'light' ? '🌙' : '☀️', action: toggleTheme },
     { label: 'Settings', icon: '⚙️', action: () => setIsSettingsOpen(true) },
     { label: 'Log out', icon: '🚪', path: '/' },
   ];
@@ -60,26 +63,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <main className="mobile-container" style={{ position: 'relative' }}>
+    <main className="mobile-container id-pattern-bg" style={{ position: 'relative' }}>
+      <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
-            ⎋ Sign Out
-          </Link>
+          <img src="/logo.png" alt="eGuide Logo" style={{ height: '24px', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div 
             className="header-profile" 
-            style={{ textAlign: 'right', flexDirection: 'row-reverse', cursor: 'pointer' }}
+            style={{ cursor: 'pointer' }}
             onClick={() => setIsProfileOpen(true)}
           >
             <div className="profile-avatar">D</div>
-            <div>
-              <div style={{ fontWeight: 'bold' }}>DENISSE</div>
-              <div className="verified-badge" style={{ justifyContent: 'flex-end' }}>
-                ✓ eGovPH Verified
-              </div>
-            </div>
           </div>
         </div>
       </header>
@@ -91,32 +87,33 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <nav className="bottom-nav">
         {navItems.map((item) => (
           <Link key={item.path} href={item.path} className={`nav-item ${pathname === item.path ? 'active' : ''}`}>
-            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-icon">
+              <img src={item.iconSrc} alt={item.name} style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
+            </span>
             <span>{item.name}</span>
           </Link>
         ))}
       </nav>
 
       {/* Global AI Chat Widget */}
-      <AiChatWidget />
 
       {/* Profile Drawer Overlay */}
       {isProfileOpen && (
         <div className="profile-drawer slide-up">
           <div style={{ padding: '24px', position: 'relative' }}>
             <span 
-              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'black', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'var(--text-primary)', cursor: 'pointer' }}
               onClick={() => setIsProfileOpen(false)}
             >
               ✕
             </span>
-            <h2 style={{ textAlign: 'center', color: 'black', marginBottom: '32px' }}>Account</h2>
+            <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px' }}>Account</h2>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
               <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d1d5db', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px' }}>
                 👤
               </div>
-              <div style={{ color: 'black' }}>
+              <div style={{ color: 'var(--text-primary)' }}>
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
                 <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
                 <p style={{ color: '#4b5563', fontSize: '14px' }}>dendenissejane@gmail.com</p>
@@ -136,7 +133,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <ItemWrapper 
                     key={idx} 
                     href={item.path || '#'}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f3f4f6', color: 'black', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f3f4f6', color: 'var(--text-primary)', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
                     onClick={item.action ? item.action : undefined}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
@@ -157,12 +154,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div className="profile-drawer slide-up" style={{ zIndex: 101 }}>
           <div style={{ padding: '24px', position: 'relative' }}>
             <span 
-              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'black', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}
               onClick={() => setIsSettingsOpen(false)}
             >
               ‹
             </span>
-            <h2 style={{ textAlign: 'center', color: 'black', marginBottom: '32px', fontSize: '20px' }}>Settings</h2>
+            <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px', fontSize: '20px' }}>Settings</h2>
             
             {settingsSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '32px' }}>
@@ -171,7 +168,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', color: 'black' }}>
+                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                         <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         {item.label}
