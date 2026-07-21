@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'eGuide',
   },
+  icons: {
+    apple: '/icon-192x192.png',
+  },
 };
 
 export const viewport: Viewport = {
