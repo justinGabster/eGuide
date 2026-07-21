@@ -88,6 +88,28 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <img src="/logo.png" alt="eGuide Logo" style={{ height: '24px', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button 
+            onClick={toggleTheme}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              fontSize: '20px', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--card-bg)',
+              boxShadow: 'var(--shadow-sm)',
+              color: 'var(--text-primary)'
+            }}
+            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+          
           <div 
             className="header-profile" 
             style={{ cursor: 'pointer' }}
