@@ -66,11 +66,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
             ⎋ Sign Out
           </Link>
-          {aiCredits !== null && (
-            <div style={{ fontSize: '10px', background: 'rgba(255,255,255,0.1)', color: 'white', padding: '6px 8px', borderRadius: '6px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ color: '#10b981' }}>●</span> AI Tokens: {aiCredits}
-            </div>
-          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div 
@@ -125,6 +120,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, JUSTIN</h3>
                 <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639325298802</p>
                 <p style={{ color: '#4b5563', fontSize: '14px' }}>ajosejustingabriel@gmail.com</p>
+                {aiCredits !== null && (
+                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                    <span style={{ color: '#10b981', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
+                  </div>
+                )}
               </div>
             </div>
 
