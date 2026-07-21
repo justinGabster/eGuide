@@ -34,9 +34,38 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProfileImage(base64String);
-        localStorage.setItem('profileImage', base64String);
+        const img = new Image();
+        img.src = reader.result as string;
+        img.onload = () => {
+          const maxDim = 200;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            setProfileImage(compressedBase64);
+            try {
+              localStorage.setItem('profileImage', compressedBase64);
+            } catch (err) {
+              console.error("LocalStorage write failed:", err);
+            }
+          }
+        };
       };
       reader.readAsDataURL(file);
     }
@@ -101,7 +130,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/logo.png" alt="eGuide Logo" style={{ height: '24px', objectFit: 'contain' }} />
+          <img 
+            src="/logo.png" 
+            alt="eGuide Logo" 
+            style={{ 
+              height: '24px', 
+              objectFit: 'contain',
+              filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
+            }} 
+          />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 

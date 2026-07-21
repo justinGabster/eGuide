@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -25,8 +26,41 @@ export interface VehicleState {
 }
 
 export default function MapComponent() {
+  const searchParams = useSearchParams();
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
+
+  useEffect(() => {
+    const lineId = searchParams.get('lineId');
+    const stationIdxParam = searchParams.get('stationIdx');
+    
+    if (lineId) {
+      setSelectedLine(lineId);
+      
+      const config: any = {
+        lineId,
+        isForward: true
+      };
+      
+      if (stationIdxParam !== null) {
+        config.originStationIdx = parseInt(stationIdxParam, 10);
+      }
+      
+      setLineViewConfig(config);
+      setIsStationSelectionMode(false);
+      setIsLineViewOpen(true);
+      
+      // Pan map to the station if specified
+      const line = transitLines.find(l => l.id === lineId);
+      if (line) {
+        const idx = stationIdxParam !== null ? parseInt(stationIdxParam, 10) : 0;
+        const station = line.stations[idx];
+        if (station && mapRef.current) {
+          mapRef.current.setView(station.coords, 14);
+        }
+      }
+    }
+  }, [searchParams]);
 
   const [pasigFerryData, setPasigFerryData] = useState<any>(null);
   const [selectedLine, setSelectedLine] = useState<string>('all');
@@ -604,7 +638,7 @@ export default function MapComponent() {
     const activeLine = transitLines.find(l => l.id === lineViewConfig.lineId) || transitLines[0];
 
     return (
-      <div style={{ padding: '24px 20px 40px 20px', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: 'var(--card-bg)', overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 110px 20px', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: 'var(--card-bg)', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
           <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
@@ -840,7 +874,7 @@ export default function MapComponent() {
         </div>
 
         {/* Timeline Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', position: 'relative' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 110px 20px', position: 'relative' }}>
           {isContextual && hiddenCount > 0 && (
              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                 <button 
