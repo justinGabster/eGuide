@@ -13,14 +13,13 @@ export default function RideAndPay() {
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
   const [userName, setUserName] = useState<string>('Commuter');
   const [userId, setUserId] = useState<string>('eG-12345');
-  const [phone, setPhone] = useState<string>('09123456789');
+  const [phone, setPhone] = useState<string>('09325298802');
   
   const [line, setLine] = useState<'MRT-3' | 'LRT-2'>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number>(0);
   const [destIndex, setDestIndex] = useState<number>(8); 
   
-  const [sendingMsg, setSendingMsg] = useState(false);
-  const [msgSuccess, setMsgSuccess] = useState(false);
+  const [simulatingScan, setSimulatingScan] = useState(false);
 
   // TOPUP State
   const [amount, setAmount] = useState('100');
@@ -35,7 +34,6 @@ export default function RideAndPay() {
         const user = JSON.parse(saved);
         setUserName(user.givenName || user.firstName || 'Commuter');
         setUserId(user.id || 'eG-12345');
-        // If SSO provides phone number
         if (user.mobileNo) setPhone(user.mobileNo);
       } catch (e) {
         console.error("Error parsing egov user", e);
@@ -69,9 +67,9 @@ export default function RideAndPay() {
     }
   };
 
-  const handleSendTicket = async () => {
-    setSendingMsg(true);
-    setMsgSuccess(false);
+  const simulateTurnstileScan = async () => {
+    if (originIndex === destIndex) return;
+    setSimulatingScan(true);
     setError(null);
 
     const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
@@ -79,31 +77,36 @@ export default function RideAndPay() {
     const dest = stations[destIndex];
     const fare = getCalculatedFare().toFixed(2);
 
-    const ticketMessage = `eGuide e-Ticket: \nName: ${userName}\nLine: ${line}\nFrom: ${origin}\nTo: ${dest}\nFare: P${fare} (${passengerType})\nScan the QR code at the turnstile gate!`;
+    const ticketMessage = `eGuide e-Ticket: \nName: ${userName}\nLine: ${line}\nFrom: ${origin}\nTo: ${dest}\nFare: P${fare} (${passengerType})\nThank you for using eGovPay!`;
 
     try {
-      const res = await fetch('/api/emessage', {
+      // 1. Send the SMS via eMessage API in the background
+      await fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          number: phone,
-          message: ticketMessage
-        })
+        body: JSON.stringify({ number: phone, message: ticketMessage })
       });
 
-      if (!res.ok) throw new Error("Failed to send eMessage");
-      setMsgSuccess(true);
-      setTimeout(() => setMsgSuccess(false), 3000);
+      // 2. Trigger the eGovPay receipt gateway with the exact fare
+      const res = await fetch('/api/epay/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: Number(fare) })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to generate payment link');
+      
+      // Redirect to eGovPay
+      window.location.href = data.url;
     } catch (err: any) {
       setError(err.message);
-    } finally {
-      setSendingMsg(false);
+      setSimulatingScan(false);
     }
   };
 
   const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
   
-  // The conjoined QR Payload
   const qrData = JSON.stringify({
     uid: userId,
     type: passengerType,
@@ -144,15 +147,40 @@ export default function RideAndPay() {
       {activeTab === 'TICKET' && (
         <div className="glass-card fade-in">
           
-          {/* Conjoined QR Code Display (MOVED TO TOP) */}
+          {/* Conjoined QR Code Display */}
           <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid #1e293b' }}>
             <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
               Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
             </div>
             
-            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px' }}>
+            {/* Clickable QR Code to simulate scan */}
+            <div 
+              onClick={simulateTurnstileScan}
+              style={{ 
+                background: 'white', 
+                padding: '16px', 
+                borderRadius: '12px', 
+                display: 'inline-block', 
+                marginBottom: '16px',
+                cursor: originIndex === destIndex ? 'not-allowed' : 'pointer',
+                opacity: simulatingScan ? 0.5 : 1,
+                transform: simulatingScan ? 'scale(0.95)' : 'scale(1)',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+              }}
+            >
               <QRCode value={qrData} size={150} level="H" />
             </div>
+
+            {simulatingScan ? (
+              <div style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Scanning at Turnstile...
+              </div>
+            ) : (
+              <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>
+                👆 Tap QR Code to simulate gate scan
+              </div>
+            )}
 
             <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
               ₱{getCalculatedFare().toFixed(2)}
@@ -219,25 +247,6 @@ export default function RideAndPay() {
           </div>
 
           {error && <div style={{ color: '#ef4444', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>⚠️ {error}</div>}
-          
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Send e-Ticket to Mobile (eMessage):</label>
-            <input 
-              type="text" 
-              value={phone} 
-              onChange={(e) => setPhone(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.5)', color: 'white' }}
-            />
-          </div>
-
-          <button 
-            className={`btn-primary w-full ${msgSuccess ? 'bg-success' : ''}`}
-            onClick={handleSendTicket}
-            disabled={sendingMsg || originIndex === destIndex || !phone}
-            style={msgSuccess ? { backgroundColor: 'var(--success)', borderColor: 'var(--success)' } : {}}
-          >
-            {sendingMsg ? 'Sending eMessage...' : msgSuccess ? 'eMessage Sent! ✅' : `Generate e-Ticket & Send SMS`}
-          </button>
         </div>
       )}
 
