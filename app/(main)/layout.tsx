@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+import AiChatWidget from '@/components/AiChatWidget';
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <main className="mobile-container">
+    <main className="mobile-container" style={{ position: 'relative' }}>
       <header className="header fade-in">
         <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
           ⎋ Sign Out
@@ -80,6 +82,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </Link>
         ))}
       </nav>
+
+      {/* Global AI Chat Widget */}
+      <AiChatWidget />
 
       {/* Profile Drawer Overlay */}
       {isProfileOpen && (
