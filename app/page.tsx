@@ -8,13 +8,16 @@ export default function Login() {
   const [exchangeCode, setExchangeCode] = useState('');
   const router = useRouter();
 
+  const [apiError, setApiError] = useState<string | null>(null);
+
   const handleSSOLogin = async () => {
     if (!exchangeCode) {
-      alert("Please paste the exchange code generated from the eGov sandbox first.");
+      setApiError("Please paste the exchange code generated from the eGov sandbox first.");
       return;
     }
 
     setLoading(true);
+    setApiError(null);
     try {
       // 1. Fetch access token from real sandbox via our proxy
       const tokenRes = await fetch('/api/token', {
@@ -27,7 +30,14 @@ export default function Login() {
       const tokenData = await tokenRes.json();
       
       if (!tokenRes.ok || !tokenData.access_token) {
-        throw new Error(tokenData.error || 'Token exchange failed');
+        // Handle eGov specific error formats (422 and 403)
+        const specificError = tokenData.errors?.exchange_code?.[0] 
+                            || tokenData.error_description 
+                            || tokenData.message 
+                            || tokenData.error 
+                            || 'Token exchange failed';
+        setApiError(specificError);
+        return;
       }
 
       // 2. Fetch the user profile from real sandbox via our proxy
@@ -44,10 +54,10 @@ export default function Login() {
         localStorage.setItem('egov_user', JSON.stringify(profileData.data));
         router.push('/ekyc');
       } else {
-        throw new Error(profileData.message || 'SSO Auth Failed');
+        setApiError(profileData.message || 'SSO Auth Failed to fetch profile.');
       }
     } catch (err: any) {
-      alert(`Failed to authenticate: ${err.message}`);
+      setApiError(`Failed to authenticate: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -72,6 +82,22 @@ export default function Login() {
 
         <div style={{ marginBottom: '16px', textAlign: 'left' }}>
            <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Sandbox Exchange Code:</label>
+           
+           {apiError && (
+             <div style={{ 
+               padding: '10px', 
+               marginTop: '8px',
+               marginBottom: '8px', 
+               background: 'rgba(255, 0, 0, 0.1)', 
+               border: '1px solid rgba(255, 0, 0, 0.3)', 
+               borderRadius: '8px',
+               color: '#ff4d4f',
+               fontSize: '13px'
+             }}>
+               ⚠️ {apiError}
+             </div>
+           )}
+
            <input 
              type="text" 
              value={exchangeCode}
