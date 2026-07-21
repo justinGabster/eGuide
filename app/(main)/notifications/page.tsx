@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function Notifications() {
-  const phoneNumber = '09567669852';
+  const phoneNumber = '09201057839';
   const [loadingStatic, setLoadingStatic] = useState(false);
   
   // AI Dynamic States

@@ -11,9 +11,9 @@ export default function RideAndPay() {
   
   // TICKET State
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
-  const [userName, setUserName] = useState<string>('Commuter');
+  const [userName, setUserName] = useState<string>('Denisse Jane Karim');
   const [userId, setUserId] = useState<string>('eG-12345');
-  const phone = '09567669852'; // Static number for all eMessage calls
+  const phone = '09201057839'; // Static number for all eMessage calls
   
   const [line, setLine] = useState<'MRT-3' | 'LRT-2'>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number>(0);

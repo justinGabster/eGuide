@@ -40,7 +40,7 @@ export default function PaymentCallback() {
 
           // Send SMS Receipt for Top-up!
           try {
-            const phones = ['09567669852', '09325298802'];
+            const phones = ['09201057839', '09325298802'];
             const message = `eGuide Wallet:\nYou successfully added P${pendingAmount} via eGovPay.\nNew Balance: P${newBalance.toFixed(2)}`;
             
             phones.forEach(p => {
