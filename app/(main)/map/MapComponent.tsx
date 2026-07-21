@@ -899,18 +899,23 @@ export default function MapComponent() {
                })}
             </div>
             
-            {renderStations.map((st, i) => {
-              const globalRenderIdx = hiddenCount + i;
-              const originalIdx = lineViewConfig.isForward ? globalRenderIdx : (stations.length - 1 - globalRenderIdx);
-              
-              let etaText = '---';
-              
-              if (isContextual && selectedDep) {
-                 const originOriginalIdx = lineViewConfig.isForward ? originRenderIdx : (stations.length - 1 - originRenderIdx);
-                 const msDiff = getTravelTimeMs(line.id, originOriginalIdx, originalIdx, lineViewConfig.isForward);
-                 const stationEtaMs = selectedDep.etaMs + msDiff;
-                 etaText = formatAbsoluteTime(stationEtaMs);
-              } else if (!isContextual) {
+            {(() => {
+               let cumulativeMs = 0;
+               return renderStations.map((st, i) => {
+                 const globalRenderIdx = hiddenCount + i;
+                 const originalIdx = lineViewConfig.isForward ? globalRenderIdx : (stations.length - 1 - globalRenderIdx);
+                 
+                 let etaText = '---';
+                 
+                 if (isContextual && selectedDep) {
+                    if (i > 0) {
+                      const prevOriginalIdx = lineViewConfig.isForward ? (globalRenderIdx - 1) : (stations.length - 1 - (globalRenderIdx - 1));
+                      const legMs = getTravelTimeMs(line.id, prevOriginalIdx, originalIdx, lineViewConfig.isForward);
+                      cumulativeMs += legMs;
+                    }
+                    const stationEtaMs = selectedDep.etaMs + cumulativeMs;
+                    etaText = formatAbsoluteTime(stationEtaMs);
+                 } else if (!isContextual) {
                  const arrivals = getUpcomingArrivals(line.id, originalIdx);
                  if (arrivals) {
                    const mins = lineViewConfig.isForward ? arrivals.forwardMins : arrivals.backwardMins;
@@ -954,7 +959,7 @@ export default function MapComponent() {
                   </div>
                 </div>
               );
-            })}
+            })})()}
           </div>
         </div>
       </>
