@@ -140,6 +140,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               <img 
                 src={item.iconSrc} 
                 alt={item.name} 
+                className={item.name !== 'Map' ? 'dark-invert' : ''}
                 style={item.name === 'Map' ? { 
                   width: '56px', 
                   height: '56px', 
