@@ -1,83 +1,47 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import QRCode from 'react-qr-code';
+import { mrt3Stations, mrt3Matrix, lrta2Stations, lrta2Matrix } from '@/lib/fareMatrix';
 
 type PassengerType = 'REGULAR' | 'STUDENT' | 'SENIOR' | 'PWD';
 
 export default function RideAndPay() {
-  const [activeTab, setActiveTab] = useState<'RIDE' | 'TOPUP'>('RIDE');
-  const [passengerType, setPassengerType] = useState<PassengerType>('SENIOR');
+  const [activeTab, setActiveTab] = useState<'RIDE' | 'CALCULATOR' | 'TOPUP'>('CALCULATOR');
+  
+  // RIDE & CALCULATOR State
+  const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
   const [userName, setUserName] = useState<string>('Commuter');
   const [userId, setUserId] = useState<string>('eG-12345');
-  const [isSeniorLock, setIsSeniorLock] = useState(false);
   
-  // ID Upload State
-  const [uploadState, setUploadState] = useState<'IDLE' | 'SELECTING' | 'VERIFYING' | 'VERIFIED'>('IDLE');
-  const [applyingFor, setApplyingFor] = useState<'STUDENT' | 'PWD' | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // CALCULATOR State
+  const [line, setLine] = useState<'MRT-3' | 'LRT-2'>('MRT-3');
+  const [originIndex, setOriginIndex] = useState<number>(0);
+  const [destIndex, setDestIndex] = useState<number>(8); // default somewhere else
 
-  // Wallet State
+  // TOPUP State
   const [amount, setAmount] = useState('100');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const balance = 450.00;
 
-  useEffect(() => {
-    // 1. Fetch user from SSO local storage
-    const saved = localStorage.getItem('egov_user');
-    if (saved) {
-      try {
-        const user = JSON.parse(saved);
-        setUserName(user.givenName || user.firstName || 'Commuter');
-        setUserId(user.id || 'eG-12345');
-
-        // 2. Auto-detect Senior Citizen status
-        if (user.birthdate) {
-          const birthDate = new Date(user.birthdate);
-          const today = new Date();
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const m = today.getMonth() - birthDate.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-          }
-          if (age >= 60) {
-            setPassengerType('SENIOR');
-            setIsSeniorLock(true);
-          }
-        }
-      } catch (e) {
-        console.error("Error parsing egov user", e);
-      }
-    }
-  }, []);
-
-  const handleUploadClick = (type: 'STUDENT' | 'PWD') => {
-    setApplyingFor(type);
-    setUploadState('SELECTING');
-    fileInputRef.current?.click();
+  // Calculate Fare
+  const getCalculatedFare = () => {
+    const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
+    const baseFare = matrix[originIndex][destIndex];
+    if (passengerType === 'REGULAR') return baseFare;
+    // 50% discount for Senior, Student, PWD (as per uploaded matrix)
+    return baseFare * 0.5;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // File selected! Start fake eVerify loading
-      setUploadState('VERIFYING');
-      
-      setTimeout(() => {
-        setPassengerType(applyingFor!);
-        setUploadState('VERIFIED');
-      }, 2500); // 2.5 second fake AI verification
-    }
-  };
-
-  const handlePayment = async () => {
+  const handlePayment = async (payAmount: number) => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/epay/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: Number(amount) })
+        body: JSON.stringify({ amount: payAmount })
       });
       const data = await res.json();
       
@@ -92,13 +56,7 @@ export default function RideAndPay() {
     }
   };
 
-  // Real-world Architecture: The QR Code is just a Digital ID.
-  // The Turnstile hardware reads this, records entry, and calculates fare upon exit.
-  const qrData = JSON.stringify({
-    uid: userId,
-    type: passengerType,
-    ts: Date.now() // Timestamp to prevent replay attacks
-  });
+  const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
 
   return (
     <div>
@@ -109,19 +67,25 @@ export default function RideAndPay() {
         <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: 'var(--success)', margin: '0 0 8px 0' }}>
           ₱{balance.toFixed(2)}
         </h1>
-        <p className="text-sm text-muted">Tap QR at LRT/MRT Turnstiles</p>
+        <p className="text-sm text-muted">Use eGovPay for seamless rides.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '12px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '12px', overflowX: 'auto' }}>
         <button 
           onClick={() => setActiveTab('RIDE')}
-          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'RIDE' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+          style={{ minWidth: '100px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'RIDE' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
         >
-          📱 Transit Pass
+          📱 QR Pass
+        </button>
+        <button 
+          onClick={() => setActiveTab('CALCULATOR')}
+          style={{ minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'CALCULATOR' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+        >
+          🧮 Calculator
         </button>
         <button 
           onClick={() => setActiveTab('TOPUP')}
-          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'TOPUP' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+          style={{ minWidth: '100px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'TOPUP' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
         >
           💳 Top Up
         </button>
@@ -133,34 +97,106 @@ export default function RideAndPay() {
           <p className="text-sm text-muted mb-6">Scan at entry/exit gates. Fare is calculated automatically.</p>
           
           <div style={{ background: 'white', padding: '24px', borderRadius: '16px', display: 'inline-block', marginBottom: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-            <QRCode value={qrData} size={180} level="H" />
+            <QRCode value={JSON.stringify({ uid: userId, type: passengerType, ts: Date.now() })} size={180} level="H" />
           </div>
 
-          {/* Passenger Profile Section */}
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span className="text-muted text-sm uppercase">Passenger Profile</span>
-              {passengerType !== 'REGULAR' && (
-                <span style={{ background: 'rgba(52, 211, 153, 0.2)', color: 'var(--success)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
-                  20% DISCOUNT ACTIVE
-                </span>
-              )}
-            </div>
+            <h4 style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase' }}>Passenger Profile</h4>
+            <select 
+              value={passengerType}
+              onChange={(e) => setPassengerType(e.target.value as PassengerType)}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)', marginBottom: '12px' }}
+            >
+              <option value="REGULAR">Regular Passenger</option>
+              <option value="STUDENT">Student (50% Off)</option>
+              <option value="SENIOR">Senior Citizen (50% Off)</option>
+              <option value="PWD">PWD (50% Off)</option>
+            </select>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>* Select your profile type for the simulation.</p>
+          </div>
+        </div>
+      )}
 
-            <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
-              {userName}
-            </div>
-            <div style={{ color: 'var(--primary-color)', fontWeight: 'bold', marginBottom: '16px' }}>
-              {passengerType === 'REGULAR' ? 'Regular Passenger' : 
-               passengerType === 'SENIOR' ? 'Senior Citizen' : 
-               passengerType === 'STUDENT' ? 'Student' : 'PWD'}
-            </div>
+      {activeTab === 'CALCULATOR' && (
+        <div className="glass-card fade-in">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0 }}>Fare Calculator</h3>
+            <select 
+              value={line}
+              onChange={(e) => {
+                setLine(e.target.value as any);
+                setOriginIndex(0);
+                setDestIndex(1);
+              }}
+              style={{ padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)', outline: 'none' }}
+            >
+              <option value="MRT-3">MRT-3</option>
+              <option value="LRT-2">LRTA-2</option>
+            </select>
+          </div>
 
-            {/* Discount Logic */}
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              ✅ Verified Senior Citizen via eGovPH SSO. 20% Discount permanently unlocked.
+          <div style={{ marginBottom: '16px' }}>
+             <h4 style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>Passenger Profile</h4>
+             <select 
+                value={passengerType}
+                onChange={(e) => setPassengerType(e.target.value as PassengerType)}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)' }}
+              >
+                <option value="REGULAR">Regular Passenger</option>
+                <option value="STUDENT">Student (50% Off)</option>
+                <option value="SENIOR">Senior Citizen (50% Off)</option>
+                <option value="PWD">PWD (50% Off)</option>
+              </select>
+          </div>
+
+          {/* Fare Display */}
+          <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px', border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>
+              {stations[originIndex]} <span style={{ margin: '0 8px' }}>→</span> {stations[destIndex]}
+            </div>
+            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
+              ₱{getCalculatedFare().toFixed(2)}
+            </div>
+            {passengerType !== 'REGULAR' && (
+              <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '8px', fontWeight: 'bold' }}>
+                50% Discount Applied
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Leaving From</p>
+            <div style={{ display: 'flex', overflowX: 'auto', padding: '16px 0', gap: '24px', borderBottom: '1px solid var(--border-color)' }} className="hide-scrollbar">
+              {stations.map((st, i) => (
+                <div key={i} onClick={() => setOriginIndex(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: '60px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `3px solid ${originIndex === i ? 'var(--primary-color)' : 'var(--border-color)'}`, background: originIndex === i ? 'var(--primary-color)' : 'transparent', marginBottom: '8px' }} />
+                  <span style={{ fontSize: '11px', textAlign: 'center', color: originIndex === i ? 'white' : 'var(--text-secondary)', fontWeight: originIndex === i ? 'bold' : 'normal' }}>{st}</span>
+                </div>
+              ))}
             </div>
           </div>
+
+          <div style={{ marginBottom: '32px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Going To</p>
+            <div style={{ display: 'flex', overflowX: 'auto', padding: '16px 0', gap: '24px', borderBottom: '1px solid var(--border-color)' }} className="hide-scrollbar">
+              {stations.map((st, i) => (
+                <div key={i} onClick={() => setDestIndex(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: '60px' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `3px solid ${destIndex === i ? '#ef4444' : 'var(--border-color)'}`, background: destIndex === i ? '#ef4444' : 'transparent', marginBottom: '8px' }} />
+                  <span style={{ fontSize: '11px', textAlign: 'center', color: destIndex === i ? 'white' : 'var(--text-secondary)', fontWeight: destIndex === i ? 'bold' : 'normal' }}>{st}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {error && <div style={{ color: '#ef4444', marginBottom: '16px', fontSize: '14px', textAlign: 'center' }}>⚠️ {error}</div>}
+
+          <button 
+            className="btn-primary w-full"
+            onClick={() => handlePayment(getCalculatedFare())}
+            disabled={loading || originIndex === destIndex}
+          >
+            {loading ? 'Processing...' : `Pay ₱${getCalculatedFare().toFixed(2)} via eGovPay`}
+          </button>
         </div>
       )}
 
@@ -201,15 +237,11 @@ export default function RideAndPay() {
           <button 
             className="btn-primary w-full" 
             style={{ width: '100%' }}
-            onClick={handlePayment}
+            onClick={() => handlePayment(Number(amount))}
             disabled={loading || !amount || Number(amount) <= 0}
           >
             {loading ? 'Connecting to eGovPay...' : 'Proceed to Payment'}
           </button>
-          
-          <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px' }}>
-            Secured by the official Philippine eGovPay Gateway
-          </p>
         </div>
       )}
     </div>
