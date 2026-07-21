@@ -122,27 +122,29 @@ export default function RideAndPay() {
 
   return (
     <div>
-      <h2 className="title mb-2" style={{ fontSize: '20px' }}>Ride & Pay</h2>
+      <h2 className="title" style={{ fontSize: '16px', margin: '0 0 8px 0' }}>Ride & Pay</h2>
       
-      <div className="glass-card text-center mb-3" style={{ padding: '12px 16px' }}>
-        <p className="text-xs text-muted mb-1">Available Balance</p>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--success)', margin: '0' }}>
-          ₱{balance.toFixed(2)}
-        </h1>
+      <div className="glass-card text-center mb-2" style={{ padding: '8px 12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <span className="text-xs text-muted">Available Balance:</span>
+          <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--success)' }}>
+            ₱{balance.toFixed(2)}
+          </span>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '10px' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '8px' }}>
         <button 
           onClick={() => setActiveTab('TICKET')}
-          style={{ flex: 1, padding: '8px', fontSize: '13px', borderRadius: '6px', border: 'none', background: activeTab === 'TICKET' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+          style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: 'none', background: activeTab === 'TICKET' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
         >
-          🎫 Single Journey Ticket
+          🎫 Ticket
         </button>
         <button 
           onClick={() => setActiveTab('TOPUP')}
-          style={{ flex: 1, padding: '8px', fontSize: '13px', borderRadius: '6px', border: 'none', background: activeTab === 'TOPUP' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+          style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: 'none', background: activeTab === 'TOPUP' ? 'var(--primary-color)' : 'transparent', color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
         >
-          💳 Wallet Top Up
+          💳 Top Up
         </button>
       </div>
 
