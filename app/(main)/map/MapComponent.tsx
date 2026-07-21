@@ -4,9 +4,12 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { transitLines } from './transitData';
+import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
+import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
 
-interface VehicleState {
+export interface VehicleState {
   id: string;
   lineId: string;
   num: number;
@@ -29,62 +32,112 @@ export default function MapComponent() {
   const [pasigFerryData, setPasigFerryData] = useState<any>(null);
   const [selectedLine, setSelectedLine] = useState<string>('all');
   const [showAllLabels, setShowAllLabels] = useState<boolean>(false);
-  const [showLiveVehicles, setShowLiveVehicles] = useState<boolean>(true);
   const [directionFilter, setDirectionFilter] = useState<'ALL' | 'NB' | 'SB'>('ALL');
   const [vehicles, setVehicles] = useState<VehicleState[]>([]);
+  const [showLiveVehicles, setShowLiveVehicles] = useState<boolean>(true);
+  const [showPastStations, setShowPastStations] = useState<boolean>(false);
+  const [isStationSelectionMode, setIsStationSelectionMode] = useState<boolean>(true);
+
+  const [lineViewConfig, setLineViewConfig] = useState<{
+    lineId: string;
+    isForward: boolean;
+    originStationIdx?: number;
+    selectedVehicleId?: string;
+  }>({ lineId: 'mrt-3', isForward: true });
+  
   const [isLineViewOpen, setIsLineViewOpen] = useState(false);
-  const [lineViewConfig, setLineViewConfig] = useState<{ 
-    lineId: string, 
-    isForward: boolean,
-    originStationIdx?: number,
-    selectedVehicleId?: string 
-  }>({ lineId: 'lrt-1', isForward: true });
-  const [showPastStations, setShowPastStations] = useState(false);
-  const [isStationSelectionMode, setIsStationSelectionMode] = useState(false);
-  const mapRef = useRef<L.Map | null>(null);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+
+  // Force re-render periodically for simulation
+  const [tick, setTick] = useState(0);
+
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    fetch('/data/pasig-ferry.json')
-      .then(res => res.json())
-      .then(data => setPasigFerryData(data))
-      .catch(err => console.error('Failed to load ferry GeoJSON:', err));
+    const fetchFerryData = async () => {
+      const FALLBACK_FERRY_COORDINATES: [number, number][] = [
+        [14.5925, 120.9692], // Escolta
+        [14.5938, 120.9782], // Lawton
+        [14.5902, 120.9902], // Plaza Mexico / Quinta
+        [14.5912, 120.9985], // PUP Sta. Mesa
+        [14.5822, 121.0118], // Lambingan
+        [14.5788, 121.0255], // Valenzuela
+        [14.5701, 121.0348], // Hulo
+        [14.5668, 121.0452], // Guadalupe
+        [14.5572, 121.0660], // San Joaquin
+        [14.5560, 121.0772], // Kalawaan
+        [14.5588, 121.0835]  // Pinagbuhatan
+      ];
+
+      const fallbackGeoJSON = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              // GeoJSON expects [longitude, latitude]
+              coordinates: FALLBACK_FERRY_COORDINATES.map(([lat, lng]) => [lng, lat])
+            },
+            properties: {
+              name: "Pasig River Ferry",
+              stroke: "#06b6d4"
+            }
+          }
+        ]
+      };
+
+      try {
+        const res = await fetch('/data/pasig-ferry.json');
+        if (!res.ok) {
+          console.warn(`Ferry GeoJSON not found (Status ${res.status}). Using fallback array.`);
+          setPasigFerryData(fallbackGeoJSON);
+          return;
+        }
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.warn('Ferry response is not JSON. Using fallback array.');
+          setPasigFerryData(fallbackGeoJSON);
+          return;
+        }
+        const ferryData = await res.json();
+        setPasigFerryData(ferryData);
+      } catch (err) {
+        console.error('Error loading Ferry GeoJSON. Using fallback array.', err);
+        setPasigFerryData(fallbackGeoJSON);
+      }
+    };
+    fetchFerryData();
   }, []);
 
-  // Pre-calculate exact distance of stations along their polylines
   const linePaths = useMemo(() => {
-    const distSq = (p1: [number, number], p2: [number, number]) => {
-      const dLat = p1[0] - p2[0];
-      const dLng = p1[1] - p2[1];
-      return dLat * dLat + dLng * dLng;
-    };
-
-    const paths: Record<string, { 
-      points: [number, number][], 
-      totalDist: number, 
-      dists: number[],
-      stationDists: number[]
-    }> = {};
-
+    const paths: Record<string, any> = {};
     transitLines.forEach(line => {
-      const points = line.path || line.stations.map(s => s.coords);
+      let points: [number, number][] = [];
       let totalDist = 0;
-      const dists = [0];
+      let dists: number[] = [0];
+
+      if (line.path) {
+         points = line.path;
+      } else {
+         line.stations.forEach(st => points.push(st.coords));
+      }
+
       for (let i = 1; i < points.length; i++) {
-        const p1 = points[i - 1];
+        const p1 = points[i-1];
         const p2 = points[i];
-        const d = Math.sqrt(distSq(p1, p2));
+        const d = Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
         totalDist += d;
         dists.push(totalDist);
       }
 
-      // Map each station to its exact distance along polyline
       const stationDists = line.stations.map(st => {
         let nearestDist = 0;
-        let minSq = Infinity;
-        points.forEach((p, idx) => {
-          const d = distSq(st.coords, p);
-          if (d < minSq) {
-            minSq = d;
+        let minDiff = Infinity;
+        points.forEach((pt, idx) => {
+          const diff = Math.sqrt(Math.pow(pt[0] - st.coords[0], 2) + Math.pow(pt[1] - st.coords[1], 2));
+          if (diff < minDiff) {
+            minDiff = diff;
             nearestDist = dists[idx];
           }
         });
@@ -109,43 +162,7 @@ export default function MapComponent() {
     return time >= 4.5 && time < 22.0;
   };
 
-  // Global Vehicle Specs
-  const vehicleSpecs = useMemo(() => {
-    const specs: { id: string, lineId: string, offsetMs: number, num: number }[] = [];
-    transitLines.forEach(line => {
-      const M = line.stations.length - 1;
-      if (M <= 0 || line.id === 'pnr-nscr') return;
-      
-      let TOTAL_LEG_MS = 150000;
-      let SPAWN_INTERVAL = 420000; // 7 mins
 
-      if (line.id === 'pnr-south') {
-        TOTAL_LEG_MS = 3000000; // 50 mins
-        SPAWN_INTERVAL = 3600000; // 60 mins
-      } else if (line.id === 'pnr-bicol') {
-        TOTAL_LEG_MS = 2700000; // 45 mins
-        SPAWN_INTERVAL = 3600000; // 60 mins
-      }
-
-      const DWELL_MS = 20000;
-      const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
-      const ROUND_TRIP_MS = 2 * M * LEG_CYCLE;
-      
-      let offset = 0;
-      let num = 1;
-      while (offset < ROUND_TRIP_MS) {
-        specs.push({
-          id: `${line.id}-v${num}`,
-          lineId: line.id,
-          offsetMs: offset,
-          num: num
-        });
-        offset += SPAWN_INTERVAL;
-        num++;
-      }
-    });
-    return specs;
-  }, []);
 
   // Realistic Simulation loop using Date.now() timetables (1 update per second)
   useEffect(() => {
@@ -160,162 +177,149 @@ export default function MapComponent() {
         return;
       }
       
-      const now = getSimulatedTime().getTime();
-      const newVehicles: VehicleState[] = vehicleSpecs.map(spec => {
-        const line = transitLines.find(l => l.id === spec.lineId)!;
-        // Skip suspended PNR line
-        if (line.id === 'pnr-nscr') return null;
+      const nowObj = getSimulatedTime();
+      const now = nowObj.getTime();
+      const isPeak = isPeakHour(nowObj);
+      const newVehicles: VehicleState[] = [];
 
-        let TOTAL_LEG_MS = 150000;
-        if (line.id === 'pnr-south') TOTAL_LEG_MS = 3000000; // 50 mins
-        else if (line.id === 'pnr-bicol') TOTAL_LEG_MS = 2700000; // 45 mins
-        const DWELL_MS = 20000;
-        const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
+      transitLines.forEach(line => {
+        if (line.id === 'pnr-nscr') return;
+        
+        const config = LINE_CONFIGS[line.id];
+        if (!config) return;
 
-        const pathInfo = linePaths[spec.lineId];
-        if (!pathInfo) return null;
-
+        const ROUND_TRIP_MS = getLineRoundTripMs(line.id);
+        const fleetSize = isPeak ? config.fleetSizePeak : config.fleetSizeOffPeak;
+        const headwayMs = (isPeak ? config.peakHeadwaySec : config.offPeakHeadwaySec) * 1000;
         const M = line.stations.length - 1;
-        const ROUND_TRIP_MS = 2 * M * LEG_CYCLE;
-        const t = (now + spec.offsetMs) % ROUND_TRIP_MS;
+        const pathInfo = linePaths[line.id];
+        if (!pathInfo) return;
 
-        const legIndex = Math.floor(t / LEG_CYCLE);
-        const legTime = t % LEG_CYCLE;
+        for (let i = 0; i < fleetSize; i++) {
+          // Perfectly space trains across the full track loop
+          const offsetMs = (i / fleetSize) * ROUND_TRIP_MS;
+          const t = (now + offsetMs) % ROUND_TRIP_MS;
+          
+          const pos = getVehiclePosition(t, line.id);
+          if (!pos) continue;
 
-        let startStationIdx = 0;
-        let endStationIdx = 0;
-        let isDwelling = false;
-        let progress = 0;
+          const startDist = pathInfo.stationDists[pos.startStationIdx];
+          const endDist = pathInfo.stationDists[pos.endStationIdx];
+          
+          let baseCoords: [number, number] = pathInfo.points[0];
+          let p0 = pathInfo.points[0];
+          let p1 = pathInfo.points[0];
+          let dLat = 0;
+          let dLng = 0;
 
-        if (legIndex < M) {
-          startStationIdx = legIndex;
-          endStationIdx = legIndex + 1;
-        } else {
-          const k = legIndex - M;
-          startStationIdx = M - k;
-          endStationIdx = M - k - 1;
-        }
+          if (startDist === undefined || endDist === undefined) {
+            console.error(`Invalid dists for line ${line.id} at idx ${pos.startStationIdx}`);
+          } else {
+            const currentDist = startDist + (endDist - startDist) * pos.progress;
 
-        if (legTime < DWELL_MS) {
-          isDwelling = true;
-          progress = 0;
-        } else {
-          isDwelling = false;
-          progress = (legTime - DWELL_MS) / TOTAL_LEG_MS;
-        }
+            // Get exact coordinates from currentDist along the polyline
+            for (let j = 1; j < pathInfo.dists.length; j++) {
+              if (pathInfo.dists[j] >= currentDist || j === pathInfo.dists.length - 1) {
+                const d0 = pathInfo.dists[j - 1];
+                const d1 = pathInfo.dists[j];
+                const fraction = d1 === d0 ? 0 : (currentDist - d0) / (d1 - d0);
+                p0 = pathInfo.points[j - 1];
+                p1 = pathInfo.points[j];
+                baseCoords = [
+                  p0[0] + (p1[0] - p0[0]) * fraction,
+                  p0[1] + (p1[1] - p0[1]) * fraction
+                ];
+                break;
+              }
+            }
 
-        const startDist = pathInfo.stationDists[startStationIdx];
-        const endDist = pathInfo.stationDists[endStationIdx];
-        const currentDist = startDist + (endDist - startDist) * progress;
+            // Fallback if interpolation evaluates to NaN
+            if (isNaN(baseCoords[0]) || isNaN(baseCoords[1])) {
+              console.error(`Interpolation NaN for ${line.id}`);
+              baseCoords = pathInfo.points[0];
+            }
 
-        // Get exact coordinates from currentDist along the polyline
-        let baseCoords: [number, number] = pathInfo.points[0];
-        let p0 = pathInfo.points[0];
-        let p1 = pathInfo.points[0];
-        for (let i = 1; i < pathInfo.dists.length; i++) {
-          if (pathInfo.dists[i] >= currentDist || i === pathInfo.dists.length - 1) {
-            const d0 = pathInfo.dists[i - 1];
-            const d1 = pathInfo.dists[i];
-            const fraction = d1 === d0 ? 0 : (currentDist - d0) / (d1 - d0);
-            p0 = pathInfo.points[i - 1];
-            p1 = pathInfo.points[i];
-            baseCoords = [
-              p0[0] + (p1[0] - p0[0]) * fraction,
-              p0[1] + (p1[1] - p0[1]) * fraction
-            ];
-            break;
+            dLat = p1[0] - p0[0];
+            dLng = p1[1] - p0[1];
+            if (!pos.isForward) {
+              dLat = p0[0] - p1[0];
+              dLng = p0[1] - p1[1];
+            }
+
+            if (dLat === 0 && dLng === 0 && pathInfo.points.length > 1) {
+              dLat = pathInfo.points[1][0] - pathInfo.points[0][0];
+              dLng = pathInfo.points[1][1] - pathInfo.points[0][1];
+              if (!pos.isForward) { dLat = -dLat; dLng = -dLng; }
+            }
           }
+
+          const norm = Math.sqrt(dLat * dLat + dLng * dLng);
+          const OFFSET = 0.00015;
+          let shiftLat = 0;
+          let shiftLng = 0;
+          if (norm > 0) {
+            shiftLat = (-dLng / norm) * OFFSET;
+            shiftLng = (dLat / norm) * OFFSET;
+          }
+          
+          const coords: [number, number] = [
+            baseCoords[0] + shiftLat,
+            baseCoords[1] + shiftLng
+          ];
+
+          // Additional safety check
+          if (isNaN(coords[0]) || isNaN(coords[1])) {
+             continue; // Do not render if completely invalid
+          }
+
+          const angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+          const isFerry = line.id === 'pasig-ferry';
+          const isEastWest = line.id === 'lrt-2' || isFerry;
+          
+          let headingText = pos.isForward ? 'Southbound' : 'Northbound';
+          if (isFerry) {
+            headingText = pos.isForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
+          } else if (isEastWest) {
+            headingText = pos.isForward ? 'Eastbound' : 'Westbound';
+          }
+
+          const startName = line.stations[pos.startStationIdx].name;
+          const endName = line.stations[pos.endStationIdx].name;
+          const boundFor = pos.isForward ? line.stations[M].name : line.stations[0].name;
+
+          const minsToNext = Math.max(1, Math.ceil(pos.nextStationEtaMs / 60000));
+          let statusText = pos.isDwelling 
+            ? `Boarding at ${startName}` 
+            : `Approaching ${endName} in ${minsToNext} min`;
+
+          if (pos.isDwelling && (pos.startStationIdx === 0 || pos.startStationIdx === M)) {
+             statusText = `Standby at ${startName}`;
+          }
+
+          let logicalFraction = 0;
+          if (pos.isForward) {
+            logicalFraction = (pos.startStationIdx + pos.progress) / M;
+          } else {
+            logicalFraction = (M - pos.startStationIdx + pos.progress) / M;
+          }
+
+          newVehicles.push({
+            id: `${line.id}-v${i + 1}`,
+            lineId: line.id,
+            num: i + 1,
+            coords,
+            statusText,
+            boundFor,
+            headingText,
+            angle,
+            logicalFraction,
+            isForward: pos.isForward,
+            isDwelling: pos.isDwelling,
+            nextStationEtaMs: pos.nextStationEtaMs,
+            totalLegMs: pos.totalLegMs
+          });
         }
-
-        const isForward = legIndex < M;
-        
-        let dLat = p1[0] - p0[0];
-        let dLng = p1[1] - p0[1];
-        if (!isForward) {
-          dLat = p0[0] - p1[0];
-          dLng = p0[1] - p1[1];
-        }
-
-        if (dLat === 0 && dLng === 0 && pathInfo.points.length > 1) {
-          dLat = pathInfo.points[1][0] - pathInfo.points[0][0];
-          dLng = pathInfo.points[1][1] - pathInfo.points[0][1];
-          if (!isForward) { dLat = -dLat; dLng = -dLng; }
-        }
-
-        // 1. Right-hand track offset (0.00015 degrees ~ 15 meters)
-        const norm = Math.sqrt(dLat * dLat + dLng * dLng);
-        const OFFSET = 0.00015;
-        let shiftLat = 0;
-        let shiftLng = 0;
-        if (norm > 0) {
-          shiftLat = (-dLng / norm) * OFFSET;
-          shiftLng = (dLat / norm) * OFFSET;
-        }
-        
-        const coords: [number, number] = [
-          baseCoords[0] + shiftLat,
-          baseCoords[1] + shiftLng
-        ];
-
-        // 2. Rotation Angle for Chevron
-        const angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
-
-        // 3. Direction Naming
-        const isFerry = line.id === 'pasig-ferry';
-        const isEastWest = line.id === 'lrt-2' || isFerry;
-        let headingText = isForward ? 'Southbound' : 'Northbound';
-        if (isFerry) {
-          headingText = isForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
-        } else if (isEastWest) {
-          headingText = isForward ? 'Eastbound' : 'Westbound';
-        }
-
-        const startName = line.stations[startStationIdx].name;
-        const endName = line.stations[endStationIdx].name;
-        const boundFor = isForward ? line.stations[M].name : line.stations[0].name;
-
-        // 4. ETA
-        const minsToNext = Math.max(1, Math.ceil((LEG_CYCLE - legTime) / 60000));
-
-        let statusText = isDwelling 
-          ? `Boarding at ${startName}` 
-          : `Approaching ${endName} in ${minsToNext} min`;
-
-        if (isDwelling && (startStationIdx === 0 || startStationIdx === M)) {
-           statusText = `Standby at ${startName}`;
-        }
-
-        // 5. Logical Route Progress (for Line View UI)
-        let logicalFraction = 0;
-        if (isForward) {
-          logicalFraction = (startStationIdx + progress) / M;
-        } else {
-          logicalFraction = (M - startStationIdx + progress) / M;
-        }
-
-        let nextStationEtaMs = 0;
-        if (isDwelling) {
-          nextStationEtaMs = (DWELL_MS - legTime) + TOTAL_LEG_MS;
-        } else {
-          nextStationEtaMs = TOTAL_LEG_MS - (legTime - DWELL_MS);
-        }
-
-        return {
-          id: spec.id,
-          lineId: spec.lineId,
-          num: spec.num,
-          coords,
-          statusText,
-          boundFor,
-          headingText,
-          angle,
-          logicalFraction,
-          isForward,
-          isDwelling,
-          nextStationEtaMs,
-          totalLegMs: TOTAL_LEG_MS
-        };
-      }).filter(Boolean) as VehicleState[];
+      });
 
       setVehicles(newVehicles);
     };
@@ -456,30 +460,45 @@ export default function MapComponent() {
     const M = line.stations.length - 1;
     if (M <= 0) return null;
 
-    let TOTAL_LEG_MS = 150000;
-    if (lineId === 'pnr-south') TOTAL_LEG_MS = 3000000;
-    else if (lineId === 'pnr-bicol') TOTAL_LEG_MS = 2700000;
-    const DWELL_MS = 20000;
-    const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
-    const ROUND_TRIP_MS = 2 * M * LEG_CYCLE;
-    const now = getSimulatedTime().getTime();
+    const config = LINE_CONFIGS[lineId];
+    if (!config) return null;
 
-    const forwardTarget = stationIdx * LEG_CYCLE;
-    const backwardTarget = (2 * M - stationIdx) * LEG_CYCLE;
+    const nowObj = getSimulatedTime();
+    const isPeak = isPeakHour(nowObj);
+    const fleetSize = isPeak ? config.fleetSizePeak : config.fleetSizeOffPeak;
+    const headwayMs = (isPeak ? config.peakHeadwaySec : config.offPeakHeadwaySec) * 1000;
+    const ROUND_TRIP_MS = getLineRoundTripMs(lineId);
+    
+    const now = nowObj.getTime();
+    
+    let forwardTargetTime = 0;
+    const dwellMs = config.dwellTimeSec * 1000;
+    for (let i = 0; i < stationIdx; i++) {
+        forwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
+    }
+    
+    let backwardTargetTime = 0;
+    for (let i = 0; i < M; i++) {
+        backwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
+    }
+    backwardTargetTime += dwellMs;
+    for (let i = M - 1; i >= stationIdx; i--) {
+        backwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
+    }
 
     let minForwardMs = Infinity;
     let minBackwardMs = Infinity;
 
-    const lineSpecs = vehicleSpecs.filter(spec => spec.lineId === lineId);
-    lineSpecs.forEach(spec => {
-      const t = (now + spec.offsetMs) % ROUND_TRIP_MS;
+    for (let i = 0; i < fleetSize; i++) {
+      const offsetMs = i * headwayMs;
+      const t = (now + offsetMs) % ROUND_TRIP_MS;
       
-      let diffFwd = (forwardTarget - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
+      let diffFwd = (forwardTargetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
       if (diffFwd < minForwardMs) minForwardMs = diffFwd;
 
-      let diffBwd = (backwardTarget - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
+      let diffBwd = (backwardTargetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
       if (diffBwd < minBackwardMs) minBackwardMs = diffBwd;
-    });
+    }
 
     return {
       forwardMins: Math.max(1, Math.ceil(minForwardMs / 60000)),
@@ -490,32 +509,49 @@ export default function MapComponent() {
   };
 
   const getUpcomingDepartures = (lineId: string, stationIdx: number, isForward: boolean, count: number = 4) => {
-    const line = transitLines.find(l => l.id === lineId);
-    if (!line) return [];
+    const config = LINE_CONFIGS[lineId];
+    if (!config) return [];
     
-    const M = line.stations.length - 1;
-    let TOTAL_LEG_MS = 210000;
-    if (lineId === 'pnr-south') TOTAL_LEG_MS = 3000000;
-    else if (lineId === 'pnr-bicol') TOTAL_LEG_MS = 2700000;
-    const DWELL_MS = 20000;
-    const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
-    const ROUND_TRIP_MS = 2 * M * LEG_CYCLE;
-    const now = getSimulatedTime().getTime();
-
-    const targetTime = isForward ? (stationIdx * LEG_CYCLE) : ((2 * M - stationIdx) * LEG_CYCLE);
-
-    const lineSpecs = vehicleSpecs.filter(spec => spec.lineId === lineId);
-    const departures = lineSpecs.map(spec => {
-      const t = (now + spec.offsetMs) % ROUND_TRIP_MS;
-      let diffMs = (targetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
-      return {
-        vehicleId: spec.id,
-        etaMs: diffMs,
-        etaMins: Math.max(1, Math.ceil(diffMs / 60000))
-      };
-    }).sort((a, b) => a.etaMs - b.etaMs);
-
-    return departures.slice(0, count);
+    const nowObj = getSimulatedTime();
+    const isPeak = isPeakHour(nowObj);
+    const fleetSize = isPeak ? config.fleetSizePeak : config.fleetSizeOffPeak;
+    const headwayMs = (isPeak ? config.peakHeadwaySec : config.offPeakHeadwaySec) * 1000;
+    const ROUND_TRIP_MS = getLineRoundTripMs(lineId);
+    
+    const now = nowObj.getTime();
+    let targetTime = 0;
+    const M = config.legDurations.length;
+    const dwellMs = config.dwellTimeSec * 1000;
+    
+    if (isForward) {
+        for (let i = 0; i < stationIdx; i++) {
+            targetTime += dwellMs + (config.legDurations[i] * 1000);
+        }
+    } else {
+        // Forward trip
+        for (let i = 0; i < M; i++) {
+            targetTime += dwellMs + (config.legDurations[i] * 1000);
+        }
+        targetTime += dwellMs; // Terminal dwell
+        
+        // Backward trip up to stationIdx
+        for (let i = M - 1; i >= stationIdx; i--) {
+            targetTime += dwellMs + (config.legDurations[i] * 1000);
+        }
+    }
+    
+    const departures = [];
+    for (let i = 0; i < fleetSize; i++) {
+       const offsetMs = i * headwayMs;
+       const t = (now + offsetMs) % ROUND_TRIP_MS;
+       let diffMs = (targetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
+       departures.push({
+           vehicleId: `${lineId}-v${i + 1}`,
+           etaMs: diffMs,
+           etaMins: Math.max(1, Math.ceil(diffMs / 60000))
+       });
+    }
+    return departures.sort((a, b) => a.etaMs - b.etaMs).slice(0, count);
   };
 
   const renderStationSelectionPrompt = () => {
@@ -653,11 +689,6 @@ export default function MapComponent() {
     if (!line) return null;
 
     const M = line.stations.length - 1;
-    let TOTAL_LEG_MS = 210000;
-    if (line.id === 'pnr-south') TOTAL_LEG_MS = 3000000;
-    else if (line.id === 'pnr-bicol') TOTAL_LEG_MS = 2700000;
-    const DWELL_MS = 20000;
-    const LEG_CYCLE = TOTAL_LEG_MS + DWELL_MS;
 
     let stations = line.stations;
     if (!lineViewConfig.isForward) {
@@ -875,8 +906,8 @@ export default function MapComponent() {
               let etaText = '---';
               
               if (isContextual && selectedDep) {
-                 const legDiff = globalRenderIdx - originRenderIdx;
-                 const msDiff = legDiff * LEG_CYCLE;
+                 const originOriginalIdx = lineViewConfig.isForward ? originRenderIdx : (stations.length - 1 - originRenderIdx);
+                 const msDiff = getTravelTimeMs(line.id, originOriginalIdx, originalIdx, lineViewConfig.isForward);
                  const stationEtaMs = selectedDep.etaMs + msDiff;
                  etaText = formatAbsoluteTime(stationEtaMs);
               } else if (!isContextual) {
@@ -939,125 +970,161 @@ export default function MapComponent() {
         top: '20px',
         right: '20px',
         zIndex: 1000,
-        background: '#1e293b',
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(8px)',
         padding: '12px 16px',
-        borderRadius: '8px',
-        border: '1px solid #334155',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        borderRadius: '12px',
+        border: '1px solid rgba(51, 65, 85, 0.6)',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '6px'
+        gap: '6px',
+        transition: 'all 0.3s ease-in-out',
+        width: isPanelCollapsed ? 'auto' : '260px'
       }}>
-        <label htmlFor="line-filter" style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-          HIGHLIGHT LINE
-        </label>
-        <select 
-          id="line-filter"
-          value={selectedLine}
-          onChange={(e) => setSelectedLine(e.target.value)}
-          style={{
-            background: '#0f172a',
-            color: '#f8fafc',
-            border: '1px solid #475569',
-            borderRadius: '4px',
-            padding: '8px',
-            fontSize: '14px',
-            outline: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="all">All Lines</option>
-          {transitLines.map(l => (
-            <option key={l.id} value={l.id}>{l.name}</option>
-          ))}
-        </select>
-        
-        {/* Toggle Station Names */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
-          <input 
-            id="label-toggle"
-            type="checkbox" 
-            checked={showAllLabels}
-            onChange={(e) => setShowAllLabels(e.target.checked)}
-            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
-          />
-          <label 
-            htmlFor="label-toggle"
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.5px', userSelect: 'none' }}>
+            {isPanelCollapsed ? '⚙️ Filters' : 'HIGHLIGHT LINE'}
+          </span>
+          <button 
+            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
             style={{ 
-              color: '#f8fafc', 
-              fontSize: '13px', 
-              cursor: 'pointer',
-              userSelect: 'none'
+              background: 'transparent', 
+              border: 'none', 
+              cursor: 'pointer', 
+              color: '#94a3b8', 
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color 0.2s'
             }}
+            onMouseOver={(e) => e.currentTarget.style.color = 'white'}
+            onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+            aria-label="Toggle Panel"
           >
-            Show Station Names
-          </label>
+            {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </button>
         </div>
 
-        {/* Toggle Live Vehicles */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-          <input 
-            type="checkbox" 
-            id="liveVehiclesToggle"
-            checked={showLiveVehicles}
-            onChange={(e) => setShowLiveVehicles(e.target.checked)}
-            style={{ cursor: 'pointer', accentColor: '#38bdf8', width: '16px', height: '16px' }}
-          />
-          <label 
-            htmlFor="liveVehiclesToggle" 
-            style={{ 
-              color: '#f8fafc', 
-              fontSize: '13px', 
-              cursor: 'pointer',
-              userSelect: 'none' 
-            }}
-          >
-            Show Live Vehicles
-          </label>
-        </div>
+        {!isPanelCollapsed && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+            <select 
+              id="line-filter"
+              value={selectedLine}
+              onChange={(e) => setSelectedLine(e.target.value)}
+              style={{
+                background: '#0f172a',
+                color: '#f8fafc',
+                border: '1px solid #475569',
+                borderRadius: '4px',
+                padding: '8px',
+                fontSize: '13px',
+                outline: 'none',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              <option value="all">All Lines</option>
+              {transitLines.map(l => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+            
+            {/* Toggle Station Names */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+              <input 
+                id="label-toggle"
+                type="checkbox" 
+                checked={showAllLabels}
+                onChange={(e) => setShowAllLabels(e.target.checked)}
+                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
+              />
+              <label 
+                htmlFor="label-toggle"
+                style={{ 
+                  color: '#f8fafc', 
+                  fontSize: '13px', 
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+              >
+                Show Station Names
+              </label>
+            </div>
 
-        {/* Direction Filter */}
-        {showLiveVehicles && (
-          <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155', marginTop: '4px' }}>
+            {/* Toggle Live Vehicles */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input 
+                  type="checkbox" 
+                  id="liveVehiclesToggle"
+                  checked={showLiveVehicles}
+                  onChange={(e) => setShowLiveVehicles(e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: '#38bdf8', width: '16px', height: '16px' }}
+                />
+                <label 
+                  htmlFor="liveVehiclesToggle" 
+                  style={{ 
+                    color: '#f8fafc', 
+                    fontSize: '13px', 
+                    cursor: 'pointer',
+                    userSelect: 'none' 
+                  }}
+                >
+                  Show Live Vehicles
+                </label>
+              </div>
+              
+              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
+                🟢 {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
+              </div>
+            </div>
+
+            {/* Direction Filter */}
+            {showLiveVehicles && (
+              <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155', marginTop: '4px' }}>
+                <button 
+                  onClick={() => setDirectionFilter('ALL')}
+                  style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'ALL' ? '#3b82f6' : 'transparent', color: directionFilter === 'ALL' ? 'white' : '#94a3b8' }}
+                >All</button>
+                <button 
+                  onClick={() => setDirectionFilter('NB')}
+                  style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', borderLeft: '1px solid #334155', borderRight: '1px solid #334155', cursor: 'pointer', backgroundColor: directionFilter === 'NB' ? '#3b82f6' : 'transparent', color: directionFilter === 'NB' ? 'white' : '#94a3b8' }}
+                >▲ NB/EB</button>
+                <button 
+                  onClick={() => setDirectionFilter('SB')}
+                  style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'SB' ? '#3b82f6' : 'transparent', color: directionFilter === 'SB' ? 'white' : '#94a3b8' }}
+                >▼ SB/WB</button>
+              </div>
+            )}
+
+            {/* Toggle Line View Button */}
             <button 
-              onClick={() => setDirectionFilter('ALL')}
-              style={{ flex: 1, padding: '6px 8px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'ALL' ? '#3b82f6' : 'transparent', color: directionFilter === 'ALL' ? 'white' : '#94a3b8' }}
-            >All</button>
-            <button 
-              onClick={() => setDirectionFilter('NB')}
-              style={{ flex: 1, padding: '6px 8px', fontSize: '11px', fontWeight: 'bold', border: 'none', borderLeft: '1px solid #334155', borderRight: '1px solid #334155', cursor: 'pointer', backgroundColor: directionFilter === 'NB' ? '#3b82f6' : 'transparent', color: directionFilter === 'NB' ? 'white' : '#94a3b8' }}
-            >▲ NB/EB</button>
-            <button 
-              onClick={() => setDirectionFilter('SB')}
-              style={{ flex: 1, padding: '6px 8px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'SB' ? '#3b82f6' : 'transparent', color: directionFilter === 'SB' ? 'white' : '#94a3b8' }}
-            >▼ SB/WB</button>
+              onClick={() => {
+                if (!isLineViewOpen) {
+                  setIsStationSelectionMode(true); // Open directly to selection wizard when launched globally
+                }
+                setIsLineViewOpen(prev => !prev);
+              }}
+              style={{ 
+                marginTop: '6px',
+                width: '100%',
+                padding: '10px',
+                backgroundColor: isLineViewOpen ? '#3b82f6' : '#0f172a',
+                color: 'white',
+                border: '1px solid #334155',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '13px',
+                transition: 'background 0.2s'
+              }}
+            >
+              {isLineViewOpen ? 'Close Schematic' : '🗺️ Open Line View'}
+            </button>
           </div>
         )}
-
-        {/* Toggle Line View Button */}
-        <button 
-          onClick={() => {
-            if (!isLineViewOpen) {
-              setIsStationSelectionMode(true); // Open directly to selection wizard when launched globally
-            }
-            setIsLineViewOpen(prev => !prev);
-          }}
-          style={{ 
-            marginTop: '8px',
-            width: '100%',
-            padding: '10px',
-            backgroundColor: isLineViewOpen ? '#3b82f6' : '#0f172a',
-            color: 'white',
-            border: '1px solid #334155',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            transition: 'background 0.2s'
-          }}
-        >
-          {isLineViewOpen ? 'Close Schematic' : '🗺️ Open Line View'}
-        </button>
       </div>
 
       <style>{`
@@ -1280,32 +1347,45 @@ export default function MapComponent() {
                       )}
 
                       {/* Action Buttons */}
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                        {idx < line.stations.length - 1 && (
-                          <button 
-                            onClick={() => {
-                              setLineViewConfig({ lineId: line.id, isForward: true, originStationIdx: idx });
-                              setIsLineViewOpen(true);
-                              setShowPastStations(false);
-                            }}
-                            style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
-                          >
-                            ▼ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
-                          </button>
-                        )}
-                        {idx > 0 && (
-                          <button 
-                            onClick={() => {
-                              setLineViewConfig({ lineId: line.id, isForward: false, originStationIdx: idx });
-                              setIsLineViewOpen(true);
-                              setShowPastStations(false);
-                            }}
-                            style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
-                          >
-                            ▲ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
-                          </button>
-                        )}
-                      </div>
+                      {line.id !== 'pnr-nscr' && isSystemActive() && (() => {
+                        let isLineActive = true;
+                        const hours = getSimulatedTime().getHours();
+                        const minutes = getSimulatedTime().getMinutes();
+                        const timeVal = hours + minutes / 60;
+                        if (line.id === 'pnr-south' && (timeVal < 5 || timeVal > 18.5)) isLineActive = false;
+                        if (line.id === 'pnr-bicol' && (timeVal < 4.5 || timeVal > 17.16)) isLineActive = false;
+                        
+                        if (!isLineActive) return null;
+                        
+                        return (
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                            {idx < line.stations.length - 1 && (
+                              <button 
+                                onClick={() => {
+                                  setLineViewConfig({ lineId: line.id, isForward: true, originStationIdx: idx });
+                                  setIsLineViewOpen(true);
+                                  setShowPastStations(false);
+                                }}
+                                style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
+                              >
+                                ▼ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
+                              </button>
+                            )}
+                            {idx > 0 && (
+                              <button 
+                                onClick={() => {
+                                  setLineViewConfig({ lineId: line.id, isForward: false, originStationIdx: idx });
+                                  setIsLineViewOpen(true);
+                                  setShowPastStations(false);
+                                }}
+                                style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
+                              >
+                                ▲ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </Popup>
                 </CircleMarker>
@@ -1334,14 +1414,12 @@ export default function MapComponent() {
                 if (nextIdx < 0) nextIdx = 0;
 
                 const stops: { name: string, etaMs: number }[] = [];
-                const LEG_CYCLE = v.totalLegMs + 20000; // 20s dwell
-                let currentEta = v.nextStationEtaMs;
                 const dir = v.isForward ? 1 : -1;
                 let idxWalker = nextIdx;
 
                 while (idxWalker >= 0 && idxWalker <= M && stops.length < 4) {
-                  stops.push({ name: (line.id === 'pasig-ferry' && snappedFerryStations ? snappedFerryStations[idxWalker].name : line.stations[idxWalker].name), etaMs: currentEta });
-                  currentEta += LEG_CYCLE;
+                  const msFromNext = idxWalker === nextIdx ? 0 : getTravelTimeMs(line.id, nextIdx, idxWalker, v.isForward);
+                  stops.push({ name: (line.id === 'pasig-ferry' && snappedFerryStations ? snappedFerryStations[idxWalker].name : line.stations[idxWalker].name), etaMs: v.nextStationEtaMs + msFromNext });
                   idxWalker += dir;
                 }
 
@@ -1358,7 +1436,7 @@ export default function MapComponent() {
 
                 return (
                   <Marker 
-                    key={v.id} 
+                    key={`vehicle-${v.lineId}-${v.id}-${v.isForward ? 'FWD' : 'BWD'}`}
                     position={v.coords} 
                     icon={createVehicleIcon(line.id, line.color, isFaded, v.headingText)}
                     zIndexOffset={1000}
