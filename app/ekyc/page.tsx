@@ -61,7 +61,7 @@ export default function Ekyc() {
       const verifyData = await verifyRes.json();
 
       if (!verifyRes.ok) {
-        throw new Error(verifyData.error || 'Identity verification failed');
+        throw new Error(verifyData.details || verifyData.error || 'Identity verification failed');
       }
 
       setStatusText('Identity Verified Successfully! Redirecting...');

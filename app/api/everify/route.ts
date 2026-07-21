@@ -61,8 +61,11 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(verifyData);
-  } catch (error) {
+  } catch (error: any) {
     console.error("eVerify Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Internal server error", 
+      details: error.message || error.toString() 
+    }, { status: 500 });
   }
 }
