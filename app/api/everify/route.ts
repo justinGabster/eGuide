@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     const accessToken = authData.data.access_token;
 
     // Step 2: Submit demographics and session ID to verify endpoint
-    const verifyRes = await fetch(`${baseUrl}/api/verify`, {
+    const verifyRes = await fetch(`${baseUrl}/api/query`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
