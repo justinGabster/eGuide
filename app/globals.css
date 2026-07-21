@@ -215,7 +215,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  padding-bottom: 90px; /* space for bottom nav */
+  padding-bottom: 120px; /* space for bottom nav */
 }
 
 .theme-light .bottom-nav {

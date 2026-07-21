@@ -664,7 +664,7 @@ export default function MapComponent() {
             </div>
           </div>
 
-          <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
+          <div style={{ paddingTop: '20px', marginTop: 'auto', zIndex: 10 }}>
             <button 
               onClick={() => {
                  if (lineViewConfig.originStationIdx === undefined) {
@@ -673,7 +673,7 @@ export default function MapComponent() {
                  setIsStationSelectionMode(false);
                  setShowPastStations(false);
               }}
-              style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
+              style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
             >
               View Line Schedule &rarr;
             </button>
