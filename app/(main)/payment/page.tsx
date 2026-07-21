@@ -92,7 +92,8 @@ export default function RideAndPay() {
     const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
     const baseFare = matrix[originIndex][destIndex];
     if (passengerType === 'REGULAR') return baseFare;
-    return baseFare * 0.5;
+    // Official Student/Senior/PWD discount is 20%
+    return baseFare * 0.8;
   };
 
   const handleTopup = async () => {
@@ -251,7 +252,7 @@ export default function RideAndPay() {
                 </div>
                 {passengerType !== 'REGULAR' && (
                   <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
-                    50% Discount Applied
+                    20% Discount Applied
                   </div>
                 )}
               </>
@@ -282,9 +283,9 @@ export default function RideAndPay() {
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--border-color)' }}
               >
                 <option value="REGULAR">Regular Passenger</option>
-                <option value="STUDENT">Student (50% Off)</option>
-                <option value="SENIOR">Senior Citizen (50% Off)</option>
-                <option value="PWD">PWD (50% Off)</option>
+                <option value="STUDENT">Student (20% Off)</option>
+                <option value="SENIOR">Senior Citizen (20% Off)</option>
+                <option value="PWD">PWD (20% Off)</option>
               </select>
           </div>
 
