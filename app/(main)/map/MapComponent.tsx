@@ -604,67 +604,67 @@ export default function MapComponent() {
     const activeLine = transitLines.find(l => l.id === lineViewConfig.lineId) || transitLines[0];
 
     return (
-      <div style={{ padding: '24px 20px 40px 20px', color: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: '#0f172a', overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 40px 20px', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: 'var(--card-bg)', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
-          <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+          <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
         
-        <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
           Where are you starting your journey?
         </p>
 
         <button 
           onClick={handleUseMyLocation}
-          style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+          style={{ width: '100%', padding: '14px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
         >
           📍 Use My Location
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
-          <span style={{ padding: '0 12px', fontSize: '11px', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>OR SELECT MANUALLY</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
+          <span style={{ padding: '0 12px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', letterSpacing: '0.5px' }}>OR SELECT MANUALLY</span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
+            <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
             <select 
               value={lineViewConfig.lineId} 
               onChange={e => setLineViewConfig(c => ({...c, lineId: e.target.value, originStationIdx: 0}))}
-              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+              style={{ width: '100%', padding: '12px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               {transitLines.filter(l => l.id !== 'pnr-nscr').map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
+            <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
             <select 
               value={lineViewConfig.originStationIdx || 0} 
               onChange={e => setLineViewConfig(c => ({...c, originStationIdx: parseInt(e.target.value)}))}
-              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+              style={{ width: '100%', padding: '12px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
-            <div style={{ display: 'flex', backgroundColor: '#1e293b', borderRadius: '6px', padding: '4px', border: '1px solid #334155' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
+            <div style={{ display: 'flex', backgroundColor: 'var(--bg-color)', borderRadius: '6px', padding: '4px', border: '1px solid var(--border-color)' }}>
                <button 
                   onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
+                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? 'var(--primary-color)' : 'transparent', color: lineViewConfig.isForward ? 'white' : 'var(--text-secondary)', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
                >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}</button>
                <button 
                   onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: !lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
+                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? 'var(--primary-color)' : 'transparent', color: !lineViewConfig.isForward ? 'white' : 'var(--text-secondary)', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
                >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}</button>
             </div>
           </div>
 
-          <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
+          <div style={{ paddingTop: '20px', marginTop: 'auto', zIndex: 10 }}>
             <button 
               onClick={() => {
                  if (lineViewConfig.originStationIdx === undefined) {
@@ -673,7 +673,7 @@ export default function MapComponent() {
                  setIsStationSelectionMode(false);
                  setShowPastStations(false);
               }}
-              style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
+              style={{ width: '100%', padding: '14px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
             >
               View Line Schedule &rarr;
             </button>
@@ -773,14 +773,14 @@ export default function MapComponent() {
     return (
       <>
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid #1e293b', backgroundColor: '#1e293b' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ backgroundColor: line.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block' }}></span>
                 {headerTitle}
               </h2>
-              <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+              <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                 {lineViewConfig.isForward 
                   ? (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'EASTBOUND' : 'SOUTHBOUND') 
                   : (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'WESTBOUND' : 'NORTHBOUND')}
@@ -806,7 +806,7 @@ export default function MapComponent() {
           
           {isContextual && departures.length > 0 && (
              <div style={{ marginTop: '16px' }}>
-               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
+               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
                  {departures.map((dep, idx) => {
                     const isSelected = selectedDep?.vehicleId === dep.vehicleId;
@@ -817,9 +817,9 @@ export default function MapComponent() {
                         style={{ 
                           padding: '8px 12px', 
                           borderRadius: '6px', 
-                          border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
-                          background: isSelected ? `${line.color}20` : '#0f172a', 
-                          color: isSelected ? '#fff' : '#94a3b8', 
+                          border: isSelected ? `1px solid ${line.color}` : '1px solid var(--border-color)', 
+                          background: isSelected ? `${line.color}20` : 'var(--card-bg)', 
+                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', 
                           cursor: 'pointer',
                           whiteSpace: 'nowrap',
                           transition: 'all 0.2s',
@@ -830,7 +830,7 @@ export default function MapComponent() {
                         }}
                       >
                         <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
-                        <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748b', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
+                        <span style={{ fontSize: '10px', color: isSelected ? line.color : 'var(--text-secondary)', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
                       </button>
                     );
                  })}
@@ -974,7 +974,7 @@ export default function MapComponent() {
         top: '20px',
         right: '20px',
         zIndex: 1000,
-        background: 'rgba(255, 255, 255, 0.95)',
+        background: 'var(--card-bg)',
         backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         borderRadius: '12px',
@@ -1179,14 +1179,14 @@ export default function MapComponent() {
         left: isLineViewOpen ? 0 : '-380px',
         width: '380px',
         height: '100%',
-        backgroundColor: '#0f172a',
+        backgroundColor: 'var(--card-bg)',
         boxShadow: '4px 0 15px rgba(0,0,0,0.5)',
         zIndex: 2000,
         transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
-        color: 'white',
-        borderRight: '1px solid #1e293b'
+        color: 'var(--text-primary)',
+        borderRight: '1px solid var(--border-color)'
       }}>
         {isLineViewOpen && (isStationSelectionMode ? renderStationSelectionPrompt() : renderLineViewContent())}
       </div>

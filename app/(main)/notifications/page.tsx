@@ -64,7 +64,7 @@ export default function Notifications() {
     <div>
       <h2 className="title mb-4">Alerts (eMessage)</h2>
       
-      <div className="glass-card mb-6 fade-in" style={{ background: '#F8FAFC', padding: '16px', border: '1px solid var(--border-color)' }}>
+      <div className="glass-card mb-6 fade-in" style={{ background: 'var(--bg-color)', padding: '16px', border: '1px solid var(--border-color)' }}>
         <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-primary)' }}>Test SMS & AI Pipeline</h3>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
           Test the eGov SMS Sandbox directly, or chain it with the eGov AI Assistant for dynamic messages.
@@ -90,21 +90,21 @@ export default function Notifications() {
             value={vehicle}
             onChange={(e) => setVehicle(e.target.value)}
             placeholder="Vehicle"
-            style={{ flex: 2, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#FFFFFF', color: 'var(--text-primary)', fontSize: '12px' }}
+            style={{ flex: 2, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px' }}
           />
           <input 
             type="text" 
             value={distance}
             onChange={(e) => setDistance(e.target.value)}
             placeholder="Distance"
-            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#FFFFFF', color: 'var(--text-primary)', fontSize: '12px' }}
+            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px' }}
           />
           <input 
             type="text" 
             value={speed}
             onChange={(e) => setSpeed(e.target.value)}
             placeholder="Speed"
-            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#FFFFFF', color: 'var(--text-primary)', fontSize: '12px' }}
+            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px' }}
           />
         </div>
         
