@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -25,8 +26,41 @@ export interface VehicleState {
 }
 
 export default function MapComponent() {
+  const searchParams = useSearchParams();
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
+
+  useEffect(() => {
+    const lineId = searchParams.get('lineId');
+    const stationIdxParam = searchParams.get('stationIdx');
+    
+    if (lineId) {
+      setSelectedLine(lineId);
+      
+      const config: any = {
+        lineId,
+        isForward: true
+      };
+      
+      if (stationIdxParam !== null) {
+        config.originStationIdx = parseInt(stationIdxParam, 10);
+      }
+      
+      setLineViewConfig(config);
+      setIsStationSelectionMode(false);
+      setIsLineViewOpen(true);
+      
+      // Pan map to the station if specified
+      const line = transitLines.find(l => l.id === lineId);
+      if (line) {
+        const idx = stationIdxParam !== null ? parseInt(stationIdxParam, 10) : 0;
+        const station = line.stations[idx];
+        if (station && mapRef.current) {
+          mapRef.current.setView(station.coords, 14);
+        }
+      }
+    }
+  }, [searchParams]);
 
   const [pasigFerryData, setPasigFerryData] = useState<any>(null);
   const [selectedLine, setSelectedLine] = useState<string>('all');

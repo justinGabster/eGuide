@@ -1,142 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 
 export default function Notifications() {
-  const phoneNumber = '09201057839';
-  const [loadingStatic, setLoadingStatic] = useState(false);
-  
-  // AI Dynamic States
-  const [vehicle, setVehicle] = useState('EDSA Carousel Bus');
-  const [distance, setDistance] = useState('2km');
-  const [speed, setSpeed] = useState('40km/h');
-  const [loadingAi, setLoadingAi] = useState(false);
-
-  const handleTestSms = async () => {
-    setLoadingStatic(true);
-    try {
-      const phones = [phoneNumber, '09325298802'];
-      const results = await Promise.all(phones.map(p => fetch('/api/emessage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          number: p, 
-          message: "eGuide Test Alert: The EDSA Carousel bus is arriving in 5 minutes! 🚌" 
-        })
-      })));
-      const res = results[0];
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.error || 'Failed to send SMS');
-      alert('Static SMS Sent Successfully!\n\nCheck your phone!');
-    } catch (err: any) {
-      alert(`eMessage Error: ${err.message}`);
-    } finally {
-      setLoadingStatic(false);
-    }
-  };
-
-  const handleTestAiSms = async () => {
-    setLoadingAi(true);
-    try {
-      const phones = [phoneNumber, '09325298802'];
-      const results = await Promise.all(phones.map(p => fetch('/api/emessage/dynamic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          number: p, 
-          vehicleType: vehicle,
-          distanceStr: distance,
-          speedStr: speed
-        })
-      })));
-      const res = results[0];
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.error || 'Failed to send AI SMS');
-      alert(`AI SMS Sent Successfully!\n\nThe AI wrote and texted you a custom message based on the speed and distance you entered.`);
-    } catch (err: any) {
-      alert(`AI eMessage Error: ${err.message}`);
-    } finally {
-      setLoadingAi(false);
-    }
-  };
-
   return (
     <div>
       <h2 className="title mb-4">Alerts (eMessage)</h2>
       
-      <div className="glass-card mb-6 fade-in" style={{ background: 'var(--bg-color)', padding: '16px', border: '1px solid var(--border-color)' }}>
-        <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-primary)' }}>Test SMS & AI Pipeline</h3>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Test the eGov SMS Sandbox directly, or chain it with the eGov AI Assistant for dynamic messages.
-        </p>
-        
-
-        
-        <button 
-          onClick={handleTestSms}
-          disabled={loadingStatic || loadingAi}
-          className="btn-primary block"
-          style={{ width: '100%', opacity: loadingStatic ? 0.7 : 1, marginBottom: '16px' }}
-        >
-          {loadingStatic ? 'Sending...' : 'Send Standard Static SMS'}
-        </button>
-
-        <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0' }} />
-
-        <h4 style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '8px' }}>Test AI-Generated Alert</h4>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-          <input 
-            type="text" 
-            value={vehicle}
-            onChange={(e) => setVehicle(e.target.value)}
-            placeholder="Vehicle"
-            style={{ flex: 2, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px' }}
-          />
-          <input 
-            type="text" 
-            value={distance}
-            onChange={(e) => setDistance(e.target.value)}
-            placeholder="Distance"
-            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px' }}
-          />
-          <input 
-            type="text" 
-            value={speed}
-            onChange={(e) => setSpeed(e.target.value)}
-            placeholder="Speed"
-            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px' }}
-          />
-        </div>
-        
-        <button 
-          onClick={handleTestAiSms}
-          disabled={loadingAi || loadingStatic}
-          className="btn-primary block"
-          style={{ width: '100%', opacity: loadingAi ? 0.7 : 1, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
-        >
-          {loadingAi ? 'AI is typing and sending...' : 'Generate & Send Dynamic AI SMS'}
-        </button>
-      </div>
-
-      <div className="glass-card mb-4">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontWeight: 'bold' }}>Approaching Bus</div>
-            <div className="text-sm text-muted mt-2">EDSA Carousel bus is 5 mins away from your pinned stop (Ayala).</div>
+      <Link href="/map?lineId=mrt-3&stationIdx=10" style={{ display: 'block', textDecoration: 'none', color: 'inherit', marginBottom: '16px' }}>
+        <div className="glass-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Approaching Bus</div>
+              <div className="text-sm text-muted mt-2">EDSA Carousel bus is 5 mins away from your pinned stop (Ayala).</div>
+            </div>
+            <span className="text-sm text-muted">Just now</span>
           </div>
-          <span className="text-sm text-muted">Just now</span>
         </div>
-      </div>
+      </Link>
       
-      <div className="glass-card" style={{ opacity: 0.7 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontWeight: 'bold' }}>Service Advisory</div>
-            <div className="text-sm text-muted mt-2">MRT-3 operating on limited capacity due to technical issue.</div>
+      <Link href="/map?lineId=mrt-3" style={{ display: 'block', textDecoration: 'none', color: 'inherit', opacity: 0.7 }}>
+        <div className="glass-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Service Advisory</div>
+              <div className="text-sm text-muted mt-2">MRT-3 operating on limited capacity due to technical issue.</div>
+            </div>
+            <span className="text-sm text-muted">2h ago</span>
           </div>
-          <span className="text-sm text-muted">2h ago</span>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
