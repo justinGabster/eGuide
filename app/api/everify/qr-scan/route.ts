@@ -33,8 +33,8 @@ export async function GET(request: Request) {
       }).catch(err => console.error("Failed to send SMS in QR scan trigger", err));
     });
 
-    // 2. Store the payment URL in the global store so the desktop can read it
-    scanStore[uid] = paymentData.url;
+    // 2. Store the payment URL and payload in the global store so the desktop can read it
+    scanStore[uid] = { url: paymentData.url, payload: parsedData };
 
     // 3. Show success to the phone!
     return new NextResponse(`

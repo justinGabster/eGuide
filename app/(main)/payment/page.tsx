@@ -53,7 +53,7 @@ export default function RideAndPay() {
         const res = await fetch(`/api/everify/status?uid=${userId}`);
         const data = await res.json();
         
-        if (data.scanned && data.url) {
+        if (data.scanned && data.url && data.payload) {
           clearInterval(interval);
           setSimulatingScan(true);
 
@@ -61,14 +61,12 @@ export default function RideAndPay() {
           const txsStr = localStorage.getItem('mock_transactions');
           const txs = txsStr ? JSON.parse(txsStr) : [];
           
-          const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
-          const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
-          const fareAmount = matrix[originIndex][destIndex];
+          const fareAmount = Number(data.payload.fare);
           
           txs.unshift({
              id: Date.now().toString(),
              type: 'Single Journey Ticket',
-             desc: `${line} (${stations[originIndex]} to ${stations[destIndex]})`,
+             desc: `${data.payload.line} (${data.payload.origin} to ${data.payload.dest})`,
              amount: fareAmount,
              date: new Date().toISOString(),
              isAddition: false
