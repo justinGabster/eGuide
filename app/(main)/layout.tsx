@@ -25,11 +25,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, []);
   
   const navItems = [
-    { name: 'Home', path: '/home', icon: '🏠' },
-    { name: 'Ride & Pay', path: '/payment', icon: '💳' },
-    { name: 'Map', path: '/map', icon: '🗺️' },
-    { name: 'Alerts', path: '/notifications', icon: '🔔' },
-    { name: 'Transactions', path: '/transactions', icon: '🧾' },
+    { name: 'Home', path: '/home', iconSrc: '/icons/eGuide UI-UX_g61-6.png' },
+    { name: 'Ride & Pay', path: '/payment', iconSrc: '/icons/eGuide UI-UX_g66-6.png' },
+    { name: 'Map', path: '/map', iconSrc: '/icons/eGuide UI-UX_g68-1.png' },
+    { name: 'Alerts', path: '/notifications', iconSrc: '/icons/eGuide UI-UX_g69-0.png' },
+    { name: 'Transactions', path: '/transactions', iconSrc: '/icons/eGuide UI-UX_g73.png' },
   ];
 
   const menuItems = [
@@ -95,7 +95,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <nav className="bottom-nav">
         {navItems.map((item) => (
           <Link key={item.path} href={item.path} className={`nav-item ${pathname === item.path ? 'active' : ''}`}>
-            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-icon">
+              <img src={item.iconSrc} alt={item.name} style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+            </span>
             <span>{item.name}</span>
           </Link>
         ))}
