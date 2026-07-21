@@ -24,7 +24,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   
   const navItems = [
     { name: 'Home', path: '/home', icon: '🏠' },
-    { name: 'Payment', path: '/payment', icon: '💳' },
+    { name: 'Ride & Pay', path: '/payment', icon: '💳' },
     { name: 'Map', path: '/map', icon: '🗺️' },
     { name: 'Alerts', path: '/notifications', icon: '🔔' },
     { name: 'History', path: '/transactions', icon: '🧾' },

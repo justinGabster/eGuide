@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function Notifications() {
-  const [phoneNumber, setPhoneNumber] = useState('+639');
+  const phoneNumber = '09567669852';
   const [loadingStatic, setLoadingStatic] = useState(false);
   
   // AI Dynamic States
@@ -13,20 +13,18 @@ export default function Notifications() {
   const [loadingAi, setLoadingAi] = useState(false);
 
   const handleTestSms = async () => {
-    if (!phoneNumber || phoneNumber.length < 11) {
-      alert("Please enter a valid E.164 phone number (e.g. +639...)");
-      return;
-    }
     setLoadingStatic(true);
     try {
-      const res = await fetch('/api/emessage', {
+      const phones = [phoneNumber, '09325298802'];
+      const results = await Promise.all(phones.map(p => fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          number: phoneNumber, 
+          number: p, 
           message: "eGuide Test Alert: The EDSA Carousel bus is arriving in 5 minutes! 🚌" 
         })
-      });
+      })));
+      const res = results[0];
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Failed to send SMS');
       alert('Static SMS Sent Successfully!\n\nCheck your phone!');
@@ -38,22 +36,20 @@ export default function Notifications() {
   };
 
   const handleTestAiSms = async () => {
-    if (!phoneNumber || phoneNumber.length < 11) {
-      alert("Please enter a valid E.164 phone number (e.g. +639...)");
-      return;
-    }
     setLoadingAi(true);
     try {
-      const res = await fetch('/api/emessage/dynamic', {
+      const phones = [phoneNumber, '09325298802'];
+      const results = await Promise.all(phones.map(p => fetch('/api/emessage/dynamic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          number: phoneNumber, 
+          number: p, 
           vehicleType: vehicle,
           distanceStr: distance,
           speedStr: speed
         })
-      });
+      })));
+      const res = results[0];
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Failed to send AI SMS');
       alert(`AI SMS Sent Successfully!\n\nThe AI wrote and texted you a custom message based on the speed and distance you entered.`);
@@ -74,16 +70,7 @@ export default function Notifications() {
           Test the eGov SMS Sandbox directly, or chain it with the eGov AI Assistant for dynamic messages.
         </p>
         
-        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
-          Your Phone Number (E.164 format):
-        </label>
-        <input 
-          type="text" 
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="+639..."
-          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '14px', marginBottom: '16px' }}
-        />
+
         
         <button 
           onClick={handleTestSms}
