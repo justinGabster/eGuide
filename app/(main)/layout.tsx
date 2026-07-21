@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 
 import SplashScreen from '@/components/SplashScreen';
@@ -11,9 +11,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
+    const savedImage = localStorage.getItem('profileImage');
+    if (savedImage) setProfileImage(savedImage);
+
     fetch('/api/ai-credits')
       .then(res => res.json())
       .then(data => {
@@ -23,6 +28,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       })
       .catch(err => console.error("Failed to load credits", err));
   }, []);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProfileImage(base64String);
+        localStorage.setItem('profileImage', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   const navItems = [
     { name: 'Home', path: '/home', iconSrc: '/icons/eGuide UI-UX_g61-6.png' },
@@ -63,7 +81,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <main className="mobile-container id-pattern-bg" style={{ position: 'relative' }}>
+    <div className={`layout-container theme-${theme}`}>
       <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -75,22 +93,51 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             style={{ cursor: 'pointer' }}
             onClick={() => setIsProfileOpen(true)}
           >
-            <div className="profile-avatar">D</div>
+            {profileImage ? (
+              <img src={profileImage} alt="Profile" className="profile-avatar" style={{ objectFit: 'cover' }} />
+            ) : (
+              <div className="profile-avatar">D</div>
+            )}
           </div>
         </div>
       </header>
       
-      <div className="main-content fade-in">
+      <main className="main-content fade-in">
         {children}
-      </div>
+      </main>
 
-      <nav className="bottom-nav">
+      <nav className="bottom-nav fade-in">
         {navItems.map((item) => (
-          <Link key={item.path} href={item.path} className={`nav-item ${pathname === item.path ? 'active' : ''}`}>
+          <Link 
+            key={item.path} 
+            href={item.path} 
+            className={`nav-item ${pathname === item.path ? 'active' : ''}`}
+            style={item.name === 'Map' ? { position: 'relative' } : {}}
+          >
             <span className="nav-icon">
-              <img src={item.iconSrc} alt={item.name} style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
+              <img 
+                src={item.iconSrc} 
+                alt={item.name} 
+                style={item.name === 'Map' ? { 
+                  width: '56px', 
+                  height: '56px', 
+                  objectFit: 'contain', 
+                  position: 'absolute', 
+                  top: '-24px', 
+                  left: '50%', 
+                  transform: 'translateX(-50%)', 
+                  borderRadius: '50%', 
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                  backgroundColor: 'var(--card-bg)',
+                  padding: '4px'
+                } : { 
+                  width: '30px', 
+                  height: '30px', 
+                  objectFit: 'contain' 
+                }} 
+              />
             </span>
-            <span>{item.name}</span>
+            <span style={item.name === 'Map' ? { marginTop: '24px' } : {}}>{item.name}</span>
           </Link>
         ))}
       </nav>
@@ -110,9 +157,26 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px' }}>Account</h2>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
-              <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d1d5db', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px' }}>
-                👤
+              <div 
+                style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d1d5db', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span>👤</span>
+                )}
+                <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px' }}>
+                  ✏️
+                </div>
               </div>
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                onChange={handleImageUpload} 
+              />
               <div style={{ color: 'var(--text-primary)' }}>
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
                 <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
@@ -185,6 +249,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }
