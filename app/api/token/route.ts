@@ -12,7 +12,8 @@ export async function POST(request: Request) {
     const partnerCode = process.env.EGOV_PARTNER_CODE || 'TEST_AGENCY';
     const partnerSecret = process.env.EGOV_PARTNER_SECRET || 'value';
 
-    const egovRes = await fetch('https://hackathon-sso.e.gov.ph/api/token', {
+    const baseUrl = process.env.EGOV_SSO_BASE_URL || 'https://hackathon-sso.e.gov.ph';
+    const egovRes = await fetch(`${baseUrl}/api/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

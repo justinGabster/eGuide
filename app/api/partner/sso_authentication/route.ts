@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const egovRes = await fetch('https://hackathon-sso.e.gov.ph/api/partner/sso_authentication', {
+    const baseUrl = process.env.EGOV_SSO_BASE_URL || 'https://hackathon-sso.e.gov.ph';
+    const egovRes = await fetch(`${baseUrl}/api/partner/sso_authentication`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,
