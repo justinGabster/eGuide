@@ -88,7 +88,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {navItems.map((item) => (
           <Link key={item.path} href={item.path} className={`nav-item ${pathname === item.path ? 'active' : ''}`}>
             <span className="nav-icon">
-              <img src={item.iconSrc} alt={item.name} style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+              <img src={item.iconSrc} alt={item.name} style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
             </span>
             <span>{item.name}</span>
           </Link>
