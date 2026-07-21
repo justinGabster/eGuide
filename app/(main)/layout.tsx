@@ -180,7 +180,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
               <div 
-                style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d1d5db', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
+                style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--border-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {profileImage ? (
@@ -201,12 +201,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               />
               <div style={{ color: 'var(--text-primary)' }}>
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
-                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
-                <p style={{ color: '#4b5563', fontSize: '14px' }}>dendenissejane@gmail.com</p>
-                <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>dendenissejane@gmail.com</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
                 {aiCredits !== null && (
-                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
-                    <span style={{ color: '#10b981', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
+                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--status-success-bg)', color: 'var(--status-success-text)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                    <span style={{ color: 'var(--success)', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
                   </div>
                 )}
               </div>
@@ -219,14 +219,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <ItemWrapper 
                     key={idx} 
                     href={item.path || '#'}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f3f4f6', color: 'var(--text-primary)', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
                     onClick={item.action ? item.action : undefined}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                       <span style={{ fontSize: '20px' }}>{item.icon}</span>
                       {item.label}
                     </div>
-                    <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '20px' }}>›</span>
+                    <span style={{ color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '20px' }}>›</span>
                   </ItemWrapper>
                 );
               })}
@@ -249,19 +249,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             
             {settingsSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '32px' }}>
-                <h4 style={{ color: '#9ca3af', fontSize: '12px', letterSpacing: '1px', marginBottom: '16px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                <h4 style={{ color: 'var(--text-secondary)', fontSize: '12px', letterSpacing: '1px', marginBottom: '16px', textTransform: 'uppercase', fontWeight: 'bold' }}>
                   {section.title}
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', color: 'var(--text-primary)' }}>
+                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                         <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         {item.label}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {item.value && <span style={{ color: '#6b7280', fontSize: '14px' }}>{item.value}</span>}
-                        <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '20px' }}>›</span>
+                        {item.value && <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{item.value}</span>}
+                        <span style={{ color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '20px' }}>›</span>
                       </div>
                     </div>
                   ))}

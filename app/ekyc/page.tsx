@@ -141,28 +141,28 @@ export default function Ekyc() {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
             <button 
               onClick={() => setSelectedOption(1)}
-              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 1 ? 'var(--primary-color)' : 'rgba(0,0,0,0.3)', color: 'white' }}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 1 ? 'var(--primary-color)' : 'var(--bg-color)', color: selectedOption === 1 ? 'white' : 'var(--text-primary)' }}
             >
               1. Standard
             </button>
             <button 
               onClick={() => setSelectedOption(2)}
-              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 2 ? 'var(--primary-color)' : 'rgba(0,0,0,0.3)', color: 'white' }}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 2 ? 'var(--primary-color)' : 'var(--bg-color)', color: selectedOption === 2 ? 'white' : 'var(--text-primary)' }}
             >
               2. Decode QR
             </button>
             <button 
               onClick={() => setSelectedOption(3)}
-              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 3 ? 'var(--primary-color)' : 'rgba(0,0,0,0.3)', color: 'white' }}
+              style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', border: '1px solid var(--border-color)', background: selectedOption === 3 ? 'var(--primary-color)' : 'var(--bg-color)', color: selectedOption === 3 ? 'white' : 'var(--text-primary)' }}
             >
               3. Full QR
             </button>
           </div>
 
-          <div className="glass-card mb-6" style={{ background: 'rgba(0,0,0,0.2)', padding: '16px' }}>
+          <div className="glass-card mb-6" style={{ background: 'var(--bg-color)', padding: '16px' }}>
             {selectedOption === 1 && (
               <div className="fade-in">
-                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Standard SSO & Face Scan</h3>
+                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-primary)' }}>Standard SSO & Face Scan</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                   Compares the profile data you authorized during SSO login against a real-time live biometric face scan.
                 </p>
@@ -182,7 +182,7 @@ export default function Ekyc() {
 
             {selectedOption === 2 && (
               <div className="fade-in">
-                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Decode National ID QR</h3>
+                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-primary)' }}>Decode National ID QR</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                   Simulate scanning a physical National ID card to decrypt its hidden profile data. Does not require a face scan.
                 </p>
@@ -191,7 +191,7 @@ export default function Ekyc() {
                   value={qrValue}
                   onChange={(e) => setQrValue(e.target.value)}
                   placeholder="Paste RAW_QR_CODE_VALUE here..."
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: '12px', marginBottom: '16px' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px', marginBottom: '16px' }}
                 />
                 <button 
                   onClick={handleQrCheck}
@@ -206,7 +206,7 @@ export default function Ekyc() {
 
             {selectedOption === 3 && (
               <div className="fade-in">
-                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Full QR & Face Verification</h3>
+                <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-primary)' }}>Full QR & Face Verification</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                   The highest tier of verification. Compares a scanned National ID QR code against a live face scan.
                 </p>
@@ -215,7 +215,7 @@ export default function Ekyc() {
                   value={qrValue}
                   onChange={(e) => setQrValue(e.target.value)}
                   placeholder="Paste RAW_QR_CODE_VALUE here..."
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: '12px', marginBottom: '16px' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', fontSize: '12px', marginBottom: '16px' }}
                 />
                 <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--border-color)', borderRadius: '8px', marginBottom: '16px' }}>
                   <p className="text-muted" style={{ fontWeight: 'bold' }}>{statusText || 'Ready for Camera Scan'}</p>
