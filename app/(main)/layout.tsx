@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import AiChatWidget from '@/components/AiChatWidget';
 
@@ -9,6 +9,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [aiCredits, setAiCredits] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/ai-credits')
+      .then(res => res.json())
+      .then(data => {
+        if (data.credits_remaining !== undefined) {
+          setAiCredits(data.credits_remaining);
+        }
+      })
+      .catch(err => console.error("Failed to load credits", err));
+  }, []);
   
   const navItems = [
     { name: 'Home', path: '/home', icon: '🏠' },
@@ -50,9 +62,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <main className="mobile-container" style={{ position: 'relative' }}>
       <header className="header fade-in">
-        <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
-          ⎋ Sign Out
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
+            ⎋ Sign Out
+          </Link>
+          {aiCredits !== null && (
+            <div style={{ fontSize: '10px', background: 'rgba(255,255,255,0.1)', color: 'white', padding: '6px 8px', borderRadius: '6px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ color: '#10b981' }}>●</span> AI Tokens: {aiCredits}
+            </div>
+          )}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div 
             className="header-profile" 

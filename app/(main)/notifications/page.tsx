@@ -103,21 +103,21 @@ export default function Notifications() {
             value={vehicle}
             onChange={(e) => setVehicle(e.target.value)}
             placeholder="Vehicle"
-            style={{ flex: 2, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
+            style={{ flex: 2, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
           />
           <input 
             type="text" 
             value={distance}
             onChange={(e) => setDistance(e.target.value)}
             placeholder="Distance"
-            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
+            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
           />
           <input 
             type="text" 
             value={speed}
             onChange={(e) => setSpeed(e.target.value)}
             placeholder="Speed"
-            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
+            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
           />
         </div>
         
