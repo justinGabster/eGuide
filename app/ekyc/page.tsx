@@ -125,9 +125,9 @@ export default function Ekyc() {
       }, 1500);
 
     } catch (err: any) {
-      console.error("eVerify Error:", err);
       // Handle cases where the SDK throws a raw object or string instead of an Error instance
       const errorText = err instanceof Error ? err.message : (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      console.warn("eVerify SDK Event:", errorText);
       alert(`Verification Failed: ${errorText}`);
       setStatusText('');
       setLoading(false);
