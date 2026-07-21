@@ -66,9 +66,9 @@ export default function Home() {
       {/* Quick Access Buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', padding: '0 8px' }}>
         {[
-          { name: 'Trains', icon: <img src="/logo.png" alt="Trains" style={{ width: '32px', height: '32px', objectFit: 'contain' }} /> },
+          { name: 'Trains', icon: <img src="/icons/media__1784670790646.png" alt="Trains" style={{ width: '40px', height: '40px', objectFit: 'contain' }} /> },
           { name: 'Buses', icon: '🚌' },
-          { name: 'PUVs', icon: '🚙' },
+          { name: 'PUVs', icon: <img src="/icons/media__1784670786009.png" alt="PUVs" style={{ width: '40px', height: '40px', objectFit: 'contain' }} /> },
           { name: 'Report', icon: '🚔' }
         ].map((btn, idx) => (
           <Link key={idx} href="/map" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', color: 'var(--text-primary)' }}>
