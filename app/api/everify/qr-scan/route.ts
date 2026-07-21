@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createPaymentLink } from '@/lib/epay';
-import { scanStore } from './store';
+import { scanStore } from '../store';
 
 export async function GET(request: Request) {
   try {
