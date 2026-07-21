@@ -116,8 +116,7 @@ export default function RideAndPay() {
     line: line,
     origin: stations[originIndex],
     dest: stations[destIndex],
-    fare: getCalculatedFare().toFixed(2),
-    ts: Date.now()
+    fare: getCalculatedFare().toFixed(2)
   };
   const qrData = `http://192.168.68.208:3000/api/everify/qr-scan?data=${encodeURIComponent(JSON.stringify(baseJsonData))}`;
 
