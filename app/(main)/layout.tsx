@@ -26,10 +26,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   
   const navItems = [
     { name: 'Home', path: '/home', iconSrc: '/icons/eGuide UI-UX_g61-6.png' },
-    { name: 'Ride & Pay', path: '/payment', iconSrc: '/icons/eGuide UI-UX_g66-6.png' },
-    { name: 'Map', path: '/map', iconSrc: '/icons/eGuide UI-UX_g68-1.png' },
-    { name: 'Alerts', path: '/notifications', iconSrc: '/icons/eGuide UI-UX_g69-0.png' },
-    { name: 'Transactions', path: '/transactions', iconSrc: '/icons/eGuide UI-UX_g73.png' },
+    { name: 'Ride & Pay', path: '/payment', iconSrc: '/icons/nav_wallet.png' },
+    { name: 'Map', path: '/map', iconSrc: '/icons/nav_map.png' },
+    { name: 'Alerts', path: '/notifications', iconSrc: '/icons/nav_bell.png' },
+    { name: 'Transactions', path: '/transactions', iconSrc: '/icons/nav_doc.png' },
   ];
 
   const menuItems = [
@@ -67,23 +67,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <SplashScreen />
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
-            ⎋ Sign Out
-          </Link>
+          <img src="/logo.png" alt="eGuide Logo" style={{ height: '36px', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div 
             className="header-profile" 
-            style={{ textAlign: 'right', flexDirection: 'row-reverse', cursor: 'pointer' }}
+            style={{ cursor: 'pointer' }}
             onClick={() => setIsProfileOpen(true)}
           >
             <div className="profile-avatar">D</div>
-            <div>
-              <div style={{ fontWeight: 'bold' }}>DENISSE</div>
-              <div className="verified-badge" style={{ justifyContent: 'flex-end' }}>
-                ✓ eGovPH Verified
-              </div>
-            </div>
           </div>
         </div>
       </header>
