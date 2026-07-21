@@ -4,7 +4,7 @@ export default function Login() {
   return (
     <main className="mobile-container flex-center">
       <div className="glass-card text-center fade-in">
-        <h1 className="title mb-2">🚆 eGuide Kita!</h1>
+        <h1 className="title mb-2">🚆 eGuide</h1>
         <p className="subtitle mb-6">Metro Manila Commuter Assistant</p>
         
         <div style={{ textAlign: 'left', marginBottom: '24px' }}>
