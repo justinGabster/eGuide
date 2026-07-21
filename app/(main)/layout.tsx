@@ -60,7 +60,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <main className="mobile-container" style={{ position: 'relative' }}>
+    <main className="mobile-container id-pattern-bg" style={{ position: 'relative' }}>
       <header className="header fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link href="/" style={{ fontSize: '12px', background: 'var(--danger)', color: 'white', padding: '6px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
@@ -105,18 +105,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div className="profile-drawer slide-up">
           <div style={{ padding: '24px', position: 'relative' }}>
             <span 
-              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'black', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'var(--text-primary)', cursor: 'pointer' }}
               onClick={() => setIsProfileOpen(false)}
             >
               ✕
             </span>
-            <h2 style={{ textAlign: 'center', color: 'black', marginBottom: '32px' }}>Account</h2>
+            <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px' }}>Account</h2>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
               <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#d1d5db', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '40px' }}>
                 👤
               </div>
-              <div style={{ color: 'black' }}>
+              <div style={{ color: 'var(--text-primary)' }}>
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
                 <p style={{ color: '#4b5563', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
                 <p style={{ color: '#4b5563', fontSize: '14px' }}>dendenissejane@gmail.com</p>
@@ -136,7 +136,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <ItemWrapper 
                     key={idx} 
                     href={item.path || '#'}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f3f4f6', color: 'black', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f3f4f6', color: 'var(--text-primary)', cursor: (item.action || item.path) ? 'pointer' : 'default', textDecoration: 'none' }}
                     onClick={item.action ? item.action : undefined}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
@@ -157,12 +157,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div className="profile-drawer slide-up" style={{ zIndex: 101 }}>
           <div style={{ padding: '24px', position: 'relative' }}>
             <span 
-              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'black', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}
               onClick={() => setIsSettingsOpen(false)}
             >
               ‹
             </span>
-            <h2 style={{ textAlign: 'center', color: 'black', marginBottom: '32px', fontSize: '20px' }}>Settings</h2>
+            <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px', fontSize: '20px' }}>Settings</h2>
             
             {settingsSections.map((section, idx) => (
               <div key={idx} style={{ marginBottom: '32px' }}>
@@ -171,7 +171,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', color: 'black' }}>
+                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                         <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         {item.label}

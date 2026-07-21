@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => (
-    <div style={{ width: '100%', height: '100%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: '100%', height: '100%', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p className="text-muted">Loading map...</p>
     </div>
   )
