@@ -15,11 +15,27 @@ export default function AiChatWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -51,7 +67,7 @@ export default function AiChatWidget() {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: '85px', right: '16px', zIndex: 1000 }}>
+    <div ref={containerRef} style={{ position: 'fixed', bottom: '85px', right: '16px', zIndex: 1000 }}>
       {/* Chat Window */}
       {isOpen && (
         <div 
