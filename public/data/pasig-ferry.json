@@ -1,0 +1,2592 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-07-21T17:28:06Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/4443915",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:es": "Río Pasig",
+        "source": "Bing",
+        "waterway": "river",
+        "wikipedia": "en:Manila's 6th congressional district"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9928282,
+            14.5912614
+          ],
+          [
+            120.9914379,
+            14.5902686
+          ],
+          [
+            120.9905321,
+            14.5897209
+          ]
+        ]
+      },
+      "id": "way/4443915"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/27296235",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0078165,
+            14.5830022
+          ],
+          [
+            121.007574,
+            14.5835272
+          ],
+          [
+            121.0071368,
+            14.5844477
+          ],
+          [
+            121.0070042,
+            14.5851192
+          ],
+          [
+            121.007035,
+            14.5857479
+          ],
+          [
+            121.0071991,
+            14.5864586
+          ],
+          [
+            121.0075306,
+            14.5869564
+          ],
+          [
+            121.0081622,
+            14.5874792
+          ],
+          [
+            121.0086627,
+            14.5877831
+          ],
+          [
+            121.0091082,
+            14.587914
+          ],
+          [
+            121.0096889,
+            14.5878771
+          ],
+          [
+            121.0105438,
+            14.5880289
+          ],
+          [
+            121.0109622,
+            14.5881309
+          ],
+          [
+            121.0113938,
+            14.5883069
+          ],
+          [
+            121.0122031,
+            14.5887127
+          ],
+          [
+            121.0128549,
+            14.5894544
+          ]
+        ]
+      },
+      "id": "way/27296235"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35067400",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9995656,
+            14.5965586
+          ],
+          [
+            120.9991564,
+            14.5966601
+          ],
+          [
+            120.9990909,
+            14.5966627
+          ],
+          [
+            120.9985353,
+            14.5966841
+          ],
+          [
+            120.9981063,
+            14.5966036
+          ],
+          [
+            120.9976724,
+            14.5963593
+          ],
+          [
+            120.9973291,
+            14.5960958
+          ],
+          [
+            120.9962409,
+            14.5951773
+          ]
+        ]
+      },
+      "id": "way/35067400"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35067509",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0181727,
+            14.5868312
+          ],
+          [
+            121.016212,
+            14.5864596
+          ],
+          [
+            121.0149714,
+            14.5861372
+          ],
+          [
+            121.0142808,
+            14.585784
+          ],
+          [
+            121.0139007,
+            14.5854247
+          ],
+          [
+            121.0126868,
+            14.5840051
+          ],
+          [
+            121.0125003,
+            14.5837821
+          ]
+        ]
+      },
+      "id": "way/35067509"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35067519",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0179149,
+            14.5792635
+          ],
+          [
+            121.0176707,
+            14.5794322
+          ]
+        ]
+      },
+      "id": "way/35067519"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35067526",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0176707,
+            14.5794322
+          ],
+          [
+            121.0174307,
+            14.5796172
+          ],
+          [
+            121.0172846,
+            14.5797867
+          ],
+          [
+            121.0170704,
+            14.5806055
+          ],
+          [
+            121.0171617,
+            14.5811598
+          ],
+          [
+            121.0177288,
+            14.5818013
+          ],
+          [
+            121.0185249,
+            14.582516
+          ],
+          [
+            121.0195256,
+            14.5837935
+          ]
+        ]
+      },
+      "id": "way/35067526"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35067557",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0195256,
+            14.5837935
+          ],
+          [
+            121.0197617,
+            14.584126
+          ],
+          [
+            121.0200669,
+            14.5847398
+          ],
+          [
+            121.0203133,
+            14.5854576
+          ],
+          [
+            121.0203561,
+            14.5857665
+          ]
+        ]
+      },
+      "id": "way/35067557"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35129631",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0529018,
+            14.5670806
+          ],
+          [
+            121.0520715,
+            14.5675983
+          ],
+          [
+            121.0515762,
+            14.567896
+          ]
+        ]
+      },
+      "id": "way/35129631"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35129708",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0669318,
+            14.5590928
+          ],
+          [
+            121.066786,
+            14.5597138
+          ],
+          [
+            121.066395,
+            14.5604251
+          ],
+          [
+            121.0661892,
+            14.5605747
+          ]
+        ]
+      },
+      "id": "way/35129708"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35154328",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.979747,
+            14.5970416
+          ],
+          [
+            120.9795671,
+            14.5970039
+          ],
+          [
+            120.978363,
+            14.5963841
+          ]
+        ]
+      },
+      "id": "way/35154328"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35154549",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9928282,
+            14.5912614
+          ],
+          [
+            120.9909858,
+            14.5911127
+          ],
+          [
+            120.9901665,
+            14.5912937
+          ],
+          [
+            120.9887453,
+            14.5913675
+          ],
+          [
+            120.9877703,
+            14.5913548
+          ],
+          [
+            120.9867475,
+            14.5914155
+          ],
+          [
+            120.9862513,
+            14.5913461
+          ]
+        ]
+      },
+      "id": "way/35154549"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35154557",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9807601,
+            14.5968237
+          ],
+          [
+            120.980275,
+            14.5969952
+          ],
+          [
+            120.979747,
+            14.5970416
+          ]
+        ]
+      },
+      "id": "way/35154557"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35154641",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9773389,
+            14.5957838
+          ],
+          [
+            120.9769412,
+            14.5956029
+          ],
+          [
+            120.9758194,
+            14.5953511
+          ],
+          [
+            120.974771,
+            14.5952797
+          ]
+        ]
+      },
+      "id": "way/35154641"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35154646",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.974771,
+            14.5952797
+          ],
+          [
+            120.9730159,
+            14.5953105
+          ],
+          [
+            120.9714972,
+            14.5955037
+          ],
+          [
+            120.9703434,
+            14.5957956
+          ],
+          [
+            120.9703038,
+            14.5958054
+          ],
+          [
+            120.9695916,
+            14.5959824
+          ],
+          [
+            120.9684298,
+            14.5960191
+          ],
+          [
+            120.967321,
+            14.5959404
+          ]
+        ]
+      },
+      "id": "way/35154646"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35154659",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.967321,
+            14.5959404
+          ],
+          [
+            120.9670053,
+            14.5959095
+          ],
+          [
+            120.9659065,
+            14.5958536
+          ],
+          [
+            120.9629324,
+            14.5958351
+          ]
+        ]
+      },
+      "id": "way/35154659"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354739",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0515762,
+            14.567896
+          ],
+          [
+            121.0503257,
+            14.5684544
+          ],
+          [
+            121.0494247,
+            14.5685464
+          ]
+        ]
+      },
+      "id": "way/35354739"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354746",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0494247,
+            14.5685464
+          ],
+          [
+            121.0486801,
+            14.5684875
+          ]
+        ]
+      },
+      "id": "way/35354746"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354825",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0471328,
+            14.5684046
+          ],
+          [
+            121.0465971,
+            14.5684302
+          ],
+          [
+            121.0459759,
+            14.5684886
+          ]
+        ]
+      },
+      "id": "way/35354825"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354836",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0459759,
+            14.5684886
+          ],
+          [
+            121.0452153,
+            14.5685631
+          ],
+          [
+            121.0438269,
+            14.5687598
+          ],
+          [
+            121.043269,
+            14.5687541
+          ]
+        ]
+      },
+      "id": "way/35354836"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354853",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.043269,
+            14.5687541
+          ],
+          [
+            121.0424464,
+            14.5686538
+          ],
+          [
+            121.0415795,
+            14.5683796
+          ],
+          [
+            121.0403483,
+            14.5681005
+          ]
+        ]
+      },
+      "id": "way/35354853"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354856",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0383354,
+            14.5676284
+          ],
+          [
+            121.0379111,
+            14.5675124
+          ],
+          [
+            121.0375134,
+            14.5674251
+          ]
+        ]
+      },
+      "id": "way/35354856"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354859",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0403483,
+            14.5681005
+          ],
+          [
+            121.0401944,
+            14.5680722
+          ],
+          [
+            121.039415,
+            14.5679048
+          ],
+          [
+            121.0383354,
+            14.5676284
+          ]
+        ]
+      },
+      "id": "way/35354859"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354941",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0375134,
+            14.5674251
+          ],
+          [
+            121.0365928,
+            14.5672249
+          ],
+          [
+            121.0357259,
+            14.5672083
+          ],
+          [
+            121.0349191,
+            14.5672665
+          ],
+          [
+            121.0339341,
+            14.567539
+          ]
+        ]
+      },
+      "id": "way/35354941"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354959",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0274865,
+            14.5731181
+          ],
+          [
+            121.0267072,
+            14.5737609
+          ]
+        ]
+      },
+      "id": "way/35354959"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354961",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0256183,
+            14.5745385
+          ],
+          [
+            121.0250973,
+            14.5749264
+          ]
+        ]
+      },
+      "id": "way/35354961"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35354976",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0250973,
+            14.5749264
+          ],
+          [
+            121.0225394,
+            14.5764544
+          ]
+        ]
+      },
+      "id": "way/35354976"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/35355031",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0213134,
+            14.5772021
+          ],
+          [
+            121.0196937,
+            14.5781604
+          ],
+          [
+            121.0185039,
+            14.5789015
+          ],
+          [
+            121.0179149,
+            14.5792635
+          ]
+        ]
+      },
+      "id": "way/35355031"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/38426268",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0026015,
+            14.5962912
+          ],
+          [
+            121.0023156,
+            14.5960785
+          ],
+          [
+            121.001893,
+            14.5958949
+          ],
+          [
+            121.0014246,
+            14.5958877
+          ]
+        ]
+      },
+      "id": "way/38426268"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/81610881",
+        "alt_name": "Napindan Channel",
+        "alt_name:tl": "Ilog Napindan",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.1017269,
+            14.5357651
+          ],
+          [
+            121.1010718,
+            14.5362181
+          ],
+          [
+            121.1005837,
+            14.5363713
+          ],
+          [
+            121.0999466,
+            14.5367551
+          ],
+          [
+            121.0994225,
+            14.5369866
+          ],
+          [
+            121.0992793,
+            14.5370879
+          ],
+          [
+            121.0990146,
+            14.5372753
+          ],
+          [
+            121.0986764,
+            14.5376144
+          ],
+          [
+            121.0985228,
+            14.5378199
+          ],
+          [
+            121.0982797,
+            14.5382459
+          ],
+          [
+            121.0980772,
+            14.5387781
+          ],
+          [
+            121.0979551,
+            14.5390663
+          ],
+          [
+            121.097774,
+            14.5393449
+          ],
+          [
+            121.0974884,
+            14.539692
+          ],
+          [
+            121.0972033,
+            14.539991
+          ],
+          [
+            121.096835,
+            14.5402595
+          ],
+          [
+            121.0965653,
+            14.5404485
+          ],
+          [
+            121.0963889,
+            14.54061
+          ],
+          [
+            121.0962844,
+            14.540749
+          ],
+          [
+            121.0961877,
+            14.5409431
+          ],
+          [
+            121.0961428,
+            14.5411748
+          ],
+          [
+            121.0961541,
+            14.5413932
+          ],
+          [
+            121.0961669,
+            14.5416482
+          ],
+          [
+            121.0962033,
+            14.5419892
+          ],
+          [
+            121.0963219,
+            14.542457
+          ],
+          [
+            121.0964133,
+            14.5428665
+          ],
+          [
+            121.0963921,
+            14.5432131
+          ],
+          [
+            121.0962908,
+            14.5436138
+          ],
+          [
+            121.0961738,
+            14.543857
+          ],
+          [
+            121.0958944,
+            14.5441587
+          ],
+          [
+            121.0955441,
+            14.5444017
+          ],
+          [
+            121.0951646,
+            14.5446097
+          ],
+          [
+            121.0948958,
+            14.5448014
+          ],
+          [
+            121.0947346,
+            14.5449541
+          ]
+        ]
+      },
+      "id": "way/81610881"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/112652256",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0553692,
+            14.5656936
+          ],
+          [
+            121.0548229,
+            14.5658749
+          ],
+          [
+            121.0536044,
+            14.5666185
+          ],
+          [
+            121.0529018,
+            14.5670806
+          ]
+        ]
+      },
+      "id": "way/112652256"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/112652263",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0661892,
+            14.5605747
+          ],
+          [
+            121.0657254,
+            14.5608467
+          ],
+          [
+            121.0649436,
+            14.5609792
+          ]
+        ]
+      },
+      "id": "way/112652263"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/112652465",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0669281,
+            14.5577153
+          ],
+          [
+            121.0669179,
+            14.5583764
+          ],
+          [
+            121.0669318,
+            14.5590928
+          ]
+        ]
+      },
+      "id": "way/112652465"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/132598417",
+        "alt_name": "Napindan Channel",
+        "alt_name:tl": "Ilog Napindan",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0947346,
+            14.5449541
+          ],
+          [
+            121.094676,
+            14.5450495
+          ],
+          [
+            121.0945978,
+            14.5451806
+          ],
+          [
+            121.094551,
+            14.5453353
+          ],
+          [
+            121.0943623,
+            14.5463956
+          ],
+          [
+            121.0943234,
+            14.546977
+          ],
+          [
+            121.0942832,
+            14.5476781
+          ],
+          [
+            121.0940409,
+            14.548593
+          ],
+          [
+            121.0932841,
+            14.5509844
+          ],
+          [
+            121.093114,
+            14.551833
+          ],
+          [
+            121.0929989,
+            14.5521324
+          ],
+          [
+            121.0928393,
+            14.5525475
+          ],
+          [
+            121.0923072,
+            14.552805
+          ],
+          [
+            121.0916634,
+            14.5526804
+          ],
+          [
+            121.0907708,
+            14.552265
+          ],
+          [
+            121.0897666,
+            14.5520906
+          ],
+          [
+            121.0890027,
+            14.5521903
+          ],
+          [
+            121.0883675,
+            14.5527635
+          ],
+          [
+            121.0881005,
+            14.552926
+          ]
+        ]
+      },
+      "id": "way/132598417"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/132598418",
+        "alt_name": "Napindan Channel",
+        "alt_name:tl": "Ilog Napindan",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0789893,
+            14.5537377
+          ],
+          [
+            121.0779133,
+            14.5534863
+          ],
+          [
+            121.0766431,
+            14.5535693
+          ],
+          [
+            121.0754243,
+            14.5540512
+          ],
+          [
+            121.0742452,
+            14.5546659
+          ]
+        ]
+      },
+      "id": "way/132598418"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/135048797",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0649436,
+            14.5609792
+          ],
+          [
+            121.0640479,
+            14.561131
+          ],
+          [
+            121.0626956,
+            14.561611
+          ],
+          [
+            121.0616999,
+            14.5624085
+          ],
+          [
+            121.0597516,
+            14.5642112
+          ],
+          [
+            121.0583484,
+            14.5649752
+          ],
+          [
+            121.058241,
+            14.5650336
+          ],
+          [
+            121.0569086,
+            14.5653426
+          ],
+          [
+            121.0558247,
+            14.5655935
+          ],
+          [
+            121.0553692,
+            14.5656936
+          ]
+        ]
+      },
+      "id": "way/135048797"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/154644780",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.014488,
+            14.5901854
+          ],
+          [
+            121.0152271,
+            14.5907217
+          ],
+          [
+            121.0158104,
+            14.591156
+          ],
+          [
+            121.0160714,
+            14.5914563
+          ],
+          [
+            121.0161604,
+            14.5917751
+          ],
+          [
+            121.0161891,
+            14.5920356
+          ],
+          [
+            121.0161169,
+            14.5922923
+          ],
+          [
+            121.0159368,
+            14.5926128
+          ],
+          [
+            121.0155911,
+            14.5930161
+          ],
+          [
+            121.0151831,
+            14.5932508
+          ],
+          [
+            121.013718,
+            14.593856
+          ],
+          [
+            121.0128645,
+            14.5941717
+          ],
+          [
+            121.0121637,
+            14.594541
+          ],
+          [
+            121.0112688,
+            14.5951599
+          ]
+        ]
+      },
+      "id": "way/154644780"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/187486773",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9816925,
+            14.5960662
+          ],
+          [
+            120.9807601,
+            14.5968237
+          ]
+        ]
+      },
+      "id": "way/187486773"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/187492411",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9962409,
+            14.5951773
+          ],
+          [
+            120.9959451,
+            14.5948795
+          ],
+          [
+            120.9957133,
+            14.5945642
+          ],
+          [
+            120.9953981,
+            14.5938504
+          ],
+          [
+            120.9946815,
+            14.592735
+          ],
+          [
+            120.9940389,
+            14.5920311
+          ],
+          [
+            120.9933873,
+            14.5915717
+          ],
+          [
+            120.9928282,
+            14.5912614
+          ]
+        ]
+      },
+      "id": "way/187492411"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/225595175",
+        "alt_name": "Napindan Channel",
+        "alt_name:tl": "Ilog Napindan",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.1084498,
+            14.5261723
+          ],
+          [
+            121.1079168,
+            14.5262505
+          ],
+          [
+            121.1073519,
+            14.5263165
+          ],
+          [
+            121.1067796,
+            14.5265725
+          ],
+          [
+            121.1062842,
+            14.5268807
+          ],
+          [
+            121.10605,
+            14.5270866
+          ],
+          [
+            121.1058943,
+            14.5273252
+          ],
+          [
+            121.1058193,
+            14.5275799
+          ],
+          [
+            121.1058086,
+            14.5278448
+          ],
+          [
+            121.1058336,
+            14.5281649
+          ],
+          [
+            121.1059607,
+            14.5289786
+          ],
+          [
+            121.1061519,
+            14.5296934
+          ],
+          [
+            121.1063523,
+            14.5302796
+          ],
+          [
+            121.1064392,
+            14.5308831
+          ],
+          [
+            121.1064309,
+            14.5312591
+          ],
+          [
+            121.1063813,
+            14.53167
+          ],
+          [
+            121.1062351,
+            14.5319938
+          ],
+          [
+            121.1059661,
+            14.5323348
+          ],
+          [
+            121.1056262,
+            14.5327312
+          ],
+          [
+            121.1051059,
+            14.5331207
+          ],
+          [
+            121.1040832,
+            14.5338787
+          ]
+        ]
+      },
+      "id": "way/225595175"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/226829296",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0225394,
+            14.5764544
+          ],
+          [
+            121.0218947,
+            14.5768554
+          ]
+        ]
+      },
+      "id": "way/226829296"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/250157903",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9863064,
+            14.590906
+          ],
+          [
+            120.9862513,
+            14.5913461
+          ]
+        ]
+      },
+      "id": "way/250157903"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/250157904",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9862513,
+            14.5913461
+          ],
+          [
+            120.9853583,
+            14.5918129
+          ],
+          [
+            120.9847494,
+            14.5922912
+          ],
+          [
+            120.9837548,
+            14.5932632
+          ],
+          [
+            120.9831481,
+            14.5940748
+          ],
+          [
+            120.9827719,
+            14.5947242
+          ]
+        ]
+      },
+      "id": "way/250157904"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/250168538",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0128549,
+            14.5894544
+          ],
+          [
+            121.014488,
+            14.5901854
+          ]
+        ]
+      },
+      "id": "way/250168538"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/250174798",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0014246,
+            14.5958877
+          ],
+          [
+            121.0008447,
+            14.5959986
+          ],
+          [
+            121.0001814,
+            14.5962594
+          ],
+          [
+            120.9995656,
+            14.5965586
+          ]
+        ]
+      },
+      "id": "way/250174798"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/250479519",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:es": "Río Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9905321,
+            14.5897209
+          ],
+          [
+            120.9896837,
+            14.58955
+          ],
+          [
+            120.9890726,
+            14.5895968
+          ],
+          [
+            120.9885973,
+            14.5897574
+          ],
+          [
+            120.9881899,
+            14.589816
+          ],
+          [
+            120.9877513,
+            14.589879
+          ],
+          [
+            120.9873827,
+            14.5900011
+          ],
+          [
+            120.9870985,
+            14.5901995
+          ],
+          [
+            120.9866877,
+            14.5906267
+          ],
+          [
+            120.9863064,
+            14.590906
+          ]
+        ]
+      },
+      "id": "way/250479519"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/303140681",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0125003,
+            14.5837821
+          ],
+          [
+            121.0121408,
+            14.5833455
+          ]
+        ]
+      },
+      "id": "way/303140681"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/303140684",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0113899,
+            14.5826269
+          ],
+          [
+            121.0107657,
+            14.5821505
+          ],
+          [
+            121.0103577,
+            14.5820171
+          ]
+        ]
+      },
+      "id": "way/303140684"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/303140687",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0103577,
+            14.5820171
+          ],
+          [
+            121.0100351,
+            14.5819922
+          ],
+          [
+            121.009123,
+            14.5820949
+          ],
+          [
+            121.0084531,
+            14.5823562
+          ],
+          [
+            121.0078165,
+            14.5830022
+          ]
+        ]
+      },
+      "id": "way/303140687"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747760",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0330171,
+            14.5682805
+          ],
+          [
+            121.0315824,
+            14.5695734
+          ],
+          [
+            121.030507,
+            14.5706165
+          ],
+          [
+            121.0274865,
+            14.5731181
+          ]
+        ]
+      },
+      "id": "way/628747760"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747761",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0339341,
+            14.567539
+          ],
+          [
+            121.0330171,
+            14.5682805
+          ]
+        ]
+      },
+      "id": "way/628747761"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747763",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0267072,
+            14.5737609
+          ],
+          [
+            121.0256183,
+            14.5745385
+          ]
+        ]
+      },
+      "id": "way/628747763"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747765",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0189473,
+            14.5869859
+          ],
+          [
+            121.0186613,
+            14.5869442
+          ],
+          [
+            121.0181727,
+            14.5868312
+          ]
+        ]
+      },
+      "id": "way/628747765"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747766",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0199832,
+            14.5864478
+          ],
+          [
+            121.0195742,
+            14.5867492
+          ],
+          [
+            121.0192809,
+            14.5869147
+          ],
+          [
+            121.0189473,
+            14.5869859
+          ]
+        ]
+      },
+      "id": "way/628747766"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747769",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0121408,
+            14.5833455
+          ],
+          [
+            121.0113899,
+            14.5826269
+          ]
+        ]
+      },
+      "id": "way/628747769"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747772",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0094959,
+            14.5960868
+          ],
+          [
+            121.0076411,
+            14.5967621
+          ],
+          [
+            121.006973,
+            14.5969354
+          ],
+          [
+            121.0063408,
+            14.5971942
+          ],
+          [
+            121.0056832,
+            14.5973472
+          ],
+          [
+            121.0050099,
+            14.597296
+          ],
+          [
+            121.0041752,
+            14.597065
+          ],
+          [
+            121.0033667,
+            14.5967518
+          ],
+          [
+            121.0032176,
+            14.5966781
+          ],
+          [
+            121.0026015,
+            14.5962912
+          ]
+        ]
+      },
+      "id": "way/628747772"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747773",
+        "boat": "yes",
+        "motorboat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0112688,
+            14.5951599
+          ],
+          [
+            121.0094959,
+            14.5960868
+          ]
+        ]
+      },
+      "id": "way/628747773"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747775",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.978363,
+            14.5963841
+          ],
+          [
+            120.9778558,
+            14.5960747
+          ],
+          [
+            120.9773389,
+            14.5957838
+          ]
+        ]
+      },
+      "id": "way/628747775"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747777",
+        "alt_name": "Napindan Channel",
+        "alt_name:tl": "Ilog Napindan",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.1040832,
+            14.5338787
+          ],
+          [
+            121.1033661,
+            14.5344058
+          ],
+          [
+            121.1027159,
+            14.5349437
+          ],
+          [
+            121.1025753,
+            14.5350627
+          ],
+          [
+            121.1023432,
+            14.535255
+          ],
+          [
+            121.1019847,
+            14.5355934
+          ],
+          [
+            121.1017269,
+            14.5357651
+          ]
+        ]
+      },
+      "id": "way/628747777"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/628747779",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0486801,
+            14.5684875
+          ],
+          [
+            121.0471328,
+            14.5684046
+          ]
+        ]
+      },
+      "id": "way/628747779"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/741799325",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9827719,
+            14.5947242
+          ],
+          [
+            120.982104,
+            14.5955756
+          ]
+        ]
+      },
+      "id": "way/741799325"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/774961196",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river",
+        "wikidata": "Q1156477",
+        "wikipedia": "en:Pasig River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0218947,
+            14.5768554
+          ],
+          [
+            121.0213134,
+            14.5772021
+          ]
+        ]
+      },
+      "id": "way/774961196"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/784140770",
+        "boat": "yes",
+        "name": "Pasig River",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.9629324,
+            14.5958351
+          ],
+          [
+            120.9627355,
+            14.5958255
+          ],
+          [
+            120.9603964,
+            14.5957121
+          ]
+        ]
+      },
+      "id": "way/784140770"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/798253804",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:es": "Río Pasig",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            120.982104,
+            14.5955756
+          ],
+          [
+            120.9816925,
+            14.5960662
+          ]
+        ]
+      },
+      "id": "way/798253804"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/798270647",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "source": "Bing",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0203561,
+            14.5857665
+          ],
+          [
+            121.020332,
+            14.5859794
+          ],
+          [
+            121.0202515,
+            14.586174
+          ],
+          [
+            121.0199832,
+            14.5864478
+          ]
+        ]
+      },
+      "id": "way/798270647"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1337340071",
+        "alt_name": "Napindan Channel",
+        "alt_name:tl": "Ilog Napindan",
+        "boat": "yes",
+        "name": "Pasig River",
+        "name:en": "Pasig River",
+        "name:tl": "Ilog Pasig",
+        "waterway": "river"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            121.0881005,
+            14.552926
+          ],
+          [
+            121.087535,
+            14.5532703
+          ],
+          [
+            121.0864621,
+            14.5534198
+          ],
+          [
+            121.0845051,
+            14.5531914
+          ],
+          [
+            121.0829173,
+            14.55337
+          ],
+          [
+            121.0825335,
+            14.5534766
+          ],
+          [
+            121.0820765,
+            14.5536034
+          ],
+          [
+            121.0817896,
+            14.5536831
+          ],
+          [
+            121.0808144,
+            14.5537937
+          ],
+          [
+            121.0795463,
+            14.5538269
+          ],
+          [
+            121.079022,
+            14.5537429
+          ],
+          [
+            121.0789893,
+            14.5537377
+          ]
+        ]
+      },
+      "id": "way/1337340071"
+    }
+  ]
+}
