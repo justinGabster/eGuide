@@ -4,6 +4,12 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'eGuide',
   description: 'Metro Manila Commuter Assistant',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'eGuide',
+  },
 };
 
 export const viewport: Viewport = {
