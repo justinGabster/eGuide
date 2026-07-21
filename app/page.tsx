@@ -83,7 +83,17 @@ export default function Login() {
             }} 
           />
         </div>
-        <h1 className="title mb-2">🚆 eGuide</h1>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+          <img 
+            src="/logo.png" 
+            alt="eGuide Logo" 
+            style={{ 
+              height: '32px', 
+              objectFit: 'contain',
+              filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
+            }} 
+          />
+        </div>
         <p className="subtitle mb-6">Metro Manila Commuter Assistant</p>
         
         <div style={{ textAlign: 'left', marginBottom: '24px' }}>
