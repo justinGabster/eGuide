@@ -14,39 +14,23 @@ export default function Home() {
       <div 
         className="mb-6 cursor-pointer"
         style={{ 
-          border: '3px solid black', 
+          border: '4px solid black', 
           borderRadius: '16px', 
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-          color: 'white',
-          padding: '24px',
           boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
           transition: 'transform 0.2s ease',
-          position: 'relative'
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#000'
         }}
         onClick={() => setIsZoomed(true)}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Republika ng Pilipinas</div>
-            <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '16px' }}>Philippine Identification Card</div>
-            
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Last Name</div>
-            <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}>Karim</div>
-            
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Given Names</div>
-            <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}>Denisse Jane</div>
-            
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Date of Birth</div>
-            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>2006/01/07</div>
-          </div>
-          <div style={{ width: '80px', height: '80px', background: '#d1d5db', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '32px' }}>
-            👤
-          </div>
-        </div>
-        <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '24px', opacity: 0.5 }}>🔎</div>
+        <img src="/nationalID.png" alt="National ID" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        <div style={{ position: 'absolute', bottom: '16px', right: '16px', fontSize: '24px', opacity: 0.8, background: 'rgba(255,255,255,0.7)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>🔎</div>
       </div>
 
       {/* Modal for Zoomed ID */}
@@ -58,36 +42,18 @@ export default function Home() {
           <div style={{ 
             border: '4px solid black', 
             borderRadius: '16px', 
-            background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-            color: 'white',
-            padding: '32px',
+            overflow: 'hidden',
             width: '100%',
-            maxWidth: '400px',
-            transform: 'scale(1.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            transform: 'scale(1.05)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            backgroundColor: '#000',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Republika ng Pilipinas</div>
-                <div style={{ fontWeight: 'bold', fontSize: '20px', marginBottom: '24px' }}>Philippine Identification Card</div>
-                
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Last Name</div>
-                <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '12px' }}>Karim</div>
-                
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Given Names</div>
-                <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '12px' }}>Denisse Jane</div>
-                
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Date of Birth</div>
-                <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '12px' }}>2006/01/07</div>
-
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Blood Type</div>
-                <div style={{ fontWeight: 'bold', fontSize: '18px' }}>O+</div>
-              </div>
-              <div style={{ width: '100px', height: '100px', background: '#d1d5db', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '48px' }}>
-                👤
-              </div>
-            </div>
-            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '12px', color: '#64748b' }}>
+            <img src="/nationalID.png" alt="National ID Zoomed" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain', maxHeight: '80vh' }} />
+            <div style={{ textAlign: 'center', padding: '12px', fontSize: '14px', color: '#fff', background: 'rgba(0,0,0,0.8)' }}>
               Tap anywhere to close
             </div>
           </div>
