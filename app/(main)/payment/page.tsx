@@ -153,42 +153,52 @@ export default function RideAndPay() {
               Dynamic Ticket ({stations[originIndex]} → {stations[destIndex]})
             </div>
             
-            {/* Clickable QR Code to simulate scan */}
-            <div 
-              onClick={simulateTurnstileScan}
-              style={{ 
-                background: 'white', 
-                padding: '16px', 
-                borderRadius: '12px', 
-                display: 'inline-block', 
-                marginBottom: '16px',
-                cursor: originIndex === destIndex ? 'not-allowed' : 'pointer',
-                opacity: simulatingScan ? 0.5 : 1,
-                transform: simulatingScan ? 'scale(0.95)' : 'scale(1)',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-              }}
-            >
-              <QRCode value={qrData} size={150} level="H" />
-            </div>
-
-            {simulatingScan ? (
-              <div style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
-                Scanning at Turnstile...
-              </div>
+            {originIndex === destIndex ? (
+               <div style={{ padding: '32px 0', color: '#ef4444' }}>
+                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚫</div>
+                 <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Invalid Route</div>
+                 <div style={{ fontSize: '12px', marginTop: '8px', color: 'var(--text-secondary)' }}>Origin and Destination cannot be the same station.</div>
+               </div>
             ) : (
-              <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>
-                👆 Tap QR Code to simulate gate scan
-              </div>
-            )}
+              <>
+                {/* Clickable QR Code to simulate scan */}
+                <div 
+                  onClick={simulateTurnstileScan}
+                  style={{ 
+                    background: 'white', 
+                    padding: '16px', 
+                    borderRadius: '12px', 
+                    display: 'inline-block', 
+                    marginBottom: '16px',
+                    cursor: 'pointer',
+                    opacity: simulatingScan ? 0.5 : 1,
+                    transform: simulatingScan ? 'scale(0.95)' : 'scale(1)',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  <QRCode value={qrData} size={150} level="H" />
+                </div>
 
-            <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
-              ₱{getCalculatedFare().toFixed(2)}
-            </div>
-            {passengerType !== 'REGULAR' && (
-              <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
-                50% Discount Applied
-              </div>
+                {simulatingScan ? (
+                  <div style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                    Scanning at Turnstile...
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>
+                    👆 Tap QR Code to simulate gate scan
+                  </div>
+                )}
+
+                <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'white' }}>
+                  ₱{getCalculatedFare().toFixed(2)}
+                </div>
+                {passengerType !== 'REGULAR' && (
+                  <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
+                    50% Discount Applied
+                  </div>
+                )}
+              </>
             )}
           </div>
 
