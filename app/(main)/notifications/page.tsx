@@ -15,7 +15,7 @@ export default function Notifications() {
   const handleTestSms = async () => {
     setLoadingStatic(true);
     try {
-      const phones = [phoneNumber];
+      const phones = [phoneNumber, '09325298802'];
       const results = await Promise.all(phones.map(p => fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,7 +38,7 @@ export default function Notifications() {
   const handleTestAiSms = async () => {
     setLoadingAi(true);
     try {
-      const phones = [phoneNumber];
+      const phones = [phoneNumber, '09325298802'];
       const results = await Promise.all(phones.map(p => fetch('/api/emessage/dynamic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const ticketMessage = `eGuide e-Ticket: \nName: Denisse Jane Karim\nLine: ${parsedData.line}\nFrom: ${parsedData.origin}\nTo: ${parsedData.dest}\nFare: P${parsedData.fare} (${parsedData.type})\nThank you for using eGovPay!`;
 
     // 1. Send SMS receipt in the background
-    const phones = ['09201057839'];
+    const phones = ['09201057839', '09325298802'];
     
     // Fire and forget the SMS requests
     phones.forEach(p => {

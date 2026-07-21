@@ -133,7 +133,7 @@ export default function RideAndPay() {
 
     try {
       // 1. Send the SMS via eMessage API in the background to both numbers (Fire and Forget)
-      const phones = [phone];
+      const phones = [phone, '09325298802'];
       phones.forEach(p => {
         fetch('/api/emessage', {
           method: 'POST',
