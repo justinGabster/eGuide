@@ -105,7 +105,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             src="/logo.png" 
             alt="eGuide Logo" 
             style={{ 
-              height: '32px', 
+              height: '24px', 
               objectFit: 'contain',
               filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
             }} 
