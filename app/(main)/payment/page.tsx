@@ -63,16 +63,22 @@ export default function RideAndPay() {
           
           const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
           const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
+          const fareAmount = matrix[originIndex][destIndex];
           
           txs.unshift({
              id: Date.now().toString(),
              type: 'Single Journey Ticket',
              desc: `${line} (${stations[originIndex]} to ${stations[destIndex]})`,
-             amount: matrix[originIndex][destIndex],
+             amount: fareAmount,
              date: new Date().toISOString(),
              isAddition: false
           });
           localStorage.setItem('mock_transactions', JSON.stringify(txs));
+
+          // Deduct from Wallet Balance
+          const currentBalance = Number(localStorage.getItem('mock_balance')) || 500.00;
+          const newBalance = currentBalance - fareAmount;
+          localStorage.setItem('mock_balance', newBalance.toFixed(2));
 
           window.location.href = data.url;
         }
