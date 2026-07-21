@@ -24,6 +24,19 @@ export default function PaymentCallback() {
           const currentBalance = Number(localStorage.getItem('mock_balance')) || 500.00;
           const newBalance = currentBalance + Number(pendingAmount);
           localStorage.setItem('mock_balance', newBalance.toFixed(2));
+          
+          const txsStr = localStorage.getItem('mock_transactions');
+          const txs = txsStr ? JSON.parse(txsStr) : [];
+          txs.unshift({
+            id: Date.now().toString(),
+            type: 'eGuide Wallet Top-up',
+            desc: 'via eGovPay',
+            amount: Number(pendingAmount),
+            date: new Date().toISOString(),
+            isAddition: true
+          });
+          localStorage.setItem('mock_transactions', JSON.stringify(txs));
+          
           localStorage.removeItem('pending_topup');
         }
 

@@ -56,6 +56,24 @@ export default function RideAndPay() {
         if (data.scanned && data.url) {
           clearInterval(interval);
           setSimulatingScan(true);
+
+          // Log the transaction
+          const txsStr = localStorage.getItem('mock_transactions');
+          const txs = txsStr ? JSON.parse(txsStr) : [];
+          
+          const matrix = line === 'MRT-3' ? mrt3Matrix : lrta2Matrix;
+          const stations = line === 'MRT-3' ? mrt3Stations : lrta2Stations;
+          
+          txs.unshift({
+             id: Date.now().toString(),
+             type: 'Single Journey Ticket',
+             desc: `${line} (${stations[originIndex]} to ${stations[destIndex]})`,
+             amount: matrix[originIndex][destIndex],
+             date: new Date().toISOString(),
+             isAddition: false
+          });
+          localStorage.setItem('mock_transactions', JSON.stringify(txs));
+
           window.location.href = data.url;
         }
       } catch (e) {

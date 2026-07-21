@@ -27,7 +27,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { name: 'Ride & Pay', path: '/payment', icon: '💳' },
     { name: 'Map', path: '/map', icon: '🗺️' },
     { name: 'Alerts', path: '/notifications', icon: '🔔' },
-    { name: 'History', path: '/transactions', icon: '🧾' },
+    { name: 'Transactions', path: '/transactions', icon: '🧾' },
   ];
 
   const menuItems = [
