@@ -16,11 +16,10 @@ const getEpayTemplateId = () => process.env.EGOV_PAY_TEMPLATE_ID || 'your_templa
  * hash_hmac('sha256', "$amount|$txnid", $token)
  */
 function generateDigest(amount: number, txnid: string, token: string): string {
-  const payload = `${amount.toFixed(2)}|${txnid}`;
-  // Wait, does the API expect fixed 2 decimal places for amount in the hash? 
-  // Let's use exactly what was passed. If amount is 1000, we'll hash "1000|txnid".
   const exactPayload = `${amount}|${txnid}`;
-  return crypto.createHmac('sha256', token).update(exactPayload).digest('hex');
+  // The eGovPay API hashes the digest using the raw token WITHOUT the 'test_' prefix
+  const hmacKey = token.startsWith('test_') ? token.replace('test_', '') : token;
+  return crypto.createHmac('sha256', hmacKey).update(exactPayload).digest('hex');
 }
 
 /**

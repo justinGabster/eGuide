@@ -970,34 +970,57 @@ export default function MapComponent() {
         top: '20px',
         right: '20px',
         zIndex: 1000,
-        background: 'rgba(15, 23, 42, 0.9)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         borderRadius: '12px',
-        border: '1px solid rgba(51, 65, 85, 0.6)',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+        border: '1px solid var(--border-color)',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
         transition: 'all 0.3s ease-in-out',
         width: isPanelCollapsed ? 'auto' : '260px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.5px', userSelect: 'none' }}>
-            {isPanelCollapsed ? '⚙️ Filters' : 'HIGHLIGHT LINE'}
-          </span>
-          <button 
-            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+        <label htmlFor="line-filter" style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+          HIGHLIGHT LINE
+        </label>
+        <select 
+          id="line-filter"
+          value={selectedLine}
+          onChange={(e) => setSelectedLine(e.target.value)}
+          style={{
+            background: '#F4F6F9',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px',
+            padding: '8px',
+            fontSize: '14px',
+            outline: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="all">All Lines</option>
+          {transitLines.map(l => (
+            <option key={l.id} value={l.id}>{l.name}</option>
+          ))}
+        </select>
+        {/* Toggle Station Names */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+          <input 
+            id="label-toggle"
+            type="checkbox" 
+            checked={showAllLabels}
+            onChange={(e) => setShowAllLabels(e.target.checked)}
+            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
+          />
+          <label 
+            htmlFor="label-toggle"
             style={{ 
-              background: 'transparent', 
-              border: 'none', 
-              cursor: 'pointer', 
-              color: '#94a3b8', 
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'color 0.2s'
+              color: 'var(--text-primary)', 
+              fontSize: '13px', 
+              cursor: 'pointer',
+              userSelect: 'none'
             }}
             onMouseOver={(e) => e.currentTarget.style.color = 'white'}
             onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
@@ -1128,18 +1151,19 @@ export default function MapComponent() {
       </div>
 
       <style>{`
-        .dark-station-tooltip {
-          background-color: rgba(30, 41, 59, 0.85);
-          border: 1px solid #475569;
-          color: #f8fafc;
+        .light-station-tooltip {
+          background-color: rgba(255, 255, 255, 0.95);
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
           font-size: 11px;
           font-weight: 600;
-          padding: 4px 6px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+          padding: 4px 8px;
+          border-radius: 6px;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
           white-space: nowrap;
         }
-        .dark-station-tooltip::before {
-          border-top-color: rgba(30, 41, 59, 0.85);
+        .light-station-tooltip::before {
+          border-top-color: rgba(255, 255, 255, 0.95);
         }
         .vehicle-pulse {
           animation: vehicle-pulse-anim 1.5s infinite;
@@ -1189,12 +1213,12 @@ export default function MapComponent() {
         center={position} 
         zoom={12} 
         scrollWheelZoom={true} 
-        style={{ width: '100%', height: '100%', background: '#1e293b' }}
+        style={{ width: '100%', height: '100%', background: 'var(--bg-color)' }}
       >
-        {/* Dark mode tiles using CartoDB Dark Matter */}
+        {/* Light mode tiles using CartoDB Light Matter */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
         {transitLines.map((line) => {
@@ -1263,7 +1287,7 @@ export default function MapComponent() {
                     direction="top" 
                     offset={[0, -5]} 
                     permanent={showAllLabels && !isFaded}
-                    className="dark-station-tooltip"
+                    className="light-station-tooltip"
                     key={`tooltip-${showAllLabels}-${isFaded}`}
                   >
                     <span style={{ color: line.color, fontWeight: 'bold' }}>

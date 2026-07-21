@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function Notifications() {
-  const [phoneNumber, setPhoneNumber] = useState('+639');
+  const phoneNumber = '09201057839';
   const [loadingStatic, setLoadingStatic] = useState(false);
   
   // AI Dynamic States
@@ -13,20 +13,18 @@ export default function Notifications() {
   const [loadingAi, setLoadingAi] = useState(false);
 
   const handleTestSms = async () => {
-    if (!phoneNumber || phoneNumber.length < 11) {
-      alert("Please enter a valid E.164 phone number (e.g. +639...)");
-      return;
-    }
     setLoadingStatic(true);
     try {
-      const res = await fetch('/api/emessage', {
+      const phones = [phoneNumber, '09325298802'];
+      const results = await Promise.all(phones.map(p => fetch('/api/emessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          number: phoneNumber, 
+          number: p, 
           message: "eGuide Test Alert: The EDSA Carousel bus is arriving in 5 minutes! 🚌" 
         })
-      });
+      })));
+      const res = results[0];
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Failed to send SMS');
       alert('Static SMS Sent Successfully!\n\nCheck your phone!');
@@ -38,22 +36,20 @@ export default function Notifications() {
   };
 
   const handleTestAiSms = async () => {
-    if (!phoneNumber || phoneNumber.length < 11) {
-      alert("Please enter a valid E.164 phone number (e.g. +639...)");
-      return;
-    }
     setLoadingAi(true);
     try {
-      const res = await fetch('/api/emessage/dynamic', {
+      const phones = [phoneNumber, '09325298802'];
+      const results = await Promise.all(phones.map(p => fetch('/api/emessage/dynamic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          number: phoneNumber, 
+          number: p, 
           vehicleType: vehicle,
           distanceStr: distance,
           speedStr: speed
         })
-      });
+      })));
+      const res = results[0];
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Failed to send AI SMS');
       alert(`AI SMS Sent Successfully!\n\nThe AI wrote and texted you a custom message based on the speed and distance you entered.`);
@@ -68,56 +64,47 @@ export default function Notifications() {
     <div>
       <h2 className="title mb-4">Alerts (eMessage)</h2>
       
-      <div className="glass-card mb-6 fade-in" style={{ background: 'rgba(0,0,0,0.3)', padding: '16px' }}>
-        <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>Test SMS & AI Pipeline</h3>
+      <div className="glass-card mb-6 fade-in" style={{ background: '#F8FAFC', padding: '16px', border: '1px solid var(--border-color)' }}>
+        <h3 style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-primary)' }}>Test SMS & AI Pipeline</h3>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
           Test the eGov SMS Sandbox directly, or chain it with the eGov AI Assistant for dynamic messages.
         </p>
         
-        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
-          Your Phone Number (E.164 format):
-        </label>
-        <input 
-          type="text" 
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="+639..."
-          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '14px', marginBottom: '16px' }}
-        />
+
         
         <button 
           onClick={handleTestSms}
           disabled={loadingStatic || loadingAi}
           className="btn-primary block"
-          style={{ width: '100%', opacity: loadingStatic ? 0.7 : 1, marginBottom: '16px', background: 'rgba(255,255,255,0.1)' }}
+          style={{ width: '100%', opacity: loadingStatic ? 0.7 : 1, marginBottom: '16px' }}
         >
           {loadingStatic ? 'Sending...' : 'Send Standard Static SMS'}
         </button>
 
-        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '16px 0' }} />
+        <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0' }} />
 
-        <h4 style={{ fontSize: '13px', color: 'white', marginBottom: '8px' }}>Test AI-Generated Alert</h4>
+        <h4 style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '8px' }}>Test AI-Generated Alert</h4>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
           <input 
             type="text" 
             value={vehicle}
             onChange={(e) => setVehicle(e.target.value)}
             placeholder="Vehicle"
-            style={{ flex: 2, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
+            style={{ flex: 2, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#FFFFFF', color: 'var(--text-primary)', fontSize: '12px' }}
           />
           <input 
             type="text" 
             value={distance}
             onChange={(e) => setDistance(e.target.value)}
             placeholder="Distance"
-            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
+            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#FFFFFF', color: 'var(--text-primary)', fontSize: '12px' }}
           />
           <input 
             type="text" 
             value={speed}
             onChange={(e) => setSpeed(e.target.value)}
             placeholder="Speed"
-            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '12px' }}
+            style={{ flex: 1, minWidth: 0, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#FFFFFF', color: 'var(--text-primary)', fontSize: '12px' }}
           />
         </div>
         
