@@ -804,9 +804,9 @@ export default function MapComponent() {
        return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     };
 
-    const headerTitle = isContextual 
-       ? `${line.name.split(' ')[0]} - ${stations[stations.length - 1].name}`
-       : `${line.name.split(' ')[0]} Schematic`;
+  const headerTitle = isContextual
+  ? line.name.split(' ')[0] + ' - ' + stations[stations.length - 1].name
+  : line.name.split(' ')[0] + ' Schematic';
 
     return (
       <>
