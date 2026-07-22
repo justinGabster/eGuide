@@ -59,7 +59,8 @@ export default function Ekyc() {
       setStatusText('Scanning Face Liveness...');
       
       // The third-party SDK injects an iframe that is not mobile responsive.
-      // We dynamically find it and apply a CSS scale so it fits on small screens.
+      // CSS transform breaks click coordinates inside iframes, so we instead
+      // force the iframe to be taller and allow the parent wrapper to scroll.
       const fixIframeInterval = setInterval(() => {
         const iframes = document.querySelectorAll('iframe');
         iframes.forEach(iframe => {
@@ -67,11 +68,14 @@ export default function Ekyc() {
             const parent = iframe.parentElement;
             if (parent && parent.style.zIndex === '9999') {
               if (window.innerWidth <= 430) {
-                iframe.style.transform = 'scale(0.85)';
-                iframe.style.transformOrigin = 'top center';
-                iframe.style.height = '118%';
-                iframe.style.width = '118%';
-                iframe.style.marginLeft = '-9%';
+                // Enable scrolling on the parent fixed div
+                parent.style.overflowY = 'auto';
+                parent.style.WebkitOverflowScrolling = 'touch';
+                
+                // Force iframe to be tall enough to fit the modal content
+                iframe.style.height = '850px';
+                iframe.style.minHeight = '850px';
+                iframe.style.transform = 'none';
               }
               clearInterval(fixIframeInterval);
             }
