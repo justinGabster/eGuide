@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useTheme } from '@/components/ThemeProvider';
 import { transitLines } from './transitData';
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
@@ -29,6 +30,12 @@ export default function MapComponent() {
   const searchParams = useSearchParams();
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
+
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const currentTileUrl = isDark ? DARK_TILES : LIGHT_TILES;
 
   useEffect(() => {
     const lineId = searchParams.get('lineId');
@@ -864,13 +871,10 @@ export default function MapComponent() {
                   onClick={() => setIsStationSelectionMode(true)}
                   style={{ fontSize: '11px', background: '#334155', color: '#e2e8f0', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                  {line.id.toUpperCase()}
-                </span>
-                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
-                  {isContextual ? `${line.stations[lineViewConfig.originStationIdx!].name} Station` : `${headerTitle}`}
-                </h2>
-              </div>
-              <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Next train arrivals & schedule</p>
+                  Change Station
+                </button>
+              )}
+              <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
             </div>
           </div>
           
@@ -908,41 +912,6 @@ export default function MapComponent() {
              </div>
           )}
         </div>
-
-        {/* Upcoming Departures Slider */}
-        {isContextual && departures.length > 0 && (
-           <div style={{ padding: '0 20px', marginTop: '8px' }}>
-             <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
-             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-               {departures.map((dep, idx) => {
-                  const isSelected = selectedDep?.vehicleId === dep.vehicleId;
-                  return (
-                    <button 
-                      key={dep.vehicleId}
-                      onClick={() => setLineViewConfig(c => ({...c, selectedVehicleId: dep.vehicleId}))}
-                      style={{ 
-                        padding: '8px 12px', 
-                        borderRadius: '6px', 
-                        border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
-                        background: isSelected ? `${line.color}20` : '#0F172A', 
-                        color: isSelected ? '#FFFFFF' : '#94A3B8', 
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        minWidth: '80px'
-                      }}
-                    >
-                      <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
-                      <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748B', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
-                    </button>
-                  );
-               })}
-             </div>
-           </div>
-        )}
 
         {/* Timeline Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 110px 20px', position: 'relative' }}>
@@ -1066,7 +1035,7 @@ export default function MapComponent() {
             })})()}
           </div>
         </div>
-      </div>
+      </>
     );
   };
 
@@ -1163,7 +1132,7 @@ export default function MapComponent() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
               <select
                 value={directionFilter}
-                onChange={(e) => setDirectionFilter(e.target.value)}
+                onChange={(e) => setDirectionFilter(e.target.value as 'ALL' | 'NB' | 'SB')}
                 style={{
                   height: '30px',
                   backgroundColor: '#1E293B',
