@@ -68,15 +68,20 @@ export default function Ekyc() {
             const parent = iframe.parentElement;
             if (parent && parent.style.zIndex === '9999') {
               if (window.innerWidth <= 430) {
-                // Enable scrolling on the parent fixed div
-                parent.style.overflowY = 'auto';
-                parent.style.setProperty('-webkit-overflow-scrolling', 'touch');
-                
-                // Force iframe to be tall enough to fit the modal content
-                iframe.style.height = '850px';
-                iframe.style.minHeight = '850px';
-                iframe.style.transform = 'none';
+                // Use CSS zoom instead of transform to preserve click coordinates natively
+                (iframe.style as any).zoom = '0.85';
+                iframe.style.height = '118%';
+                iframe.style.width = '118%';
+                iframe.style.marginLeft = '-9%';
               }
+              
+              // Force camera permissions if the SDK missed them
+              if (!iframe.hasAttribute('allow') || !iframe.getAttribute('allow')?.includes('camera')) {
+                iframe.setAttribute('allow', 'camera; microphone; geolocation');
+                // Reload iframe to apply new permission policy
+                iframe.src = iframe.src;
+              }
+              
               clearInterval(fixIframeInterval);
             }
           }
