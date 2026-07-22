@@ -1041,6 +1041,13 @@ export default function MapComponent() {
             }}
             onMouseOver={(e) => e.currentTarget.style.color = 'white'}
             onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+          >
+            Show Station Names
+          </label>
+          <div style={{ flex: 1 }} />
+          <button 
+            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             aria-label="Toggle Panel"
           >
             {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
