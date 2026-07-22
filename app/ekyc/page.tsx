@@ -57,7 +57,30 @@ export default function Ekyc() {
       const pubKey = process.env.NEXT_PUBLIC_EGOV_EVERIFY_PUB_KEY || 'MOCK_PUB_KEY';
       
       setStatusText('Scanning Face Liveness...');
+      
+      // The third-party SDK injects an iframe that is not mobile responsive.
+      // We dynamically find it and apply a CSS scale so it fits on small screens.
+      const fixIframeInterval = setInterval(() => {
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+          if (iframe.src.includes('everify')) {
+            const parent = iframe.parentElement;
+            if (parent && parent.style.zIndex === '9999') {
+              if (window.innerWidth <= 430) {
+                iframe.style.transform = 'scale(0.85)';
+                iframe.style.transformOrigin = 'top center';
+                iframe.style.height = '118%';
+                iframe.style.width = '118%';
+                iframe.style.marginLeft = '-9%';
+              }
+              clearInterval(fixIframeInterval);
+            }
+          }
+        });
+      }, 200);
+
       const response = await window.eKYC().start({ pubKey });
+      clearInterval(fixIframeInterval);
       
       if (response.status !== 'COMPLETED' || !response.result?.session_id) {
         throw new Error('Verification was not completed properly.');
