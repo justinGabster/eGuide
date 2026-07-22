@@ -987,7 +987,7 @@ export default function MapComponent() {
         top: '20px',
         right: '20px',
         zIndex: 1000,
-        background: 'rgba(255, 255, 255, 0.95)',
+        background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         borderRadius: '12px',
@@ -1007,9 +1007,9 @@ export default function MapComponent() {
           value={selectedLine}
           onChange={(e) => setSelectedLine(e.target.value)}
           style={{
-            background: '#F4F6F9',
+            background: '#0f172a',
             color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
+            border: '1px solid #334155',
             borderRadius: '8px',
             padding: '8px',
             fontSize: '14px',
@@ -1175,19 +1175,19 @@ export default function MapComponent() {
       </div>
 
       <style>{`
-        .light-station-tooltip {
-          background-color: rgba(255, 255, 255, 0.95);
-          border: 1px solid var(--border-color);
-          color: var(--text-primary);
+        .dark-station-tooltip {
+          background-color: rgba(30, 41, 59, 0.95);
+          border: 1px solid #334155;
+          color: #f8fafc;
           font-size: 11px;
           font-weight: 600;
           padding: 4px 8px;
           border-radius: 6px;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
           white-space: nowrap;
         }
-        .light-station-tooltip::before {
-          border-top-color: rgba(255, 255, 255, 0.95);
+        .dark-station-tooltip::before {
+          border-top-color: rgba(30, 41, 59, 0.95);
         }
         .vehicle-pulse {
           animation: vehicle-pulse-anim 1.5s infinite;
@@ -1201,7 +1201,9 @@ export default function MapComponent() {
           border-radius: 12px;
           padding: 0;
           overflow: hidden;
-          box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+          background-color: #1e293b;
+          color: #f8fafc;
+          box-shadow: 0 8px 16px rgba(0,0,0,0.5);
         }
         .custom-station-popup .leaflet-popup-content {
           margin: 12px;
@@ -1239,10 +1241,10 @@ export default function MapComponent() {
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
         <MapResizer />
-        {/* Dark mode tiles using CartoDB Light Matter for lighter map */}
+        {/* Dark mode tiles using CartoDB Dark Matter */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
         {transitLines.map((line) => {
@@ -1311,7 +1313,7 @@ export default function MapComponent() {
                     direction="top" 
                     offset={[0, -5]} 
                     permanent={showAllLabels && !isFaded}
-                    className="light-station-tooltip"
+                    className="dark-station-tooltip"
                     key={`tooltip-${showAllLabels}-${isFaded}`}
                   >
                     <span style={{ color: line.color, fontWeight: 'bold' }}>
@@ -1322,7 +1324,7 @@ export default function MapComponent() {
                     <div style={{ padding: '4px', fontFamily: 'sans-serif' }}>
                       {/* Header */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
                           {station.name}
                         </h3>
                         <span style={{ 
@@ -1345,9 +1347,9 @@ export default function MapComponent() {
 
                       {/* Status / Arrivals */}
                       {line.id === 'pnr-nscr' ? (
-                        <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#fff7ed', borderRadius: '6px', textAlign: 'center', border: '1px solid #fdba74' }}>
-                          <span style={{ color: '#ea580c', fontWeight: 'bold', fontSize: '13px' }}>Suspended / Under Renovation</span>
-                          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#9a3412', lineHeight: '1.4' }}>
+                        <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#431407', borderRadius: '6px', textAlign: 'center', border: '1px solid #7c2d12' }}>
+                          <span style={{ color: '#fdba74', fontWeight: 'bold', fontSize: '13px' }}>Suspended / Under Renovation</span>
+                          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#fed7aa', lineHeight: '1.4' }}>
                             Operations suspended due to North-South Commuter Railway (NSCR) construction.
                           </p>
                         </div>
@@ -1361,9 +1363,9 @@ export default function MapComponent() {
 
                         if (!isLineActive) {
                           return (
-                            <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#f1f5f9', borderRadius: '6px', textAlign: 'center', border: '1px solid #cbd5e1' }}>
-                              <span style={{ color: '#64748b', fontWeight: 'bold', fontSize: '13px' }}>Off Hours</span>
-                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#475569', lineHeight: '1.4' }}>
+                            <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#0f172a', borderRadius: '6px', textAlign: 'center', border: '1px solid #334155' }}>
+                              <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '13px' }}>Off Hours</span>
+                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
                                 Train operations run between specific hours.
                               </p>
                             </div>
@@ -1375,14 +1377,14 @@ export default function MapComponent() {
                         return (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                             {idx < line.stations.length - 1 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px', opacity: (directionFilter === 'NB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>To <strong>{arrivals.forwardName}</strong></span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'NB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.forwardName}</strong></span>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.forwardMins)}</span>
                               </div>
                             )}
                             {idx > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px', opacity: (directionFilter === 'SB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>To <strong>{arrivals.backwardName}</strong></span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'SB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.backwardName}</strong></span>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.backwardMins)}</span>
                               </div>
                             )}
