@@ -1,9 +1,21 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON } from 'react-leaflet';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { transitLines } from './transitData';
+
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    // Invalidate size after a short delay to ensure the DOM flex layout has settled
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
 
 export default function MapComponent() {
   // Center map around Metro Manila
@@ -152,6 +164,7 @@ export default function MapComponent() {
         scrollWheelZoom={true} 
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
+        <MapResizer />
         {/* Dark mode tiles using CartoDB Dark Matter */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -168,7 +181,7 @@ export default function MapComponent() {
           const markerOpacity = isFaded ? 0.3 : 1.0;
 
           return (
-            <div key={line.id}>
+            <React.Fragment key={line.id}>
               {/* Render the polyline path */}
               {line.id === 'pasig-ferry' ? (
                 pasigFerryData && (
@@ -236,7 +249,7 @@ export default function MapComponent() {
                   </Popup>
                 </CircleMarker>
               ))}
-            </div>
+            </React.Fragment>
           );
         })}
       </MapContainer>
