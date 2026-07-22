@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useTheme } from '@/components/ThemeProvider';
 import { transitLines } from './transitData';
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
@@ -29,6 +30,12 @@ export default function MapComponent() {
   const searchParams = useSearchParams();
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
+
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const currentTileUrl = isDark ? DARK_TILES : LIGHT_TILES;
 
   useEffect(() => {
     const lineId = searchParams.get('lineId');
@@ -85,6 +92,26 @@ export default function MapComponent() {
   const [tick, setTick] = useState(0);
 
   const mapRef = useRef<any>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 200);
+
+    const handleResize = () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchFerryData = async () => {
@@ -372,7 +399,10 @@ export default function MapComponent() {
     else if (headingText.includes('Eastbound')) dirCode = 'EB';
     else if (headingText.includes('Westbound')) dirCode = 'WB';
 
-    // High-contrast direction badge pill (Option B)
+    const isBus = lineId === 'edsa-carousel';
+    const displayCode = isBus ? `🚌 ${dirCode}` : dirCode;
+
+    // High-contrast direction badge pill
     const dirBadge = `<div style="
       position: absolute;
       top: -8px;
@@ -387,12 +417,13 @@ export default function MapComponent() {
       border: 1.5px solid ${color};
       box-shadow: 0 2px 4px rgba(0,0,0,0.5);
       z-index: 10;
-    ">${dirCode}</div>`;
+    ">${displayCode}</div>`;
 
-    if (isTrain || isFerry) {
+    if (isTrain || isFerry || isBus) {
       const trainSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2.23v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm6 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z"/></svg>`;
       const ferrySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg>`;
-      const iconSvg = isFerry ? ferrySvg : trainSvg;
+      const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v6z"/></svg>`;
+      const iconSvg = isFerry ? ferrySvg : (isBus ? busSvg : trainSvg);
 
       return L.divIcon({
         className: 'custom-vehicle-marker',
@@ -648,7 +679,8 @@ export default function MapComponent() {
           Where are you starting your journey?
         </p>
 
-        <button 
+        {/* Location Button */}
+        <button
           onClick={handleUseMyLocation}
           style={{ width: '100%', padding: '14px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
         >
@@ -665,7 +697,9 @@ export default function MapComponent() {
           <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
         </div>
 
+        {/* Form Fields Container */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Line Select */}
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
             <select 
@@ -677,6 +711,7 @@ export default function MapComponent() {
             </select>
           </div>
 
+          {/* Origin Station Select */}
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
             <select 
@@ -688,6 +723,7 @@ export default function MapComponent() {
             </select>
           </div>
 
+          {/* Direction Selector */}
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
             <div style={{ display: 'flex', backgroundColor: 'var(--bg-color)', borderRadius: '6px', padding: '4px', border: '1px solid var(--border-color)' }}>
@@ -991,7 +1027,7 @@ export default function MapComponent() {
                       {st.name} {isOrigin && <span style={{ fontSize: '10px', backgroundColor: line.color, color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle' }}>ORIGIN</span>}
                     </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: isApproaching ? '#38bdf8' : (isOrigin ? '#fff' : '#94a3b8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
+                  <div style={{ fontSize: '12px', color: isApproaching ? '#38BDF8' : (isOrigin ? '#FFFFFF' : '#94A3B8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
                     {etaText}
                   </div>
                 </div>
@@ -1051,78 +1087,85 @@ export default function MapComponent() {
           </button>
         </div>
 
+        {/* Body */}
         {!isPanelCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-            <select 
-              id="line-filter"
-              value={selectedLine}
-              onChange={(e) => setSelectedLine(e.target.value)}
-              style={{
-                background: '#0f172a',
-                color: '#f8fafc',
-                border: '1px solid #475569',
-                borderRadius: '4px',
-                padding: '8px',
-                fontSize: '13px',
-                outline: 'none',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <option value="all">All Lines</option>
-              {transitLines.map(l => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-            
-            {/* Toggle Station Names */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-              <input 
-                id="label-toggle"
-                type="checkbox" 
-                checked={showAllLabels}
-                onChange={(e) => setShowAllLabels(e.target.checked)}
-                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
-              />
-              <label 
-                htmlFor="label-toggle"
-                style={{ 
-                  color: '#f8fafc', 
-                  fontSize: '13px', 
-                  cursor: 'pointer',
-                  userSelect: 'none'
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '10px', color: '#94A3B8', marginBottom: '4px', textTransform: 'uppercase' }}>
+                Highlight Line
+              </label>
+              <select
+                value={selectedLine}
+                onChange={(e) => setSelectedLine(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '32px',
+                  backgroundColor: '#1E293B',
+                  color: '#FFFFFF',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  outline: 'none'
                 }}
               >
+                <option value="all">All Lines</option>
+                {transitLines.map(l => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                id="showStations"
+                checked={showAllLabels}
+                onChange={(e) => setShowAllLabels(e.target.checked)}
+                style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+              />
+              <label htmlFor="showStations" style={{ fontSize: '12px', color: '#E2E8F0', cursor: 'pointer', userSelect: 'none' }}>
                 Show Station Names
               </label>
             </div>
 
-            {/* Toggle Live Vehicles */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  type="checkbox" 
-                  id="liveVehiclesToggle"
-                  checked={showLiveVehicles}
-                  onChange={(e) => setShowLiveVehicles(e.target.checked)}
-                  style={{ cursor: 'pointer', accentColor: '#38bdf8', width: '16px', height: '16px' }}
-                />
-                <label 
-                  htmlFor="liveVehiclesToggle" 
-                  style={{ 
-                    color: '#f8fafc', 
-                    fontSize: '13px', 
-                    cursor: 'pointer',
-                    userSelect: 'none' 
-                  }}
-                >
-                  Show Live Vehicles
-                </label>
-              </div>
-              
-              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                🟢 {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
+              <select
+                value={directionFilter}
+                onChange={(e) => setDirectionFilter(e.target.value as 'ALL' | 'NB' | 'SB')}
+                style={{
+                  height: '30px',
+                  backgroundColor: '#1E293B',
+                  color: '#FFFFFF',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '0 4px',
+                  fontSize: '11px'
+                }}
+              >
+                <option value="ALL">All Directions</option>
+                <option value="NB">NB / EB</option>
+                <option value="SB">SB / WB</option>
+              </select>
+
+              <button
+                onClick={() => {
+                  if (!isLineViewOpen) setIsStationSelectionMode(true);
+                  setIsLineViewOpen(!isLineViewOpen);
+                }}
+                style={{
+                  height: '30px',
+                  backgroundColor: isLineViewOpen ? '#1D4ED8' : '#2563EB',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                🗺️ {isLineViewOpen ? 'Close View' : 'Line View'}
+              </button>
             </div>
 
             {/* Direction Filter */}
@@ -1245,12 +1288,13 @@ export default function MapComponent() {
         center={position} 
         zoom={12} 
         scrollWheelZoom={true} 
+        attributionControl={false}
         style={{ width: '100%', height: '100%', background: 'var(--bg-color)' }}
       >
-        {/* Light mode tiles using CartoDB Light Matter */}
+        {/* Dynamic Theme Tiles */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url={currentTileUrl}
         />
 
         {transitLines.map((line) => {
@@ -1285,7 +1329,7 @@ export default function MapComponent() {
                       color: lineColor, 
                       weight: lineWeight,
                       opacity: lineOpacity,
-                      dashArray: (segment.isDashed || line.id === 'pnr') ? '6, 8' : undefined
+                      dashArray: (segment.isDashed || line.id.includes('pnr')) ? '6, 8' : (line.id === 'edsa-carousel' ? '4, 6' : undefined)
                     }}
                   />
                 ))
@@ -1296,7 +1340,7 @@ export default function MapComponent() {
                     color: lineColor, 
                     weight: lineWeight,
                     opacity: lineOpacity,
-                    dashArray: line.id === 'pnr' ? '6, 8' : undefined
+                    dashArray: line.id.includes('pnr') ? '6, 8' : (line.id === 'edsa-carousel' ? '4, 6' : undefined)
                   }}
                 />
               )}
@@ -1513,9 +1557,9 @@ export default function MapComponent() {
                         {/* Header Row */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
-                              {line.id === 'pasig-ferry' ? 'Ferry Details' : 'Train Details'}
-                            </h3>
+                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>
+                              {line.id === 'pasig-ferry' ? 'Ferry Details' : (line.id === 'edsa-carousel' ? 'Bus Details' : 'Train Details')}
+                            </div>
                             <span style={{ backgroundColor: line.color, color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                               {line.id.toUpperCase()}
                             </span>

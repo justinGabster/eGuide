@@ -283,4 +283,29 @@ export const pasigFerry: TransitLine = {
   ]
 };
 
-export const transitLines = [lrt1, lrt2, mrt3, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
+export const edsaCarousel: TransitLine = {
+  id: 'edsa-carousel',
+  name: 'EDSA Carousel Busway',
+  color: '#EC4899', // Crimson / Vibrant Pink accent color
+  stations: [
+    { name: 'Monumento', coords: [14.6575, 120.9839] },
+    { name: 'Balintawak', coords: [14.6573, 121.0028] },
+    { name: 'North Ave', coords: [14.6528, 121.0326] },
+    { name: 'Quezon Ave', coords: [14.6433, 121.0370] },
+    { name: 'GMA Kamuning', coords: [14.6346, 121.0435] },
+    { name: 'Araneta Center Cubao', coords: [14.6193, 121.0511] },
+    { name: 'Santolan EDSA', coords: [14.6080, 121.0566] },
+    { name: 'Ortigas EDSA', coords: [14.5878, 121.0566] },
+    { name: 'Shaw EDSA', coords: [14.5812, 121.0535] },
+    { name: 'Boni EDSA', coords: [14.5739, 121.0481] },
+    { name: 'Guadalupe EDSA', coords: [14.5671, 121.0456] },
+    { name: 'Buendia EDSA', coords: [14.5546, 121.0345] },
+    { name: 'Ayala EDSA', coords: [14.5492, 121.0281] },
+    { name: 'Magallanes EDSA', coords: [14.5418, 121.0195] },
+    { name: 'Taft EDSA', coords: [14.5375, 121.0012] },
+    { name: 'MOA', coords: [14.5352, 120.9822] },
+    { name: 'PITX', coords: [14.5113, 120.9912] }
+  ]
+};
+
+export const transitLines = [lrt1, lrt2, mrt3, pnrNscr, pnrSouth, pnrBicol, pasigFerry, edsaCarousel];
