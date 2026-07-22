@@ -855,8 +855,8 @@ export default function MapComponent() {
                         style={{ 
                           padding: '8px 12px', 
                           borderRadius: '6px', 
-                          border: isSelected ? `1px solid ${line.color}` : '1px solid var(--border-color)', 
-                          background: isSelected ? `${line.color}20` : 'var(--card-bg)', 
+                          border: isSelected ? '1px solid ' + line.color : '1px solid var(--border-color)', 
+                          background: isSelected ? line.color + '20' : 'var(--card-bg)', 
                           color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', 
                           cursor: 'pointer',
                           whiteSpace: 'nowrap',
@@ -868,7 +868,7 @@ export default function MapComponent() {
                         }}
                       >
                         <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
-                        <span style={{ fontSize: '10px', color: isSelected ? line.color : 'var(--text-secondary)', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
+                        <span style={{ fontSize: '10px', color: isSelected ? line.color : 'var(--text-secondary)', marginTop: '2px' }}>{idx === 0 ? 'Next' : 'in ' + dep.etaMins + 'm'}</span>
                       </button>
                     );
                  })}
