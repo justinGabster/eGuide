@@ -70,7 +70,7 @@ export default function Ekyc() {
               if (window.innerWidth <= 430) {
                 // Enable scrolling on the parent fixed div
                 parent.style.overflowY = 'auto';
-                parent.style.WebkitOverflowScrolling = 'touch';
+                parent.style.setProperty('-webkit-overflow-scrolling', 'touch');
                 
                 // Force iframe to be tall enough to fit the modal content
                 iframe.style.height = '850px';
