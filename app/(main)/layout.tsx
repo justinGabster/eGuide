@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
+import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, MessageSquare, Unlock, ScanFace, FileText, Edit2, Cake } from 'lucide-react';
 
 import SplashScreen from '@/components/SplashScreen';
 
@@ -80,12 +81,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   const menuItems = [
-    { label: 'Personal Information', icon: '⚙️' },
-    { label: 'FAQs', icon: '❓' },
-    { label: 'About eGovPH', icon: 'ℹ️' },
-    { label: 'Privacy Notice', icon: '🛡️' },
-    { label: 'Contact Us', icon: '📞' },
-    { label: 'Rate our app', icon: '👍' },
+    { label: 'Personal Information', icon: <User size={20} /> },
+    { label: 'FAQs', icon: <HelpCircle size={20} /> },
+    { label: 'About eGovPH', icon: <Info size={20} /> },
+    { label: 'Privacy Notice', icon: <Shield size={20} /> },
+    { label: 'Contact Us', icon: <Phone size={20} /> },
+    { label: 'Rate our app', icon: <ThumbsUp size={20} /> },
     { label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, icon: theme === 'light' ? (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: 'var(--text-primary)' }}>
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -103,24 +104,24 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
       </svg>
     ), action: toggleTheme },
-    { label: 'Settings', icon: '⚙️', action: () => setIsSettingsOpen(true) },
-    { label: 'Log out', icon: '🚪', path: '/' },
+    { label: 'Settings', icon: <Settings size={20} />, action: () => setIsSettingsOpen(true) },
+    { label: 'Log out', icon: <LogOut size={20} />, path: '/' },
   ];
 
   const settingsSections = [
     {
       title: 'PRIVACY AND SECURITY',
       items: [
-        { label: 'Account Settings', icon: '⚙️' },
-        { label: 'Notification Settings', icon: '💬' },
-        { label: 'Change PIN', icon: '🔓' },
-        { label: 'Face ID Authentication', icon: '🪪', value: 'Enabled' },
+        { label: 'Account Settings', icon: <Settings size={20} /> },
+        { label: 'Notification Settings', icon: <MessageSquare size={20} /> },
+        { label: 'Change PIN', icon: <Unlock size={20} /> },
+        { label: 'Face ID Authentication', icon: <ScanFace size={20} />, value: 'Enabled' },
       ]
     },
     {
       title: 'ABOUT eGovPH',
       items: [
-        { label: 'Terms and Conditions', icon: '📄' },
+        { label: 'Terms and Conditions', icon: <FileText size={20} /> },
       ]
     }
   ];
@@ -193,7 +194,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
       
-      <main className="pt-3 px-3 min-h-screen fade-in">
+      <main className="main-content fade-in" style={{ display: 'flex', flexDirection: 'column' }}>
         {children}
       </main>
 
@@ -256,10 +257,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span>👤</span>
+                  <User size={40} color="var(--text-secondary)" />
                 )}
-                <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px' }}>
-                  ✏️
+                <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+                  <Edit2 size={12} />
                 </div>
               </div>
               <input 
@@ -273,7 +274,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>dendenissejane@gmail.com</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}><Cake size={14} /> January 7, 2006</p>
                 {aiCredits !== null && (
                   <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--status-success-bg)', color: 'var(--status-success-text)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
                     <span style={{ color: 'var(--success)', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining

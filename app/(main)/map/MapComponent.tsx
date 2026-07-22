@@ -1,14 +1,25 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker } from 'react-leaflet';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useTheme } from '@/components/ThemeProvider';
+import { ChevronUp, ChevronDown, MapPin, Circle, Map } from 'lucide-react';
 import { transitLines } from './transitData';
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
+
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    // Invalidate size after a short delay to ensure the DOM flex layout has settled
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
 
 export interface VehicleState {
   id: string;
@@ -27,47 +38,8 @@ export interface VehicleState {
 }
 
 export default function MapComponent() {
-  const searchParams = useSearchParams();
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
-
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-  const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-  const currentTileUrl = isDark ? DARK_TILES : LIGHT_TILES;
-
-  useEffect(() => {
-    const lineId = searchParams.get('lineId');
-    const stationIdxParam = searchParams.get('stationIdx');
-    
-    if (lineId) {
-      setSelectedLine(lineId);
-      
-      const config: any = {
-        lineId,
-        isForward: true
-      };
-      
-      if (stationIdxParam !== null) {
-        config.originStationIdx = parseInt(stationIdxParam, 10);
-      }
-      
-      setLineViewConfig(config);
-      setIsStationSelectionMode(false);
-      setIsLineViewOpen(true);
-      
-      // Pan map to the station if specified
-      const line = transitLines.find(l => l.id === lineId);
-      if (line) {
-        const idx = stationIdxParam !== null ? parseInt(stationIdxParam, 10) : 0;
-        const station = line.stations[idx];
-        if (station && mapRef.current) {
-          mapRef.current.setView(station.coords, 14);
-        }
-      }
-    }
-  }, [searchParams]);
 
   const [pasigFerryData, setPasigFerryData] = useState<any>(null);
   const [selectedLine, setSelectedLine] = useState<string>('all');
@@ -92,26 +64,6 @@ export default function MapComponent() {
   const [tick, setTick] = useState(0);
 
   const mapRef = useRef<any>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    }, 200);
-
-    const handleResize = () => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   useEffect(() => {
     const fetchFerryData = async () => {
@@ -399,10 +351,7 @@ export default function MapComponent() {
     else if (headingText.includes('Eastbound')) dirCode = 'EB';
     else if (headingText.includes('Westbound')) dirCode = 'WB';
 
-    const isBus = lineId === 'edsa-carousel';
-    const displayCode = isBus ? `🚌 ${dirCode}` : dirCode;
-
-    // High-contrast direction badge pill
+    // High-contrast direction badge pill (Option B)
     const dirBadge = `<div style="
       position: absolute;
       top: -8px;
@@ -417,13 +366,12 @@ export default function MapComponent() {
       border: 1.5px solid ${color};
       box-shadow: 0 2px 4px rgba(0,0,0,0.5);
       z-index: 10;
-    ">${displayCode}</div>`;
+    ">${dirCode}</div>`;
 
-    if (isTrain || isFerry || isBus) {
+    if (isTrain || isFerry) {
       const trainSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2.23v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm6 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z"/></svg>`;
       const ferrySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg>`;
-      const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v6z"/></svg>`;
-      const iconSvg = isFerry ? ferrySvg : (isBus ? busSvg : trainSvg);
+      const iconSvg = isFerry ? ferrySvg : trainSvg;
 
       return L.divIcon({
         className: 'custom-vehicle-marker',
@@ -669,76 +617,67 @@ export default function MapComponent() {
     const activeLine = transitLines.find(l => l.id === lineViewConfig.lineId) || transitLines[0];
 
     return (
-      <div style={{ padding: '24px 20px 110px 20px', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: 'var(--card-bg)', overflowY: 'auto' }}>
+      <div style={{ padding: '24px 20px 120px 20px', color: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', backgroundColor: '#0f172a', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
-          <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+          <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
         
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+        <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>
           Where are you starting your journey?
         </p>
 
-        {/* Location Button */}
-        <button
+        <button 
           onClick={handleUseMyLocation}
-          style={{ width: '100%', padding: '14px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+          style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-            <circle cx="12" cy="12" r="10"></circle>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          Use My Location
+          <MapPin size={16} /> Use My Location
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
-          <span style={{ padding: '0 12px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', letterSpacing: '0.5px' }}>OR SELECT MANUALLY</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-color)' }}></div>
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
+          <span style={{ padding: '0 12px', fontSize: '11px', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>OR SELECT MANUALLY</span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#334155' }}></div>
         </div>
 
-        {/* Form Fields Container */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Line Select */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
             <select 
               value={lineViewConfig.lineId} 
               onChange={e => setLineViewConfig(c => ({...c, lineId: e.target.value, originStationIdx: 0}))}
-              style={{ width: '100%', padding: '12px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               {transitLines.filter(l => l.id !== 'pnr-nscr').map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
 
-          {/* Origin Station Select */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
             <select 
               value={lineViewConfig.originStationIdx || 0} 
               onChange={e => setLineViewConfig(c => ({...c, originStationIdx: parseInt(e.target.value)}))}
-              style={{ width: '100%', padding: '12px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
             </select>
           </div>
 
-          {/* Direction Selector */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
-            <div style={{ display: 'flex', backgroundColor: 'var(--bg-color)', borderRadius: '6px', padding: '4px', border: '1px solid var(--border-color)' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
+            <div style={{ display: 'flex', backgroundColor: '#1e293b', borderRadius: '6px', padding: '4px', border: '1px solid #334155' }}>
                <button 
                   onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? 'var(--primary-color)' : 'transparent', color: lineViewConfig.isForward ? 'white' : 'var(--text-secondary)', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
+                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
                >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}</button>
                <button 
                   onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? 'var(--primary-color)' : 'transparent', color: !lineViewConfig.isForward ? 'white' : 'var(--text-secondary)', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
+                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: !lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
                >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}</button>
             </div>
           </div>
 
-          <div style={{ paddingTop: '20px', marginTop: 'auto', zIndex: 10 }}>
+          <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
             <button 
               onClick={() => {
                  if (lineViewConfig.originStationIdx === undefined) {
@@ -747,7 +686,7 @@ export default function MapComponent() {
                  setIsStationSelectionMode(false);
                  setShowPastStations(false);
               }}
-              style={{ width: '100%', padding: '14px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
+              style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
             >
               View Line Schedule &rarr;
             </button>
@@ -847,14 +786,14 @@ export default function MapComponent() {
     return (
       <>
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid #1e293b', backgroundColor: '#1e293b' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ backgroundColor: line.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block' }}></span>
                 {headerTitle}
               </h2>
-              <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+              <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                 {lineViewConfig.isForward 
                   ? (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'EASTBOUND' : 'SOUTHBOUND') 
                   : (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'WESTBOUND' : 'NORTHBOUND')}
@@ -880,7 +819,7 @@ export default function MapComponent() {
           
           {isContextual && departures.length > 0 && (
              <div style={{ marginTop: '16px' }}>
-               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
+               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
                  {departures.map((dep, idx) => {
                     const isSelected = selectedDep?.vehicleId === dep.vehicleId;
@@ -891,9 +830,9 @@ export default function MapComponent() {
                         style={{ 
                           padding: '8px 12px', 
                           borderRadius: '6px', 
-                          border: isSelected ? `1px solid ${line.color}` : '1px solid var(--border-color)', 
-                          background: isSelected ? `${line.color}20` : 'var(--card-bg)', 
-                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', 
+                          border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
+                          background: isSelected ? `${line.color}20` : '#0f172a', 
+                          color: isSelected ? '#fff' : '#94a3b8', 
                           cursor: 'pointer',
                           whiteSpace: 'nowrap',
                           transition: 'all 0.2s',
@@ -904,7 +843,7 @@ export default function MapComponent() {
                         }}
                       >
                         <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
-                        <span style={{ fontSize: '10px', color: isSelected ? line.color : 'var(--text-secondary)', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
+                        <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748b', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
                       </button>
                     );
                  })}
@@ -914,7 +853,7 @@ export default function MapComponent() {
         </div>
 
         {/* Timeline Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 110px 20px', position: 'relative' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', position: 'relative' }}>
           {isContextual && hiddenCount > 0 && (
              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                 <button 
@@ -1027,7 +966,7 @@ export default function MapComponent() {
                       {st.name} {isOrigin && <span style={{ fontSize: '10px', backgroundColor: line.color, color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle' }}>ORIGIN</span>}
                     </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: isApproaching ? '#38BDF8' : (isOrigin ? '#FFFFFF' : '#94A3B8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
+                  <div style={{ fontSize: '12px', color: isApproaching ? '#38bdf8' : (isOrigin ? '#fff' : '#94a3b8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
                     {etaText}
                   </div>
                 </div>
@@ -1048,7 +987,7 @@ export default function MapComponent() {
         top: '20px',
         right: '20px',
         zIndex: 1000,
-        background: 'var(--card-bg)',
+        background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         borderRadius: '12px',
@@ -1060,112 +999,91 @@ export default function MapComponent() {
         transition: 'all 0.3s ease-in-out',
         width: isPanelCollapsed ? 'auto' : '260px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: isPanelCollapsed ? 'center' : 'space-between', gap: '12px' }}>
-          {!isPanelCollapsed && (
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>
-              TRANSIT CONTROL
-            </span>
-          )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+            MAP CONTROLS
+          </label>
           <button 
             onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer', 
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              color: 'var(--text-primary)'
-            }}
+            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             aria-label="Toggle Panel"
           >
-            {isPanelCollapsed ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-            )}
+            {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           </button>
         </div>
 
-        {/* Body */}
         {!isPanelCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '10px', color: '#94A3B8', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Highlight Line
-              </label>
-              <select
-                value={selectedLine}
-                onChange={(e) => setSelectedLine(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '32px',
-                  backgroundColor: '#1E293B',
-                  color: '#FFFFFF',
-                  border: '1px solid #334155',
-                  borderRadius: '6px',
-                  padding: '0 8px',
-                  fontSize: '12px',
-                  outline: 'none'
-                }}
-              >
-                <option value="all">All Lines</option>
-                {transitLines.map(l => (
-                  <option key={l.id} value={l.id}>{l.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                id="showStations"
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+            <select 
+              id="line-filter"
+              value={selectedLine}
+              onChange={(e) => setSelectedLine(e.target.value)}
+              style={{
+                background: '#0f172a',
+                color: '#f8fafc',
+                border: '1px solid #475569',
+                borderRadius: '4px',
+                padding: '8px',
+                fontSize: '13px',
+                outline: 'none',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              <option value="all">All Lines</option>
+              {transitLines.map(l => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+            
+            {/* Toggle Station Names */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+              <input 
+                id="label-toggle"
+                type="checkbox" 
                 checked={showAllLabels}
                 onChange={(e) => setShowAllLabels(e.target.checked)}
-                style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
               />
-              <label htmlFor="showStations" style={{ fontSize: '12px', color: '#E2E8F0', cursor: 'pointer', userSelect: 'none' }}>
+              <label 
+                htmlFor="label-toggle"
+                style={{ 
+                  color: '#f8fafc', 
+                  fontSize: '13px', 
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+              >
                 Show Station Names
               </label>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
-              <select
-                value={directionFilter}
-                onChange={(e) => setDirectionFilter(e.target.value as 'ALL' | 'NB' | 'SB')}
-                style={{
-                  height: '30px',
-                  backgroundColor: '#1E293B',
-                  color: '#FFFFFF',
-                  border: '1px solid #334155',
-                  borderRadius: '6px',
-                  padding: '0 4px',
-                  fontSize: '11px'
-                }}
-              >
-                <option value="ALL">All Directions</option>
-                <option value="NB">NB / EB</option>
-                <option value="SB">SB / WB</option>
-              </select>
-
-              <button
-                onClick={() => {
-                  if (!isLineViewOpen) setIsStationSelectionMode(true);
-                  setIsLineViewOpen(!isLineViewOpen);
-                }}
-                style={{
-                  height: '30px',
-                  backgroundColor: isLineViewOpen ? '#1D4ED8' : '#2563EB',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                🗺️ {isLineViewOpen ? 'Close View' : 'Line View'}
-              </button>
+            {/* Toggle Live Vehicles */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input 
+                  type="checkbox" 
+                  id="liveVehiclesToggle"
+                  checked={showLiveVehicles}
+                  onChange={(e) => setShowLiveVehicles(e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: '#38bdf8', width: '16px', height: '16px' }}
+                />
+                <label 
+                  htmlFor="liveVehiclesToggle" 
+                  style={{ 
+                    color: '#f8fafc', 
+                    fontSize: '13px', 
+                    cursor: 'pointer',
+                    userSelect: 'none' 
+                  }}
+                >
+                  Show Live Vehicles
+                </label>
+              </div>
+              
+              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
+                <Circle size={10} fill="#22c55e" color="#22c55e" style={{ display: 'inline-block', marginRight: '4px' }} /> {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
+              </div>
             </div>
 
             {/* Direction Filter */}
@@ -1208,37 +1126,26 @@ export default function MapComponent() {
                 transition: 'background 0.2s'
               }}
             >
-              {isLineViewOpen ? (
-                'Close Schematic'
-              ) : (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
-                    <line x1="9" y1="3" x2="9" y2="18"></line>
-                    <line x1="15" y1="6" x2="15" y2="21"></line>
-                  </svg>
-                  Open Line View
-                </span>
-              )}
+              {isLineViewOpen ? 'Close Schematic' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Map size={16} /> Open Line View</span>}
             </button>
           </div>
         )}
       </div>
 
       <style>{`
-        .light-station-tooltip {
-          background-color: rgba(255, 255, 255, 0.95);
-          border: 1px solid var(--border-color);
-          color: var(--text-primary);
+        .dark-station-tooltip {
+          background-color: rgba(30, 41, 59, 0.95);
+          border: 1px solid #334155;
+          color: #f8fafc;
           font-size: 11px;
           font-weight: 600;
           padding: 4px 8px;
           border-radius: 6px;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
           white-space: nowrap;
         }
-        .light-station-tooltip::before {
-          border-top-color: rgba(255, 255, 255, 0.95);
+        .dark-station-tooltip::before {
+          border-top-color: rgba(30, 41, 59, 0.95);
         }
         .vehicle-pulse {
           animation: vehicle-pulse-anim 1.5s infinite;
@@ -1252,7 +1159,9 @@ export default function MapComponent() {
           border-radius: 12px;
           padding: 0;
           overflow: hidden;
-          box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+          background-color: #1e293b;
+          color: #f8fafc;
+          box-shadow: 0 8px 16px rgba(0,0,0,0.5);
         }
         .custom-station-popup .leaflet-popup-content {
           margin: 12px;
@@ -1271,30 +1180,29 @@ export default function MapComponent() {
         left: isLineViewOpen ? 0 : '-380px',
         width: '380px',
         height: '100%',
-        backgroundColor: 'var(--card-bg)',
+        backgroundColor: '#0f172a',
         boxShadow: '4px 0 15px rgba(0,0,0,0.5)',
         zIndex: 2000,
         transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
-        color: 'var(--text-primary)',
-        borderRight: '1px solid var(--border-color)'
+        color: 'white',
+        borderRight: '1px solid #1e293b'
       }}>
         {isLineViewOpen && (isStationSelectionMode ? renderStationSelectionPrompt() : renderLineViewContent())}
       </div>
 
       <MapContainer 
-        ref={mapRef}
         center={position} 
         zoom={12} 
         scrollWheelZoom={true} 
-        attributionControl={false}
-        style={{ width: '100%', height: '100%', background: 'var(--bg-color)' }}
+        style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
-        {/* Dynamic Theme Tiles */}
+        <MapResizer />
+        {/* Dark mode tiles using CartoDB Dark Matter */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url={currentTileUrl}
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
         {transitLines.map((line) => {
@@ -1307,7 +1215,7 @@ export default function MapComponent() {
           const markerOpacity = isFaded ? 0.3 : (line.id === 'pnr' ? 0.6 : 1.0);
 
           return (
-            <div key={line.id}>
+            <React.Fragment key={line.id}>
               {/* Render the polyline path */}
               {line.id === 'pasig-ferry' ? (
                 pasigFerryData && (
@@ -1329,7 +1237,7 @@ export default function MapComponent() {
                       color: lineColor, 
                       weight: lineWeight,
                       opacity: lineOpacity,
-                      dashArray: (segment.isDashed || line.id.includes('pnr')) ? '6, 8' : (line.id === 'edsa-carousel' ? '4, 6' : undefined)
+                      dashArray: (segment.isDashed || line.id === 'pnr') ? '6, 8' : undefined
                     }}
                   />
                 ))
@@ -1340,7 +1248,7 @@ export default function MapComponent() {
                     color: lineColor, 
                     weight: lineWeight,
                     opacity: lineOpacity,
-                    dashArray: line.id.includes('pnr') ? '6, 8' : (line.id === 'edsa-carousel' ? '4, 6' : undefined)
+                    dashArray: line.id === 'pnr' ? '6, 8' : undefined
                   }}
                 />
               )}
@@ -1363,7 +1271,7 @@ export default function MapComponent() {
                     direction="top" 
                     offset={[0, -5]} 
                     permanent={showAllLabels && !isFaded}
-                    className="light-station-tooltip"
+                    className="dark-station-tooltip"
                     key={`tooltip-${showAllLabels}-${isFaded}`}
                   >
                     <span style={{ color: line.color, fontWeight: 'bold' }}>
@@ -1374,7 +1282,7 @@ export default function MapComponent() {
                     <div style={{ padding: '4px', fontFamily: 'sans-serif' }}>
                       {/* Header */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
                           {station.name}
                         </h3>
                         <span style={{ 
@@ -1397,9 +1305,9 @@ export default function MapComponent() {
 
                       {/* Status / Arrivals */}
                       {line.id === 'pnr-nscr' ? (
-                        <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#fff7ed', borderRadius: '6px', textAlign: 'center', border: '1px solid #fdba74' }}>
-                          <span style={{ color: '#ea580c', fontWeight: 'bold', fontSize: '13px' }}>Suspended / Under Renovation</span>
-                          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#9a3412', lineHeight: '1.4' }}>
+                        <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#431407', borderRadius: '6px', textAlign: 'center', border: '1px solid #7c2d12' }}>
+                          <span style={{ color: '#fdba74', fontWeight: 'bold', fontSize: '13px' }}>Suspended / Under Renovation</span>
+                          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#fed7aa', lineHeight: '1.4' }}>
                             Operations suspended due to North-South Commuter Railway (NSCR) construction.
                           </p>
                         </div>
@@ -1413,9 +1321,9 @@ export default function MapComponent() {
 
                         if (!isLineActive) {
                           return (
-                            <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#f1f5f9', borderRadius: '6px', textAlign: 'center', border: '1px solid #cbd5e1' }}>
-                              <span style={{ color: '#64748b', fontWeight: 'bold', fontSize: '13px' }}>Off Hours</span>
-                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#475569', lineHeight: '1.4' }}>
+                            <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#0f172a', borderRadius: '6px', textAlign: 'center', border: '1px solid #334155' }}>
+                              <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '13px' }}>Off Hours</span>
+                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
                                 Train operations run between specific hours.
                               </p>
                             </div>
@@ -1427,14 +1335,14 @@ export default function MapComponent() {
                         return (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                             {idx < line.stations.length - 1 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px', opacity: (directionFilter === 'NB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>To <strong>{arrivals.forwardName}</strong></span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'NB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.forwardName}</strong></span>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.forwardMins)}</span>
                               </div>
                             )}
                             {idx > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px', opacity: (directionFilter === 'SB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>To <strong>{arrivals.backwardName}</strong></span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'SB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.backwardName}</strong></span>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.backwardMins)}</span>
                               </div>
                             )}
@@ -1557,9 +1465,9 @@ export default function MapComponent() {
                         {/* Header Row */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>
-                              {line.id === 'pasig-ferry' ? 'Ferry Details' : (line.id === 'edsa-carousel' ? 'Bus Details' : 'Train Details')}
-                            </div>
+                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
+                              {line.id === 'pasig-ferry' ? 'Ferry Details' : 'Train Details'}
+                            </h3>
                             <span style={{ backgroundColor: line.color, color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                               {line.id.toUpperCase()}
                             </span>
@@ -1618,7 +1526,7 @@ export default function MapComponent() {
                   </Marker>
                 );
               })}
-            </div>
+            </React.Fragment>
           );
         })}
       </MapContainer>
