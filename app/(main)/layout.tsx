@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
+import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, MessageSquare, Unlock, ScanFace, FileText } from 'lucide-react';
 
 import SplashScreen from '@/components/SplashScreen';
 
@@ -80,12 +81,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   ];
 
   const menuItems = [
-    { label: 'Personal Information', icon: '⚙️' },
-    { label: 'FAQs', icon: '❓' },
-    { label: 'About eGovPH', icon: 'ℹ️' },
-    { label: 'Privacy Notice', icon: '🛡️' },
-    { label: 'Contact Us', icon: '📞' },
-    { label: 'Rate our app', icon: '👍' },
+    { label: 'Personal Information', icon: <User size={20} /> },
+    { label: 'FAQs', icon: <HelpCircle size={20} /> },
+    { label: 'About eGovPH', icon: <Info size={20} /> },
+    { label: 'Privacy Notice', icon: <Shield size={20} /> },
+    { label: 'Contact Us', icon: <Phone size={20} /> },
+    { label: 'Rate our app', icon: <ThumbsUp size={20} /> },
     { label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, icon: theme === 'light' ? (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: 'var(--text-primary)' }}>
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -103,24 +104,24 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
       </svg>
     ), action: toggleTheme },
-    { label: 'Settings', icon: '⚙️', action: () => setIsSettingsOpen(true) },
-    { label: 'Log out', icon: '🚪', path: '/' },
+    { label: 'Settings', icon: <Settings size={20} />, action: () => setIsSettingsOpen(true) },
+    { label: 'Log out', icon: <LogOut size={20} />, path: '/' },
   ];
 
   const settingsSections = [
     {
       title: 'PRIVACY AND SECURITY',
       items: [
-        { label: 'Account Settings', icon: '⚙️' },
-        { label: 'Notification Settings', icon: '💬' },
-        { label: 'Change PIN', icon: '🔓' },
-        { label: 'Face ID Authentication', icon: '🪪', value: 'Enabled' },
+        { label: 'Account Settings', icon: <Settings size={20} /> },
+        { label: 'Notification Settings', icon: <MessageSquare size={20} /> },
+        { label: 'Change PIN', icon: <Unlock size={20} /> },
+        { label: 'Face ID Authentication', icon: <ScanFace size={20} />, value: 'Enabled' },
       ]
     },
     {
       title: 'ABOUT eGovPH',
       items: [
-        { label: 'Terms and Conditions', icon: '📄' },
+        { label: 'Terms and Conditions', icon: <FileText size={20} /> },
       ]
     }
   ];
