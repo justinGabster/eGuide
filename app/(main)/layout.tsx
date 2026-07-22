@@ -193,7 +193,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
       
-      <main className="pt-3 px-3 min-h-screen fade-in">
+      <main className="main-content fade-in" style={{ display: 'flex', flexDirection: 'column' }}>
         {children}
       </main>
 
