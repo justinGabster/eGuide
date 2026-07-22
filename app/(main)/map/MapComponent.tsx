@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, MapPin, Circle, Map } from 'lucide-react';
 import { transitLines } from './transitData';
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
@@ -631,7 +631,7 @@ export default function MapComponent() {
           onClick={handleUseMyLocation}
           style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
         >
-          📍 Use My Location
+          <MapPin size={16} /> Use My Location
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
@@ -1082,7 +1082,7 @@ export default function MapComponent() {
               </div>
               
               <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                🟢 {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
+                <Circle size={10} fill="#22c55e" color="#22c55e" style={{ display: 'inline-block', marginRight: '4px' }} /> {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
               </div>
             </div>
 
@@ -1126,7 +1126,7 @@ export default function MapComponent() {
                 transition: 'background 0.2s'
               }}
             >
-              {isLineViewOpen ? 'Close Schematic' : '🗺️ Open Line View'}
+              {isLineViewOpen ? 'Close Schematic' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Map size={16} /> Open Line View</span>}
             </button>
           </div>
         )}

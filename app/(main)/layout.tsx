@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
-import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, MessageSquare, Unlock, ScanFace, FileText } from 'lucide-react';
+import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, MessageSquare, Unlock, ScanFace, FileText, Edit2, Cake } from 'lucide-react';
 
 import SplashScreen from '@/components/SplashScreen';
 
@@ -257,10 +257,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span>👤</span>
+                  <User size={40} color="var(--text-secondary)" />
                 )}
-                <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px' }}>
-                  ✏️
+                <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+                  <Edit2 size={12} />
                 </div>
               </div>
               <input 
@@ -274,7 +274,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>dendenissejane@gmail.com</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '2px' }}>🎂 January 7, 2006</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}><Cake size={14} /> January 7, 2006</p>
                 {aiCredits !== null && (
                   <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--status-success-bg)', color: 'var(--status-success-text)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
                     <span style={{ color: 'var(--success)', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
