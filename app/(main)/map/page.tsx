@@ -1,12 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
 
 const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => (
-    <div style={{ width: '100%', height: '100%', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: '100%', height: '100%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p className="text-muted">Loading map...</p>
     </div>
   )
@@ -15,16 +14,11 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
 export default function Map() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <h2 className="title mb-4">Live Map</h2>
+      <h2 className="title mb-2">Live Map</h2>
+      <p className="text-sm text-muted mb-4">Powered by Project LIGTAS Data</p>
       
       <div className="glass-card" style={{ flex: 1, padding: 0, position: 'relative', overflow: 'hidden' }}>
-        <Suspense fallback={
-          <div style={{ width: '100%', height: '100%', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p className="text-muted">Loading map...</p>
-          </div>
-        }>
-          <MapComponent />
-        </Suspense>
+        <MapComponent />
       </div>
     </div>
   );

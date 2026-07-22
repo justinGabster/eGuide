@@ -22,7 +22,7 @@ export const lrt1: TransitLine = {
   name: 'LRT-1 (Green Line)',
   color: '#00B140', // or #28a745
   stations: [
-    { name: 'Fernando Poe Jr. (Roosevelt)', coords: [14.6576, 121.0211] },
+    { name: 'Roosevelt', coords: [14.6576, 121.0211] },
     { name: 'Balintawak', coords: [14.6575, 121.0041] },
     { name: 'Monumento', coords: [14.6540, 120.9839] },
     { name: '5th Ave', coords: [14.6443, 120.9836] },
@@ -115,48 +115,22 @@ const pnrExtendedStations: Station[] = [
   { name: 'Calamba', coords: [14.2044, 121.1650] }
 ];
 
-export const pnrNscr: TransitLine = {
-  id: 'pnr-nscr',
-  name: 'PNR Metro (Suspended)',
+export const pnr: TransitLine = {
+  id: 'pnr',
+  name: 'PNR Metro Commuter (Orange Line)',
   color: '#E65100', // or #FF6F00
-  stations: [...pnrActiveStations, ...pnrExtendedStations.slice(1)],
+  // All stations for rendering markers
+  stations: [...pnrActiveStations, ...pnrExtendedStations.slice(1)], // slice(1) to avoid duplicate Alabang marker
   segments: [
     {
       stations: pnrActiveStations,
-      isDashed: true
+      isDashed: false
     },
     {
       stations: pnrExtendedStations,
       isDashed: true
     }
   ]
-};
-
-const pnrSouthStations: Station[] = [
-  { name: 'Calamba', coords: [14.2044, 121.1650] },
-  { name: 'Pansol', coords: [14.1793, 121.1895] },
-  { name: 'San Pablo', coords: [14.0720, 121.3260] },
-  { name: 'Lucena', coords: [13.9269, 121.6131] }
-];
-
-export const pnrSouth: TransitLine = {
-  id: 'pnr-south',
-  name: 'PNR South (Active)',
-  color: '#E65100',
-  stations: pnrSouthStations
-};
-
-const pnrBicolStations: Station[] = [
-  { name: 'Lupi Viejo', coords: [13.7883, 122.9075] },
-  { name: 'Sipocot', coords: [13.7690, 122.9776] },
-  { name: 'Naga', coords: [13.6196, 123.1859] }
-];
-
-export const pnrBicol: TransitLine = {
-  id: 'pnr-bicol',
-  name: 'PNR Bicol (Active)',
-  color: '#E65100',
-  stations: pnrBicolStations
 };
 
 export const pasigFerry: TransitLine = {
@@ -181,11 +155,11 @@ export const pasigFerry: TransitLine = {
     // --- Escolta Terminal ---
     [14.5964, 120.9775], 
 
-    // --- Escolta Ferry Terminal ---
-    [14.5966, 120.9786], 
+    // Path under Jones Bridge
+    [14.5958, 120.9790], 
 
-    // --- Lawton Ferry Terminal ---
-    [14.5952, 120.9810], 
+    // --- Lawton Terminal (South Bank) ---
+    [14.5958, 120.9815], 
 
     // Crossing water under MacArthur Bridge heading towards Quinta North Bank
     [14.5962, 120.9825], 
@@ -197,25 +171,17 @@ export const pasigFerry: TransitLine = {
     // Following Pasig River channel under Quezon Bridge towards PUP
     [14.5970, 120.9855], 
     [14.5960, 120.9875], 
-    [14.5947, 120.9880],
-    [14.5935, 120.9890], // Added
-    [14.5925, 120.9905], // Added
+    [14.5947, 120.9880], 
     [14.5921, 120.9926], 
-    [14.5930, 120.9945], // Added
     [14.5950, 120.9972], 
     [14.5953, 121.0016], 
-    [14.5955, 121.0050], // Added
-    [14.5956, 121.0080], // Added
     
     // --- PUP Ferry Terminal ---
     [14.5956, 121.0106], 
 
     // Following the river curve south past Beata/Pandacan
-    [14.5948, 121.0120], // Added (Curve start)
     [14.5930, 121.0128],
-    [14.5910, 121.0130], // Added (Mid-curve)
     [14.5890, 121.0125],
-    [14.5870, 121.0118], // Added (Mid-curve)
     [14.5855, 121.0108],
 
     // --- Sta. Ana Ferry Terminal (At the river bank bend) ---
@@ -223,37 +189,26 @@ export const pasigFerry: TransitLine = {
 
     // Curved path following river east towards Lambingan
     [14.5815, 121.0142],
-    [14.5820, 121.0155], // Added
     [14.5825, 121.0165],
-    [14.5835, 121.0175], // Added
     [14.5850, 121.0182],
 
     // --- Lambingan Ferry Terminal ---
     [14.5872, 121.0203],
 
     // Lambingan -> Valenzuela
-    [14.5840, 121.0210], // Added
     [14.5807, 121.0224],
-    [14.5775, 121.0245], // Added
     [14.5739, 121.0264], // Valenzuela
 
     // Valenzuela -> Hulo -> Guadalupe
-    [14.5720, 121.0300], // Added
     [14.5711, 121.0336], // Hulo
-    [14.5708, 121.0370], // Added
     [14.5702, 121.0398],
-    [14.5695, 121.0425], // Added
     [14.5681, 121.0453], // Guadalupe
 
     // Following Pasig River channel East
     [14.5668, 121.0505],
-    [14.5655, 121.0535], // Added
     [14.5645, 121.0560],
-    [14.5630, 121.0590], // Added
     [14.5615, 121.0620],
-    [14.5605, 121.0650], // Added
     [14.5595, 121.0680],
-    [14.5590, 121.0710], // Added
 
     // --- San Joaquin Ferry (On the River Channel) ---
     [14.5585, 121.0748], 
@@ -266,46 +221,15 @@ export const pasigFerry: TransitLine = {
 
     // Swirling East and South following the Napindan River bend
     [14.5580, 121.0845],
-    [14.5575, 121.0860], // Added
     [14.5565, 121.0872],
-    [14.5550, 121.0880], // Added
     [14.5538, 121.0888],
-    [14.5525, 121.0895], // Added
     [14.5510, 121.0895], // Sharp southward river turn
-    [14.5490, 121.0895], // Added
     [14.5470, 121.0892],
-    [14.5455, 121.0890], // Added
     [14.5445, 121.0890],
-    [14.5435, 121.0890], // Added
 
     // --- Nagpayong Ferry Terminal (Pinagbuhatan) ---
     [14.5420, 121.0890]
   ]
 };
 
-export const edsaCarousel: TransitLine = {
-  id: 'edsa-carousel',
-  name: 'EDSA Carousel Busway',
-  color: '#EC4899', // Crimson / Vibrant Pink accent color
-  stations: [
-    { name: 'Monumento', coords: [14.6575, 120.9839] },
-    { name: 'Balintawak', coords: [14.6573, 121.0028] },
-    { name: 'North Ave', coords: [14.6528, 121.0326] },
-    { name: 'Quezon Ave', coords: [14.6433, 121.0370] },
-    { name: 'GMA Kamuning', coords: [14.6346, 121.0435] },
-    { name: 'Araneta Center Cubao', coords: [14.6193, 121.0511] },
-    { name: 'Santolan EDSA', coords: [14.6080, 121.0566] },
-    { name: 'Ortigas EDSA', coords: [14.5878, 121.0566] },
-    { name: 'Shaw EDSA', coords: [14.5812, 121.0535] },
-    { name: 'Boni EDSA', coords: [14.5739, 121.0481] },
-    { name: 'Guadalupe EDSA', coords: [14.5671, 121.0456] },
-    { name: 'Buendia EDSA', coords: [14.5546, 121.0345] },
-    { name: 'Ayala EDSA', coords: [14.5492, 121.0281] },
-    { name: 'Magallanes EDSA', coords: [14.5418, 121.0195] },
-    { name: 'Taft EDSA', coords: [14.5375, 121.0012] },
-    { name: 'MOA', coords: [14.5352, 120.9822] },
-    { name: 'PITX', coords: [14.5113, 120.9912] }
-  ]
-};
-
-export const transitLines = [lrt1, lrt2, mrt3, pnrNscr, pnrSouth, pnrBicol, pasigFerry, edsaCarousel];
+export const transitLines = [lrt1, lrt2, mrt3, pnr, pasigFerry];
