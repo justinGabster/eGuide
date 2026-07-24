@@ -54,10 +54,12 @@ export default function MapComponent() {
     lineId: string;
     isForward: boolean;
     originStationIdx?: number;
+    destinationStationIdx?: number;
     selectedVehicleId?: string;
   }>({ lineId: 'mrt-3', isForward: true });
   
   const [isLineViewOpen, setIsLineViewOpen] = useState(false);
+  const [showCarouselBanner, setShowCarouselBanner] = useState(false);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
 
   // Force re-render periodically for simulation
@@ -655,40 +657,53 @@ export default function MapComponent() {
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
             <select 
-              value={lineViewConfig.originStationIdx || 0} 
+              value={lineViewConfig.originStationIdx ?? ''} 
               onChange={e => setLineViewConfig(c => ({...c, originStationIdx: parseInt(e.target.value)}))}
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
+              <option value="" disabled>Select Origin</option>
               {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAVEL DIRECTION</label>
-            <div style={{ display: 'flex', backgroundColor: '#1e293b', borderRadius: '6px', padding: '4px', border: '1px solid #334155' }}>
-               <button 
-                  onClick={() => setLineViewConfig(c => ({...c, isForward: true}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
-               >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}</button>
-               <button 
-                  onClick={() => setLineViewConfig(c => ({...c, isForward: false}))}
-                  style={{ flex: 1, padding: '10px', border: 'none', background: !lineViewConfig.isForward ? '#3b82f6' : 'transparent', color: !lineViewConfig.isForward ? 'white' : '#94a3b8', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background 0.2s' }}
-               >{activeLine.id === 'lrt-2' || activeLine.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}</button>
-            </div>
+            <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>DESTINATION STATION</label>
+            <select 
+              value={lineViewConfig.destinationStationIdx ?? ''} 
+              onChange={e => setLineViewConfig(c => ({...c, destinationStationIdx: parseInt(e.target.value)}))}
+              style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
+            >
+              <option value="" disabled>Select Destination</option>
+              {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
+            </select>
           </div>
 
           <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
             <button 
               onClick={() => {
+                 const originStationName = lineViewConfig.originStationIdx !== undefined ? activeLine.stations[lineViewConfig.originStationIdx]?.name || '' : '';
+                 const destinationStationName = lineViewConfig.destinationStationIdx !== undefined ? activeLine.stations[lineViewConfig.destinationStationIdx]?.name || '' : '';
+                 
+                 const isCarouselDemo = lineViewConfig.lineId === 'edsa-carousel' && originStationName.toLowerCase().includes('trinoma') && destinationStationName.toLowerCase().includes('main ave');
+                 
+                 if (isCarouselDemo) {
+                    setShowCarouselBanner(true);
+                    setTimeout(() => setShowCarouselBanner(false), 5000); // auto dismiss
+                 }
+
                  if (lineViewConfig.originStationIdx === undefined) {
                    setLineViewConfig(c => ({...c, originStationIdx: 0}));
+                 }
+                 if (lineViewConfig.originStationIdx !== undefined && lineViewConfig.destinationStationIdx !== undefined) {
+                    const isForward = lineViewConfig.destinationStationIdx >= lineViewConfig.originStationIdx;
+                    setLineViewConfig(c => ({...c, isForward}));
                  }
                  setIsStationSelectionMode(false);
                  setShowPastStations(false);
               }}
               style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
             >
-              View Line Schedule &rarr;
+              View Route &rarr;
             </button>
           </div>
         </div>
@@ -1530,6 +1545,31 @@ export default function MapComponent() {
           );
         })}
       </MapContainer>
+      
+      {showCarouselBanner && (
+        <div style={{
+          position: 'fixed',
+          top: '12px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10000,
+          backgroundColor: '#1E293B',
+          borderLeft: '4px solid #EF4444',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          color: '#FFFFFF'
+        }}>
+          <div style={{ fontSize: '20px' }}>🚍</div>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold' }}>Next EDSA Carousel in 5 Mins</div>
+            <div style={{ fontSize: '12px', color: '#94A3B8' }}>Trinoma &rarr; Main Ave</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
