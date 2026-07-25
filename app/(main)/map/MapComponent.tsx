@@ -47,6 +47,8 @@ export default function MapComponent() {
   const [directionFilter, setDirectionFilter] = useState<'ALL' | 'NB' | 'SB'>('ALL');
   const [vehicles, setVehicles] = useState<VehicleState[]>([]);
   const [showLiveVehicles, setShowLiveVehicles] = useState<boolean>(true);
+  const [osrmPaths, setOsrmPaths] = useState<Record<string, [number, number][]>>({});
+  const [isOsrmLoading, setIsOsrmLoading] = useState<boolean>(false);
   const [showPastStations, setShowPastStations] = useState<boolean>(false);
   const [isStationSelectionMode, setIsStationSelectionMode] = useState<boolean>(true);
 
@@ -124,6 +126,87 @@ export default function MapComponent() {
     fetchFerryData();
   }, []);
 
+  useEffect(() => {
+    // Note: Using the public OSRM demo server (router.project-osrm.org) for now,
+    // which is rate-limited and not meant for production.
+    // TODO: Self-host OSRM or switch to Mapbox Map Matching API for production.
+    const fetchOsrmRoutes = async () => {
+      setIsOsrmLoading(true);
+      const bgcLine = transitLines.find(l => l.id === 'bgc-bus-west');
+      if (bgcLine) {
+        try {
+          let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
+          
+          bgcLine.stations.forEach(s => {
+            stopsToRoute.push({ lat: s.coords[0], lng: s.coords[1], rad: 'unlimited' });
+            
+            // Inject via-point after Arya to force the route up 9th Ave
+            // (OSRM does not map Federacion Drive as a through-road)
+            if (s.name === 'Arya Residences' && bgcLine.routingWaypoints) {
+              const via9th = bgcLine.routingWaypoints.find(w => w.name === 'Via 9th Ave');
+              if (via9th) {
+                stopsToRoute.push({ lat: via9th.coords[0], lng: via9th.coords[1], rad: 'unlimited' });
+              }
+            }
+          });
+
+          // Close the loop by returning to the first station
+          if (bgcLine.stations.length > 0) {
+            const firstStation = bgcLine.stations[0];
+            stopsToRoute.push({ lat: firstStation.coords[0], lng: firstStation.coords[1], rad: 'unlimited' });
+          }
+
+          const coordsString = stopsToRoute.map(s => `${s.lng},${s.lat}`).join(';');
+          const radiuses = stopsToRoute.map(s => s.rad).join(';');
+          const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson&radiuses=${radiuses}`;
+          
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          console.log("OSRM Raw Response:", data);
+          
+          if (data.code !== 'Ok') {
+            throw new Error(`OSRM API Error: ${data.code} - ${data.message || ''}`);
+          }
+          
+          const coordinates = data.routes[0].geometry.coordinates;
+          // Convert [lng, lat] to [lat, lng] for Leaflet
+          let route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+          
+          // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus West
+          // OSRM forces a U-turn on Ayala because it thinks the left turn into the terminal is illegal.
+          // This creates a Westbound overshoot, a U-turn spike, and an Eastbound backtrack (zigzag).
+          // We filter out these redundant coordinates from the arrival sequence to simulate a clean left turn.
+          if (bgcLine.id === 'bgc-bus-west') {
+            let blueDotIndex = -1;
+            let minDiff = 999;
+            for (let i = 0; i < route.length; i++) {
+              const diff = Math.abs(route[i][0] - 14.5493) + Math.abs(route[i][1] - 121.0291);
+              if (diff < minDiff) {
+                minDiff = diff;
+                blueDotIndex = i;
+              }
+            }
+            
+            if (blueDotIndex !== -1) {
+              const filteredArrival = route.slice(0, blueDotIndex).filter(
+                (c: [number, number]) => !(c[0] > 14.5495 && c[1] < 121.0301)
+              );
+              const restOfRoute = route.slice(blueDotIndex);
+              route = [...filteredArrival, ...restOfRoute];
+            }
+          }
+          
+          setOsrmPaths(prev => ({ ...prev, 'bgc-bus-west': route }));
+        } catch (error) {
+          console.error('Failed to get OSRM route for BGC Bus West, falling back to straight lines:', error);
+        }
+      }
+      setIsOsrmLoading(false);
+    };
+    fetchOsrmRoutes();
+  }, []);
+
   const linePaths = useMemo(() => {
     const paths: Record<string, any> = {};
     transitLines.forEach(line => {
@@ -131,7 +214,9 @@ export default function MapComponent() {
       let totalDist = 0;
       let dists: number[] = [0];
 
-      if (line.path) {
+      if (osrmPaths[line.id]) {
+         points = osrmPaths[line.id];
+      } else if (line.path) {
          points = line.path;
       } else {
          line.stations.forEach(st => points.push(st.coords));
@@ -161,7 +246,7 @@ export default function MapComponent() {
       paths[line.id] = { points, totalDist, dists, stationDists };
     });
     return paths;
-  }, []);
+  }, [osrmPaths]);
 
   const getSimulatedTime = () => {
     return new Date();
@@ -662,7 +747,7 @@ export default function MapComponent() {
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               <option value="" disabled>Select Origin</option>
-              {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
+              {activeLine.stations.filter(s => !s.isVia).map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
             </select>
           </div>
 
@@ -674,7 +759,7 @@ export default function MapComponent() {
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               <option value="" disabled>Select Destination</option>
-              {activeLine.stations.map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
+              {activeLine.stations.filter(s => !s.isVia).map((s, idx) => <option key={idx} value={idx}>{s.name}</option>)}
             </select>
           </div>
 
@@ -717,7 +802,7 @@ export default function MapComponent() {
 
     const M = line.stations.length - 1;
 
-    let stations = line.stations;
+    let stations = line.stations.filter(s => !s.isVia);
     if (!lineViewConfig.isForward) {
       stations = [...stations].reverse();
     }
@@ -1207,6 +1292,33 @@ export default function MapComponent() {
         {isLineViewOpen && (isStationSelectionMode ? renderStationSelectionPrompt() : renderLineViewContent())}
       </div>
 
+      {isOsrmLoading && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          backgroundColor: '#1e293b',
+          color: '#38bdf8',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+          border: '1px solid #334155'
+        }}>
+          <svg style={{ animation: 'spin 1s linear infinite', width: '16px', height: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
+            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          Loading map routes...
+        </div>
+      )}
+
       <MapContainer 
         center={position} 
         zoom={12} 
@@ -1258,7 +1370,7 @@ export default function MapComponent() {
                 ))
               ) : (
                 <Polyline 
-                  positions={line.path || line.stations.map((s) => s.coords)}
+                  positions={osrmPaths[line.id] || line.path || line.stations.map((s) => s.coords)}
                   pathOptions={{ 
                     color: lineColor, 
                     weight: lineWeight,
@@ -1269,7 +1381,9 @@ export default function MapComponent() {
               )}
               
               {/* Render the station markers */}
-              {(line.id === 'pasig-ferry' ? (snappedFerryStations || []) : line.stations).map((station, idx) => (
+              {(line.id === 'pasig-ferry' ? (snappedFerryStations || []) : line.stations)
+                .filter(s => !s.isVia)
+                .map((station, idx) => (
                 <CircleMarker
                   key={`${line.id}-${idx}-${showAllLabels}-${isFaded}`}
                   center={station.coords}
