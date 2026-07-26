@@ -19,6 +19,8 @@ export interface TransitLine {
   segments?: TransitSegment[];
   path?: [number, number][]; // Optional custom polyline path (e.g. for rivers)
   routingWaypoints?: Station[]; // Used only for OSRM routing, not rendered
+  outboundWaypoints?: Station[]; // Specific via-waypoints for outbound leg
+  returnWaypoints?: Station[]; // Specific via-waypoints for return leg
 }
 
 export const lrt1: TransitLine = {
@@ -435,4 +437,21 @@ export const bgcBusWestLine: TransitLine = {
   ]
 };
 
-export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, bgcBusWestLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
+// --- BGC Bus East Express Route ---
+const bgcBusEastExpressStations: Station[] = [
+  { name: 'EDSA-Ayala Terminal', coords: [14.5493, 121.0291] },
+  { name: 'Market! Market! Terminal', coords: [14.5489, 121.05645] }
+];
+
+export const bgcBusEastExpressLine: TransitLine = {
+  id: 'bgc-bus-east-express',
+  name: 'BGC Bus (East Express)',
+  color: '#FF8800',
+  stations: bgcBusEastExpressStations,
+  outboundWaypoints: [
+    { name: '7th Ave & 26th St', coords: [14.5482, 121.0495] }
+  ],
+  returnWaypoints: []
+};
+
+export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, bgcBusWestLine, bgcBusEastExpressLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];

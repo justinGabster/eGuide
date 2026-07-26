@@ -132,74 +132,102 @@ export default function MapComponent() {
     // TODO: Self-host OSRM or switch to Mapbox Map Matching API for production.
     const fetchOsrmRoutes = async () => {
       setIsOsrmLoading(true);
-      const bgcLine = transitLines.find(l => l.id === 'bgc-bus-west');
-      if (bgcLine) {
+      const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus'));
+      
+      for (const bgcLine of bgcLines) {
         try {
-          let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
+          let route: [number, number][] = [];
           
-          bgcLine.stations.forEach(s => {
-            stopsToRoute.push({ lat: s.coords[0], lng: s.coords[1], rad: 'unlimited' });
+          if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints && bgcLine.stations.length === 2) {
+            // Dual-leg true loop (e.g., East Express)
+            const start = bgcLine.stations[0];
+            const end = bgcLine.stations[1];
             
-            // Inject via-point after Arya to force the route up 9th Ave
-            // (OSRM does not map Federacion Drive as a through-road)
-            if (s.name === 'Arya Residences' && bgcLine.routingWaypoints) {
-              const via9th = bgcLine.routingWaypoints.find(w => w.name === 'Via 9th Ave');
-              if (via9th) {
-                stopsToRoute.push({ lat: via9th.coords[0], lng: via9th.coords[1], rad: 'unlimited' });
-              }
+            // 1. Outbound (Start -> Outbound Vias -> End)
+            const outStops = [start, ...bgcLine.outboundWaypoints, end];
+            const outString = outStops.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
+            const outUrl = `https://router.project-osrm.org/route/v1/driving/${outString}?overview=full&geometries=geojson`;
+            
+            // 2. Return (End -> Return Vias -> Start)
+            const retStops = [end, ...bgcLine.returnWaypoints, start];
+            const retString = retStops.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
+            const retUrl = `https://router.project-osrm.org/route/v1/driving/${retString}?overview=full&geometries=geojson`;
+            
+            const [outRes, retRes] = await Promise.all([fetch(outUrl), fetch(retUrl)]);
+            const outData = await outRes.json();
+            const retData = await retRes.json();
+            
+            if (outData.code !== 'Ok' || retData.code !== 'Ok') {
+              throw new Error(`OSRM API Error for dual-leg route`);
             }
-          });
+            
+            const outCoords = outData.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+            const retCoords = retData.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+            
+            // Combine both legs
+            route = [...outCoords, ...retCoords];
+          } else {
+            // Standard single-call route (e.g., West Route)
+            let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
+            
+            bgcLine.stations.forEach(s => {
+              stopsToRoute.push({ lat: s.coords[0], lng: s.coords[1], rad: 'unlimited' });
+              
+              // Inject via-point after Arya to force the route up 9th Ave
+              if (s.name === 'Arya Residences' && bgcLine.routingWaypoints) {
+                const via9th = bgcLine.routingWaypoints.find(w => w.name === 'Via 9th Ave');
+                if (via9th) {
+                  stopsToRoute.push({ lat: via9th.coords[0], lng: via9th.coords[1], rad: 'unlimited' });
+                }
+              }
+            });
 
-          // Close the loop by returning to the first station
-          if (bgcLine.stations.length > 0) {
-            const firstStation = bgcLine.stations[0];
-            stopsToRoute.push({ lat: firstStation.coords[0], lng: firstStation.coords[1], rad: 'unlimited' });
-          }
+            // Close the loop by returning to the first station
+            if (bgcLine.stations.length > 0) {
+              const firstStation = bgcLine.stations[0];
+              stopsToRoute.push({ lat: firstStation.coords[0], lng: firstStation.coords[1], rad: 'unlimited' });
+            }
 
-          const coordsString = stopsToRoute.map(s => `${s.lng},${s.lat}`).join(';');
-          const radiuses = stopsToRoute.map(s => s.rad).join(';');
-          const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson&radiuses=${radiuses}`;
-          
-          const response = await fetch(url);
-          const data = await response.json();
-          
-          console.log("OSRM Raw Response:", data);
-          
-          if (data.code !== 'Ok') {
-            throw new Error(`OSRM API Error: ${data.code} - ${data.message || ''}`);
+            const coordsString = stopsToRoute.map(s => `${s.lng},${s.lat}`).join(';');
+            const radiuses = stopsToRoute.map(s => s.rad).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson&radiuses=${radiuses}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.code !== 'Ok') {
+              throw new Error(`OSRM API Error: ${data.code} - ${data.message || ''}`);
+            }
+            
+            const coordinates = data.routes[0].geometry.coordinates;
+            route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
           }
           
-          const coordinates = data.routes[0].geometry.coordinates;
-          // Convert [lng, lat] to [lat, lng] for Leaflet
-          let route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-          
-          // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus West
+          // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus routes ending at EDSA
           // OSRM forces a U-turn on Ayala because it thinks the left turn into the terminal is illegal.
           // This creates a Westbound overshoot, a U-turn spike, and an Eastbound backtrack (zigzag).
           // We filter out these redundant coordinates from the arrival sequence to simulate a clean left turn.
-          if (bgcLine.id === 'bgc-bus-west') {
-            let blueDotIndex = -1;
-            let minDiff = 999;
-            for (let i = 0; i < route.length; i++) {
-              const diff = Math.abs(route[i][0] - 14.5493) + Math.abs(route[i][1] - 121.0291);
-              if (diff < minDiff) {
-                minDiff = diff;
-                blueDotIndex = i;
-              }
-            }
-            
-            if (blueDotIndex !== -1) {
-              const filteredArrival = route.slice(0, blueDotIndex).filter(
-                (c: [number, number]) => !(c[0] > 14.5495 && c[1] < 121.0301)
-              );
-              const restOfRoute = route.slice(blueDotIndex);
-              route = [...filteredArrival, ...restOfRoute];
+          let blueDotIndex = -1;
+          let minDiff = 999;
+          for (let i = 0; i < route.length; i++) {
+            const diff = Math.abs(route[i][0] - 14.5493) + Math.abs(route[i][1] - 121.0291);
+            if (diff < minDiff) {
+              minDiff = diff;
+              blueDotIndex = i;
             }
           }
           
-          setOsrmPaths(prev => ({ ...prev, 'bgc-bus-west': route }));
+          if (blueDotIndex !== -1) {
+            const filteredArrival = route.slice(0, blueDotIndex).filter(
+              (c: [number, number]) => !(c[0] > 14.5495 && c[1] < 121.0301)
+            );
+            const restOfRoute = route.slice(blueDotIndex);
+            route = [...filteredArrival, ...restOfRoute];
+          }
+          
+          setOsrmPaths(prev => ({ ...prev, [bgcLine.id]: route }));
         } catch (error) {
-          console.error('Failed to get OSRM route for BGC Bus West, falling back to straight lines:', error);
+          console.error(`Failed to get OSRM route for ${bgcLine.name}, falling back to straight lines:`, error);
         }
       }
       setIsOsrmLoading(false);
