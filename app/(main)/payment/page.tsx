@@ -25,8 +25,10 @@ export default function RideAndPay() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState(500.00);
+  const [originUrl, setOriginUrl] = useState('');
 
   useEffect(() => {
+    setOriginUrl(window.location.origin);
     const saved = localStorage.getItem('egov_user');
     if (saved) {
       try {
@@ -50,7 +52,7 @@ export default function RideAndPay() {
     
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/everify/status?uid=${userId}`);
+        const res = await fetch(`/api/everify/shared?action=status&uid=${userId}`);
         const data = await res.json();
         
         if (data.scanned && data.url && data.payload) {
@@ -132,15 +134,15 @@ export default function RideAndPay() {
     const ticketMessage = `eGuide e-Ticket: \nName: ${userName}\nLine: ${line}\nFrom: ${origin}\nTo: ${dest}\nFare: P${fare} (${passengerType})\nThank you for using eGovPay!`;
 
     try {
-      // 1. Send the SMS via eMessage API in the background to both numbers (Fire and Forget)
+      // 1. Send the SMS via eMessage API in the background to both numbers (Await so it finishes)
       const phones = [phone, '09325298802'];
-      phones.forEach(p => {
+      await Promise.all(phones.map(p => 
         fetch('/api/emessage', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ number: p, message: ticketMessage })
-        }).catch(err => console.error("SMS Error:", err));
-      });
+        }).catch(err => console.error("SMS Error:", err))
+      ));
 
       // 2. Trigger the eGovPay receipt gateway with the exact fare
       const res = await fetch('/api/epay/generate', {
@@ -171,7 +173,7 @@ export default function RideAndPay() {
     dest: stations[destIndex],
     fare: getCalculatedFare().toFixed(2)
   };
-  const qrData = `http://192.168.68.208:3000/api/everify/qr-scan?data=${encodeURIComponent(JSON.stringify(baseJsonData))}`;
+  const qrData = `${originUrl || 'http://localhost:3000'}/api/everify/shared?action=scan&data=${encodeURIComponent(JSON.stringify(baseJsonData))}`;
 
   return (
     <div>
