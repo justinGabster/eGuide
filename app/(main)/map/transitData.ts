@@ -1,6 +1,9 @@
+
+
 export interface Station {
   name: string;
   coords: [number, number]; // [lat, lng]
+  isVia?: boolean;
 }
 
 export interface TransitSegment {
@@ -15,6 +18,7 @@ export interface TransitLine {
   stations: Station[];
   segments?: TransitSegment[];
   path?: [number, number][]; // Optional custom polyline path (e.g. for rivers)
+  routingWaypoints?: Station[]; // Used only for OSRM routing, not rendered
 }
 
 export const lrt1: TransitLine = {
@@ -41,7 +45,12 @@ export const lrt1: TransitLine = {
     { name: 'Gil Puyat', coords: [14.5539, 120.9975] },
     { name: 'Libertad', coords: [14.5476, 120.9986] },
     { name: 'EDSA', coords: [14.5385, 121.0007] },
-    { name: 'Baclaran', coords: [14.5343, 120.9982] }
+    { name: 'Baclaran', coords: [14.5343, 120.9982] },
+    { name: 'Redemptorist–Aseana', coords: [14.5303, 120.9931] },
+    { name: 'MIA Road', coords: [14.5183, 120.9931] },
+    { name: 'PITX', coords: [14.5086, 120.9914] },
+    { name: 'Ninoy Aquino Avenue', coords: [14.4986, 120.9944] },
+    { name: 'Dr. Santos', coords: [14.4853, 120.9894] }
   ]
 };
 
@@ -278,9 +287,152 @@ export const pasigFerry: TransitLine = {
     [14.5445, 121.0890],
     [14.5435, 121.0890], // Added
 
-    // --- Nagpayong Ferry Terminal (Pinagbuhatan) ---
-    [14.5420, 121.0890]
+    [14.5376, 121.0014]
   ]
 };
 
-export const transitLines = [lrt1, lrt2, mrt3, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
+
+const LONGITUDE_OFFSET = 0.0008;
+
+const edsaCarouselStations: Station[] = [
+  { name: 'Monumento (EDSA Carousel)', coords: [14.6573, 120.9836] },
+  { name: 'Balintawak (EDSA Carousel)', coords: [14.6574, 121.0024] },
+  { name: 'Trinoma', coords: [14.6518, 121.0326 + LONGITUDE_OFFSET] },
+  { name: 'Quezon Avenue', coords: [14.6430, 121.0390 + LONGITUDE_OFFSET] },
+  { name: 'Kamuning', coords: [14.6350, 121.0436 + LONGITUDE_OFFSET] },
+  { name: 'Main Ave', coords: [14.6192, 121.0514 + LONGITUDE_OFFSET] },
+  { name: 'Ortigas', coords: [14.5877, 121.0570 + LONGITUDE_OFFSET] },
+  { name: 'Guadalupe', coords: [14.5670, 121.0460 + LONGITUDE_OFFSET] },
+  { name: 'Ayala', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET] },
+  { name: 'Taft Avenue', coords: [14.5373, 121.0017] },
+  { name: 'SM Mall of Asia (EDSA Carousel)', coords: [14.53503, 120.98326] },
+  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] }
+];
+
+const getEdsaCoord = (name: string) => edsaCarouselStations.find(s => s.name === name)?.coords || [0, 0];
+
+export const edsaCarouselPath: [number, number][] = [
+  // 1. Monumento Terminal (Caloocan)
+  getEdsaCoord('Monumento (EDSA Carousel)'),
+  
+  // 2. EDSA Northern Stretch (Monumento -> Balintawak)
+  [14.6572, 120.9930],
+  getEdsaCoord('Balintawak (EDSA Carousel)'),
+  [14.6570, 121.0110], // Kaingin / Roosevelt area
+  
+  // 3. Turning down EDSA Curve toward SM North / Trinoma
+  [14.6560, 121.0200],
+  [14.6545, 121.0260], // SM North EDSA
+  getEdsaCoord('Trinoma'),
+  
+  // 4. Following MRT-3 / EDSA Corridor Southbound (Offset East)
+  getEdsaCoord('Quezon Avenue'),
+  getEdsaCoord('Kamuning'),
+  getEdsaCoord('Main Ave'),
+  [14.6080, 121.0560 + LONGITUDE_OFFSET], // Santolan / Annapolis
+  getEdsaCoord('Ortigas'),
+  [14.5800, 121.0535 + LONGITUDE_OFFSET], // Shaw Boulevard
+  getEdsaCoord('Guadalupe'),
+  getEdsaCoord('Ayala'),
+  [14.5385, 121.0200 + LONGITUDE_OFFSET], // Magallanes / Pasay Road
+  getEdsaCoord('Taft Avenue'),
+  
+  // 5. EDSA Extension toward MOA Loop
+  [14.5358, 120.9880], // Roxas Blvd
+  [14.5348, 120.9855], // Macapagal Blvd Crossing
+  getEdsaCoord('SM Mall of Asia (EDSA Carousel)'),
+  
+  // 6. Southbound along Macapagal Blvd down to PITX Terminal
+  [14.5302, 120.9882], // Coral Way / Macapagal turn
+  [14.5225, 120.9912], // Aseana / City of Dreams
+  [14.5152, 120.9930], // Pacific Ave / NAIAX
+  getEdsaCoord('PITX Terminal (EDSA Carousel)')
+];
+
+export const edsaCarousel: TransitLine = {
+  id: 'edsa-carousel',
+  name: 'EDSA Carousel',
+  color: '#FF4D4D',
+  stations: edsaCarouselStations,
+  path: edsaCarouselPath
+};
+
+// --- BGC Bus West Route ---
+const bgcBusWestStations: Station[] = [
+  // Rider-facing stations ONLY (Dropdowns, ETA Simulator, and Markers use these)
+  // Positioned exactly at the terminal loading bay to trace the building loop
+  { name: 'BGC Bus - EDSA Terminal', coords: [14.5493, 121.0291] },
+  { name: 'McKinley Parkway', coords: [14.5451, 121.0464] },
+  { name: 'Arya Residences', coords: [14.5466, 121.0481] }, 
+  { name: 'The Fort Bus Stop', coords: [14.5489, 121.0470] },
+  { name: 'Net One', coords: [14.5503, 121.0454] },
+  { name: 'Bonifacio Stopover', coords: [14.5533, 121.0454] },
+  { name: 'Crescent Park', coords: [14.5538, 121.0437] },
+  // Adjusted slightly East to snap perfectly to 5th Avenue instead of 23rd St
+  { name: 'Fort Victoria', coords: [14.546468, 121.045975] }
+];
+
+const getBgcWestCoord = (name: string) => bgcBusWestStations.find(s => s.name === name)?.coords || [0, 0];
+
+export const bgcBusWestPath: [number, number][] = [
+  // 1. EDSA Terminal (KEPT EXACTLY AS REQUESTED)
+  [14.5493, 121.0291],
+  
+  // --- McKinley Road Natural Bend Waypoints ---
+  [14.5480, 121.0315], // McKinley Rd / Cambridge Circle
+  [14.5460, 121.0350], // McKinley Rd / Harvard Road
+  [14.5442, 121.0388], // McKinley Rd / Narra Avenue
+  [14.5430, 121.0418], // McKinley Rd / San Antonio Plaza
+  [14.5428, 121.0442], // McKinley Rd southern curve towards 5th Ave
+  
+  // 2. McKinley Parkway Station (KEPT EXACTLY AS REQUESTED)
+  [14.5451, 121.0464],
+  
+  // --- BGC Internal Loop Street Grid ---
+  // McKinley Parkway to 11th Ave (Arya Residences area)
+  [14.5465, 121.0495],
+  [14.5482, 121.0492],
+  
+  // 26th Street / 5th Ave (The Fort)
+  [14.5489, 121.0470],
+  
+  // 5th Ave / 31st St Northbound
+  [14.5515, 121.0465],
+  [14.5539, 121.0462], // Crescent North Park
+  
+  // 31st St Westbound
+  [14.5542, 121.0443], // Crescent Park West
+  [14.5540, 121.0422], // 1st Ave
+  
+  // Rizal Drive / 1st Ave Southbound
+  [14.5528, 121.0418],
+  [14.5503, 121.0429], // One/NEO
+  
+  // 26th St Eastbound toward Fort Victoria
+  [14.5498, 121.0440],
+  [14.5480, 121.0442], // Fort Victoria
+  
+  // Return via 5th Ave onto McKinley Road back to EDSA Terminal
+  [14.5451, 121.0464], // McKinley Parkway
+  [14.5428, 121.0442],
+  [14.5430, 121.0418],
+  [14.5442, 121.0388],
+  [14.5460, 121.0350],
+  [14.5480, 121.0315],
+  [14.5493, 121.0291]  // Return to EDSA Terminal
+];
+
+export const bgcBusWestLine: TransitLine = {
+  id: 'bgc-bus-west',
+  name: 'BGC Bus (West Route)',
+  color: '#00C4D6',
+  stations: bgcBusWestStations,
+  path: bgcBusWestPath,
+  routingWaypoints: [
+    // Forces the route to connect from Arya to The Fort via 9th Avenue 
+    // (since OSRM doesn't map Federacion Drive as a through-road)
+    { name: 'Via 9th Ave', coords: [14.5475, 121.0505] }
+  ]
+};
+
+export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, bgcBusWestLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
