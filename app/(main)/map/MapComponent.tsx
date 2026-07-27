@@ -235,6 +235,35 @@ export default function MapComponent() {
     fetchOsrmRoutes();
   }, []);
 
+  useEffect(() => {
+    const fetchMrt7Route = async () => {
+      try {
+        const mrt7 = transitLines.find(l => l.id === 'mrt-7');
+        if (!mrt7) return;
+
+        // NOTE: This route is an approximation of the elevated MRT-7 alignment via road-network snapping,
+        // not the exact rail viaduct path, since exact rail geometry would need official DOTr/SMC alignment data.
+        // It connects the stations sequentially in a linear path.
+        const coordsString = mrt7.stations.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
+        const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.code === 'Ok') {
+          const coordinates = data.routes[0].geometry.coordinates;
+          const route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+          setOsrmPaths(prev => ({ ...prev, 'mrt-7': route }));
+        } else {
+          console.warn('MRT-7 OSRM route fetch failed:', data.message);
+        }
+      } catch (error) {
+        console.error('Failed to fetch MRT-7 route:', error);
+      }
+    };
+    fetchMrt7Route();
+  }, []);
+
   const linePaths = useMemo(() => {
     const paths: Record<string, any> = {};
     transitLines.forEach(line => {
@@ -1348,8 +1377,8 @@ export default function MapComponent() {
       )}
 
       <MapContainer 
-        center={position} 
-        zoom={12} 
+        center={[14.6500, 121.0300]} 
+        zoom={11} 
         scrollWheelZoom={true} 
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >

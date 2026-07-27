@@ -454,4 +454,26 @@ export const bgcBusEastExpressLine: TransitLine = {
   returnWaypoints: []
 };
 
-export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, bgcBusWestLine, bgcBusEastExpressLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
+export const mrt7: TransitLine = {
+  id: 'mrt-7',
+  name: 'MRT-7 (Red Line)',
+  color: '#DC143C', // Crimson red
+  stations: [
+    { name: 'North EDSA', coords: [14.6553, 121.0333] },
+    { name: 'Quezon Memorial Circle', coords: [14.6523, 121.0475] },
+    { name: 'University Avenue', coords: [14.6550, 121.0549] },
+    { name: 'Tandang Sora', coords: [14.6634, 121.0674] },
+    { name: 'Don Antonio', coords: [14.6770, 121.0826] },
+    { name: 'Batasan', coords: [14.6850, 121.0864] },
+    { name: 'Manggahan', coords: [14.6975, 121.0872] },
+    { name: 'Doña Carmen', coords: [14.7051, 121.0783] },
+    { name: 'Regalado Avenue', coords: [14.7203, 121.0658] },
+    { name: 'Mindanao Avenue', coords: [14.7328, 121.0611] },
+    { name: 'Quirino', coords: [14.7355, 121.0669] },
+    { name: 'Sacred Heart', coords: [14.7539, 121.0850] },
+    { name: 'Tala', coords: [14.7722, 121.0892] },
+    { name: 'San Jose Del Monte', coords: [14.7931, 121.0819] }
+  ]
+};
+
+export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, mrt7, bgcBusWestLine, bgcBusEastExpressLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
