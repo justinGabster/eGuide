@@ -21,6 +21,7 @@ export interface TransitLine {
   routingWaypoints?: Station[]; // Used only for OSRM routing, not rendered
   outboundWaypoints?: Station[]; // Specific via-waypoints for outbound leg
   returnWaypoints?: Station[]; // Specific via-waypoints for return leg
+  isUnderConstruction?: boolean;
 }
 
 export const lrt1: TransitLine = {
@@ -458,6 +459,7 @@ export const mrt7: TransitLine = {
   id: 'mrt-7',
   name: 'MRT-7 (Red Line)',
   color: '#DC143C', // Crimson red
+  isUnderConstruction: true,
   stations: [
     { name: 'North EDSA', coords: [14.6553, 121.0333] },
     { name: 'Quezon Memorial Circle', coords: [14.6523, 121.0475] },
