@@ -41,8 +41,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile);
-        setProfileData(parsed);
-        setEditForm(parsed);
+        if (parsed.name === 'DENISSE' && parsed.email === 'dendenissejane@gmail.com') {
+          localStorage.removeItem('profileData');
+        } else {
+          setProfileData(parsed);
+          setEditForm(parsed);
+        }
       } catch(e) {}
     }
 
