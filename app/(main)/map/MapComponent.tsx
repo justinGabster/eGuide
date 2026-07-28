@@ -171,14 +171,20 @@ export default function MapComponent() {
             let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
             
             bgcLine.stations.forEach(s => {
-              stopsToRoute.push({ lat: s.coords[0], lng: s.coords[1], rad: 'unlimited' });
+              // Zone 3 Fix: The user's exact HSBC coordinate falls precisely on the Southbound lane of 5th Ave (which has a median).
+              // This naturally forces OSRM to U-turn around 30th/32nd streets. By dynamically nudging the routing target 
+              // slightly East here (without modifying the user's base coordinate array), we snap perfectly to the Northbound lane.
+              const isHSBCNorth = bgcLine.id === 'bgc-bus-north' && s.name === 'HSBC';
+              const routingLng = isHSBCNorth ? 121.0486 : s.coords[1];
               
-              // Inject via-point after Arya to force the route up 9th Ave
-              if (s.name === 'Arya Residences' && bgcLine.routingWaypoints) {
-                const via9th = bgcLine.routingWaypoints.find(w => w.name === 'Via 9th Ave');
-                if (via9th) {
-                  stopsToRoute.push({ lat: via9th.coords[0], lng: via9th.coords[1], rad: 'unlimited' });
-                }
+              stopsToRoute.push({ lat: s.coords[0], lng: routingLng, rad: 'unlimited' });
+              
+              // Inject generic via-points specified in transitData (using afterStation property)
+              if (bgcLine.routingWaypoints) {
+                const vias = bgcLine.routingWaypoints.filter(w => w.afterStation === s.name || (s.name === 'Arya Residences' && w.name === 'Via 9th Ave'));
+                vias.forEach(via => {
+                  stopsToRoute.push({ lat: via.coords[0], lng: via.coords[1], rad: 'unlimited' });
+                });
               }
             });
 

@@ -1,9 +1,8 @@
-
-
 export interface Station {
   name: string;
   coords: [number, number]; // [lat, lng]
   isVia?: boolean;
+  afterStation?: string; // For routingWaypoints, specifying which station this waypoint follows
 }
 
 export interface TransitSegment {
@@ -455,6 +454,32 @@ export const bgcBusEastExpressLine: TransitLine = {
   returnWaypoints: []
 };
 
+// --- BGC Bus North Route ---
+const bgcBusNorthStations: Station[] = [
+  { name: 'EDSA Ayala Terminal', coords: [14.5493, 121.0290] },
+  { name: 'HSBC', coords: [14.5535, 121.0484] },
+  { name: 'BGC Turf', coords: [14.5549, 121.0524] },
+  { name: 'Avida 34th', coords: [14.5544, 121.05465] },
+  { name: 'Uptown Mall', coords: [14.5565, 121.0534] },
+  { name: 'The Globe Tower', coords: [14.5518, 121.0498] },
+  { name: 'BGC Arts Center', coords: [14.5480, 121.0498] }
+];
+
+export const bgcBusNorthLine: TransitLine = {
+  id: 'bgc-bus-north',
+  name: 'BGC Bus (North Route)',
+  color: '#E91E63', // Magenta
+  stations: bgcBusNorthStations,
+  routingWaypoints: [
+    // Zone 1 Fix: Forces route to enter BGC via McKinley Parkway instead of taking Kalayaan Avenue
+    { name: 'McKinley Parkway', coords: [14.5451, 121.0464], afterStation: 'EDSA Ayala Terminal' },
+    // Zone 2 Fix: Forces the Uptown route to smoothly follow 11th Ave to 36th St without diagonal cutting
+    { name: '11th Ave Northbound', coords: [14.5563, 121.0545], afterStation: 'Avida 34th' },
+    // Zone 4 Fix: Forces route to turn left onto 5th Ave (Fort Victoria) avoiding the Federacion Drive loop
+    { name: '5th Ave Southbound', coords: [14.5465, 121.0458], afterStation: 'BGC Arts Center' }
+  ]
+};
+
 export const mrt7: TransitLine = {
   id: 'mrt-7',
   name: 'MRT-7 (Red Line)',
@@ -478,4 +503,4 @@ export const mrt7: TransitLine = {
   ]
 };
 
-export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, mrt7, bgcBusWestLine, bgcBusEastExpressLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
+export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, mrt7, bgcBusWestLine, bgcBusEastExpressLine, bgcBusNorthLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
