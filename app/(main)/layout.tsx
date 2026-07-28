@@ -15,11 +15,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: 'DENISSE',
-    phone: '+639201057839',
-    email: 'dendenissejane@gmail.com',
-    dob: '2006-01-07',
-    emergencyContact: '+639123456789'
+    name: 'Commuter',
+    phone: '',
+    email: '',
+    dob: '',
+    emergencyContact: ''
   });
   const [editForm, setEditForm] = useState(profileData);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
@@ -41,8 +41,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile);
-        setProfileData(parsed);
-        setEditForm(parsed);
+        if (parsed.name === 'DENISSE' && parsed.email === 'dendenissejane@gmail.com') {
+          localStorage.removeItem('profileData');
+        } else {
+          setProfileData(parsed);
+          setEditForm(parsed);
+        }
       } catch(e) {}
     }
 
@@ -211,7 +215,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className={`layout-container theme-${theme}`}>
       <SplashScreen />
-      <header className="header fade-in" style={{ padding: '20px 24px' }}>
+      <header className="header fade-in" style={{ padding: '20px 24px', paddingTop: 'max(44px, env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img 
             src={`/uiux/${theme === 'light' ? 'Light Mode' : 'Dark Mode'}/eGovibes Icon_eGuide Logo-${theme === 'light' ? 'Light' : 'Dark'}.svg`}
@@ -375,23 +379,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>FULL NAME</label>
-                  <input type="text" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                  <input type="text" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>PHONE NUMBER</label>
-                  <input type="text" maxLength={13} value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} placeholder="+639XXXXXXXXX" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Phone Number') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                  <input type="text" maxLength={13} value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} placeholder="+639XXXXXXXXX" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Phone Number') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMAIL ADDRESS</label>
-                  <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                  <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>DATE OF BIRTH</label>
-                  <input type="date" value={editForm.dob} onChange={(e) => setEditForm({...editForm, dob: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none', colorScheme: 'var(--theme-mode)' }} />
+                  <input type="date" value={editForm.dob} onChange={(e) => setEditForm({...editForm, dob: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none', colorScheme: 'var(--theme-mode)' }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMERGENCY CONTACT</label>
-                  <input type="text" maxLength={13} value={editForm.emergencyContact || ''} onChange={(e) => setEditForm({...editForm, emergencyContact: e.target.value})} placeholder="+639XXXXXXXXX" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Emergency Contact') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                  <input type="text" maxLength={13} value={editForm.emergencyContact || ''} onChange={(e) => setEditForm({...editForm, emergencyContact: e.target.value})} placeholder="+639XXXXXXXXX" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Emergency Contact') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
                 
                 {profileError && (

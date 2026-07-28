@@ -32,7 +32,7 @@ function generateTxnId(): string {
 /**
  * Calls eGovPay to create a new transaction and return the gateway URL.
  */
-export async function createPaymentLink(amount: number, description: string = "eGuide Wallet Top-up") {
+export async function createPaymentLink(amount: number, description: string = "eGuide Wallet Top-up", customAppUrl?: string) {
   const token = getEpayToken();
   
   if (token.includes('your_epay_token_here')) {
@@ -48,8 +48,8 @@ export async function createPaymentLink(amount: number, description: string = "e
   const digest = generateDigest(amount, txnid, token);
 
   // We need absolute URLs for callbacks. In a real app, this would be an env variable.
-  // For the hackathon, we'll assume localhost:3000 if not set.
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // We use customAppUrl passed from the route handler headers to get the dynamic host.
+  const appUrl = customAppUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   const payload = {
     amount: amount,
@@ -57,7 +57,7 @@ export async function createPaymentLink(amount: number, description: string = "e
     currency: "PHP",
     digest: digest,
     callback_url: `${appUrl}/api/epay/callback`,
-    redirect_url: `${appUrl}/payment/callback`,
+    redirect_url: `${appUrl}/api/epay/redirect`,
     txnid: txnid,
     name: "eGuide User",
     items: [
