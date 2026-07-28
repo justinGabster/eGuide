@@ -212,24 +212,11 @@ export default function MapComponent() {
           // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus routes ending at EDSA
           // OSRM forces a U-turn on Ayala because it thinks the left turn into the terminal is illegal.
           // This creates a Westbound overshoot, a U-turn spike, and an Eastbound backtrack (zigzag).
-          // We filter out these redundant coordinates from the arrival sequence to simulate a clean left turn.
-          let blueDotIndex = -1;
-          let minDiff = 999;
-          for (let i = 0; i < route.length; i++) {
-            const diff = Math.abs(route[i][0] - 14.5493) + Math.abs(route[i][1] - 121.0291);
-            if (diff < minDiff) {
-              minDiff = diff;
-              blueDotIndex = i;
-            }
-          }
-          
-          if (blueDotIndex !== -1) {
-            const filteredArrival = route.slice(0, blueDotIndex).filter(
-              (c: [number, number]) => !(c[0] > 14.5495 && c[1] < 121.0301)
-            );
-            const restOfRoute = route.slice(blueDotIndex);
-            route = [...filteredArrival, ...restOfRoute];
-          }
+          // We filter out these redundant coordinates from the entire route to simulate a clean left turn.
+          // (Previously this used blueDotIndex which failed on loop routes where EDSA is at index 0).
+          route = route.filter(
+            (c: [number, number]) => !(c[0] > 14.5495 && c[1] < 121.0301)
+          );
           
           setOsrmPaths(prev => ({ ...prev, [bgcLine.id]: route }));
         } catch (error) {
