@@ -36,6 +36,7 @@ export default function PaymentCallback() {
             isAddition: true
           });
           localStorage.setItem('mock_transactions', JSON.stringify(txs));
+          localStorage.setItem('has_new_transaction', 'true');
           localStorage.removeItem('pending_topup');
 
           // Send SMS Receipt for Top-up!

@@ -1,24 +1,57 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, MessageSquare, Unlock, ScanFace, FileText, Edit2, Cake } from 'lucide-react';
 
 import SplashScreen from '@/components/SplashScreen';
+import AiChatWidget from '@/components/AiChatWidget';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: 'DENISSE',
+    phone: '+639201057839',
+    email: 'dendenissejane@gmail.com',
+    dob: '2006-01-07',
+    emergencyContact: '+639123456789'
+  });
+  const [editForm, setEditForm] = useState(profileData);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [beepCard, setBeepCard] = useState<{cardNumber: string} | null>(null);
+  const [hasNewTransaction, setHasNewTransaction] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const lastNotifFlag = useRef(false);
+  const [bannerNotif, setBannerNotif] = useState<{message: string} | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const savedImage = localStorage.getItem('profileImage');
     if (savedImage) setProfileImage(savedImage);
+
+    const savedProfile = localStorage.getItem('profileData');
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        setProfileData(parsed);
+        setEditForm(parsed);
+      } catch(e) {}
+    }
+
+    const savedBeep = localStorage.getItem('linked_beep_card');
+    if (savedBeep) {
+      try {
+        setBeepCard(JSON.parse(savedBeep));
+      } catch(e) {}
+    }
 
     fetch('/api/ai-credits')
       .then(res => res.json())
@@ -28,6 +61,26 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         }
       })
       .catch(err => console.error("Failed to load credits", err));
+
+    const checkNewData = () => {
+      setHasNewTransaction(localStorage.getItem('has_new_transaction') === 'true');
+      
+      const newNotifFlag = localStorage.getItem('has_new_notification') === 'true';
+      if (newNotifFlag !== lastNotifFlag.current) {
+        setHasNewNotification(newNotifFlag);
+        if (newNotifFlag) {
+          const notifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
+          if (notifs.length > 0) {
+            setBannerNotif(notifs[0]);
+            setTimeout(() => setBannerNotif(null), 4000); // auto-hide
+          }
+        }
+        lastNotifFlag.current = newNotifFlag;
+      }
+    };
+    checkNewData();
+    const interval = setInterval(checkNewData, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,17 +124,46 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       reader.readAsDataURL(file);
     }
   };
+
+  const handleSaveProfile = () => {
+    const phoneRegex = /^\+63\d{10}$/;
+    
+    if (editForm.phone && !phoneRegex.test(editForm.phone)) {
+      setProfileError('Phone Number must be in +63XXXXXXXXXX format (e.g., +639123456789)');
+      return;
+    }
+    
+    if (editForm.emergencyContact && !phoneRegex.test(editForm.emergencyContact)) {
+      setProfileError('Emergency Contact must be in +63XXXXXXXXXX format (e.g., +639123456789)');
+      return;
+    }
+    
+    setProfileError(null);
+    setProfileData(editForm);
+    localStorage.setItem('profileData', JSON.stringify(editForm));
+    setIsEditingProfile(false);
+  };
   
   const navItems = [
-    { name: 'Home', path: '/home', iconSrc: '/icons/eGuide UI-UX_g61-6.png' },
-    { name: 'Ride & Pay', path: '/payment', iconSrc: '/icons/nav_wallet.png' },
-    { name: 'Map', path: '/map', iconSrc: '/icons/nav_map.png' },
-    { name: 'Alerts', path: '/notifications', iconSrc: '/icons/nav_bell.png' },
-    { name: 'Transactions', path: '/transactions', iconSrc: '/icons/nav_doc.png' },
+    { name: 'Home', path: '/home' },
+    { name: 'Ride & Pay', path: '/payment' },
+    { name: 'Maps', path: '/map' },
+    { name: 'Notifications', path: '/notifications' },
+    { name: 'Transactions', path: '/transactions' },
   ];
 
+  const getIconSrc = (name: string, isActive: boolean, theme: string) => {
+    const t = theme === 'light' ? 'Light' : 'Dark';
+    const state = isActive ? '-Selected' : '';
+    let iconName = name;
+    if (name === 'Ride & Pay') iconName = 'RidePay';
+    if (name === 'Notifications') iconName = 'Notif';
+    if (name === 'Transactions') iconName = (theme === 'dark' && !isActive) ? 'Transaction' : 'Transactions';
+    return `/uiux/${t} Mode/eGovibes Icon_${iconName}-${t}${state}.svg`;
+  };
+
   const menuItems = [
-    { label: 'Personal Information', icon: <User size={20} /> },
+    { label: 'Personal Information', icon: <User size={20} />, action: () => { setEditForm(profileData); setIsEditingProfile(true); } },
     { label: 'FAQs', icon: <HelpCircle size={20} /> },
     { label: 'About eGovPH', icon: <Info size={20} /> },
     { label: 'Privacy Notice', icon: <Shield size={20} /> },
@@ -129,16 +211,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className={`layout-container theme-${theme}`}>
       <SplashScreen />
-      <header className="header fade-in">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <header className="header fade-in" style={{ padding: '20px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <img 
-            src="/logo.png" 
+            src={`/uiux/${theme === 'light' ? 'Light Mode' : 'Dark Mode'}/eGovibes Icon_eGuide Logo-${theme === 'light' ? 'Light' : 'Dark'}.svg`}
             alt="eGuide Logo" 
-            style={{ 
-              height: '24px', 
-              objectFit: 'contain',
-              filter: 'drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white) drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)'
-            }} 
+            style={{ height: '28px', objectFit: 'contain' }} 
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -146,8 +224,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             onClick={toggleTheme}
             style={{ 
               background: 'none', 
-              border: 'none', 
-              fontSize: '20px', 
+              border: '1px solid var(--border-color)', 
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -155,29 +232,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               width: '36px',
               height: '36px',
               borderRadius: '50%',
-              backgroundColor: 'var(--card-bg)',
-              boxShadow: 'var(--shadow-sm)',
-              color: 'var(--text-primary)'
+              backgroundColor: 'transparent',
             }}
             title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
           >
-            {theme === 'light' ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-              </svg>
-            )}
+            <img 
+              src={`/uiux/${theme === 'light' ? 'Light Mode/eGovibes Icon_Dark Mode.svg' : 'Dark Mode/eGovibes Icon_Light Mode.svg'}`}
+              alt="Toggle Theme"
+              style={{ width: '20px', height: '20px' }}
+            />
           </button>
           
           <div 
@@ -188,7 +251,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {profileImage ? (
               <img src={profileImage} alt="Profile" className="profile-avatar" style={{ objectFit: 'cover' }} />
             ) : (
-              <div className="profile-avatar">D</div>
+              <div className="profile-avatar" style={{ backgroundColor: '#2dd4bf', color: 'transparent' }}>D</div>
             )}
           </div>
         </div>
@@ -199,55 +262,78 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       <nav className="bottom-nav fade-in">
-        {navItems.map((item) => (
-          <Link 
-            key={item.path} 
-            href={item.path} 
-            className={`nav-item ${pathname === item.path ? 'active' : ''}`}
-            style={item.name === 'Map' ? { position: 'relative' } : {}}
-          >
-            <span className="nav-icon">
-              <img 
-                src={item.iconSrc} 
-                alt={item.name} 
-                className={item.name !== 'Map' ? 'dark-invert' : ''}
-                style={item.name === 'Map' ? { 
-                  width: '56px', 
-                  height: '56px', 
-                  objectFit: 'contain', 
-                  position: 'absolute', 
-                  top: '-24px', 
-                  left: '50%', 
-                  transform: 'translateX(-50%)', 
-                  borderRadius: '50%', 
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                  backgroundColor: 'var(--card-bg)',
-                  padding: '4px'
-                } : { 
-                  width: '30px', 
-                  height: '30px', 
-                  objectFit: 'contain' 
-                }} 
-              />
-            </span>
-            <span style={item.name === 'Map' ? { marginTop: '24px' } : {}}>{item.name}</span>
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <Link 
+              key={item.path} 
+              href={item.path} 
+              className={`nav-item ${isActive ? 'active' : ''}`}
+            >
+              <div className={item.name === 'Maps' ? 'nav-icon-map' : 'nav-icon'}>
+                <img src={getIconSrc(item.name, isActive, theme)} alt={item.name} />
+                {item.name === 'Notifications' && hasNewNotification && !isActive && (
+                  <div className="notification-dot" style={{ position: 'absolute', top: '2px', right: '4px', width: '8px', height: '8px', backgroundColor: '#ef4444', borderRadius: '50%', border: '1px solid var(--card-bg)' }} />
+                )}
+                {item.name === 'Transactions' && hasNewTransaction && !isActive && (
+                  <div className="notification-dot" style={{ position: 'absolute', top: '2px', right: '4px', width: '8px', height: '8px', backgroundColor: '#ef4444', borderRadius: '50%', border: '1px solid var(--card-bg)' }} />
+                )}
+              </div>
+              <span style={item.name === 'Maps' ? { marginTop: '28px' } : {}}>{item.name}</span>
+              {item.name !== 'Maps' && <div className="nav-indicator" />}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Global AI Chat Widget */}
+      <AiChatWidget />
+
+      {/* iOS-Style Banner Notification */}
+      {bannerNotif && (
+        <div 
+          className="slide-down"
+          style={{
+            position: 'absolute',
+            top: '24px',
+            left: '50%',
+            width: '90%',
+            maxWidth: '340px',
+            background: 'var(--card-bg)',
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            zIndex: 9999,
+            border: '1px solid var(--border-color)',
+            cursor: 'pointer'
+          }}
+          onClick={() => {
+            setBannerNotif(null);
+            router.push('/notifications');
+          }}
+        >
+          <img src={`/uiux/${theme === 'light' ? 'Light Mode' : 'Dark Mode'}/eGovibes Icon_eGuide Logo-${theme === 'light' ? 'Light' : 'Dark'}.svg`} alt="eGuide" style={{ width: '28px', height: '28px' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '4px' }}>eGuide Notification</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{bannerNotif.message}</div>
+          </div>
+        </div>
+      )}
 
       {/* Profile Drawer Overlay */}
       {isProfileOpen && (
         <div className="profile-drawer slide-up">
           <div style={{ padding: '24px', position: 'relative' }}>
             <span 
-              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'var(--text-primary)', cursor: 'pointer' }}
-              onClick={() => setIsProfileOpen(false)}
+              style={{ position: 'absolute', top: '24px', left: '24px', fontSize: '24px', color: 'var(--text-primary)', cursor: 'pointer', zIndex: 10 }}
+              onClick={() => isEditingProfile ? setIsEditingProfile(false) : setIsProfileOpen(false)}
             >
-              ✕
+              {isEditingProfile ? '‹' : '✕'}
             </span>
-            <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px' }}>Account</h2>
+            <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', marginBottom: '32px' }}>{isEditingProfile ? 'Edit Profile' : 'Account'}</h2>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
               <div 
@@ -270,21 +356,57 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 style={{ display: 'none' }} 
                 onChange={handleImageUpload} 
               />
-              <div style={{ color: 'var(--text-primary)' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Hi, DENISSE</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>+639201057839</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>dendenissejane@gmail.com</p>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}><Cake size={14} /> January 7, 2006</p>
+              <div style={{ color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Hi, {profileData.name}</h3>
                 {aiCredits !== null && (
-                  <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--status-success-bg)', color: 'var(--status-success-text)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                  <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--status-success-bg)', color: 'var(--status-success-text)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', width: 'fit-content' }}>
                     <span style={{ color: 'var(--success)', fontSize: '10px' }}>●</span> {aiCredits} AI Tokens Remaining
+                  </div>
+                )}
+                {beepCard && (
+                  <div style={{ marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--success)', fontWeight: 'bold' }}>
+                    💳 Beep: {beepCard.cardNumber.slice(0, 4)} **** **** {beepCard.cardNumber.slice(-4)}
                   </div>
                 )}
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {menuItems.map((item, idx) => {
+            {isEditingProfile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>FULL NAME</label>
+                  <input type="text" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>PHONE NUMBER</label>
+                  <input type="text" maxLength={13} value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} placeholder="+639XXXXXXXXX" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Phone Number') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMAIL ADDRESS</label>
+                  <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>DATE OF BIRTH</label>
+                  <input type="date" value={editForm.dob} onChange={(e) => setEditForm({...editForm, dob: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none', colorScheme: 'var(--theme-mode)' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMERGENCY CONTACT</label>
+                  <input type="text" maxLength={13} value={editForm.emergencyContact || ''} onChange={(e) => setEditForm({...editForm, emergencyContact: e.target.value})} placeholder="+639XXXXXXXXX" style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Emergency Contact') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                </div>
+                
+                {profileError && (
+                  <div style={{ color: 'var(--danger)', fontSize: '12px', fontWeight: 'bold', marginTop: '-8px' }}>
+                    {profileError}
+                  </div>
+                )}
+                
+                <button onClick={handleSaveProfile} style={{ width: '100%', padding: '16px', borderRadius: '24px', background: 'var(--primary-color)', color: 'white', fontWeight: 'bold', border: 'none', marginTop: '16px', cursor: 'pointer', fontSize: '16px' }}>
+                  Save Changes
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {menuItems.map((item, idx) => {
                 const ItemWrapper = item.path ? Link : 'div';
                 return (
                   <ItemWrapper 
@@ -301,7 +423,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   </ItemWrapper>
                 );
               })}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
