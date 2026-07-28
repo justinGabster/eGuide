@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import AiChatWidget from '@/components/AiChatWidget';
 import { BeepCard } from '@/lib/fareTypes';
 import { useTheme } from '@/components/ThemeProvider';
+import { CreditCard } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -186,7 +187,7 @@ export default function Home() {
         ) : (
           <Link href="/payment" style={{ display: 'block', textDecoration: 'none', height: '100%' }}>
             <div className="glass-card fade-in" style={{ padding: '16px', background: 'var(--card-bg)', border: '2px dashed var(--border-color)', borderRadius: '16px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-               <div style={{ fontSize: '24px', marginBottom: '8px' }}>💳</div>
+               <div style={{ marginBottom: '8px' }}><CreditCard size={28} strokeWidth={1.5} /></div>
                <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Link Beep Card</div>
             </div>
           </Link>
