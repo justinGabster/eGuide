@@ -18,7 +18,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     name: 'Commuter',
     phone: '',
     email: '',
-    dob: '',
     emergencyContact: ''
   });
   const [editForm, setEditForm] = useState(profileData);
@@ -388,10 +387,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMAIL ADDRESS</label>
                   <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>DATE OF BIRTH</label>
-                  <input type="date" value={editForm.dob} onChange={(e) => setEditForm({...editForm, dob: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none', colorScheme: 'var(--theme-mode)' }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMERGENCY CONTACT</label>

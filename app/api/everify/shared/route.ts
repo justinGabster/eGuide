@@ -45,10 +45,10 @@ export async function GET(request: Request) {
       // 1. Generate the eGovPay Payment Link
       const paymentData = await createPaymentLink(fare);
 
-      const ticketMessage = `eGuide e-Ticket: \nName: Denisse Jane Karim\nLine: ${parsedData.line}\nFrom: ${parsedData.origin}\nTo: ${parsedData.dest}\nFare: P${parsedData.fare} (${parsedData.type})\nThank you for using eGovPay!`;
+      const ticketMessage = `eGuide e-Ticket: \nName: Commuter\nLine: ${parsedData.line}\nFrom: ${parsedData.origin}\nTo: ${parsedData.dest}\nFare: P${parsedData.fare} (${parsedData.type})\nThank you for using eGovPay!`;
 
       // 2. Send SMS receipt securely (awaiting it so Vercel doesn't kill it early!)
-      const phones = ['09201057839', '09325298802'];
+      const phones: string[] = [];
       
       await Promise.all(phones.map(p => 
         sendTransitAlert(p, ticketMessage).catch(err => console.error("SMS Failed", err))

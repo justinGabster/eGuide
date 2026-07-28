@@ -17,10 +17,21 @@ export default function RideAndPay() {
   
   // TICKET State
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
-  const [userName, setUserName] = useState<string>('Denisse Jane Karim');
+  const [userName, setUserName] = useState<string>('Commuter');
   const [userId, setUserId] = useState<string>('eG-12345');
-  const phone = '09201057839'; 
+  // Replace hardcoded phone with dynamic local storage fetch in useEffect
+  const [profilePhone, setProfilePhone] = useState('');
   
+  useEffect(() => {
+    const p = localStorage.getItem('profileData');
+    if (p) {
+      try {
+        const parsed = JSON.parse(p);
+        if (parsed.phone) setProfilePhone(parsed.phone);
+        if (parsed.name) setUserName(parsed.name);
+      } catch (e) {}
+    }
+  }, []);  
   const [mode, setMode] = useState<TransitMode>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number | ''>('');
   const [destIndex, setDestIndex] = useState<number | ''>(''); 
@@ -218,7 +229,9 @@ export default function RideAndPay() {
     const ticketMessage = `eGuide e-Ticket: \nName: ${userName}\nMode: ${mode}\nFrom: ${origin}\nTo: ${dest}\nFare: P${fare} (${passengerType})\nThank you for using eGovPay!`;
 
     try {
-      const phones = [phone, '09325298802'];
+      // Send SMS Receipt
+      // Only send if the user provided a phone number in their profile
+      const phones = profilePhone ? [profilePhone] : [];
       await Promise.all(phones.map(p => 
         fetch('/api/emessage', {
           method: 'POST',
