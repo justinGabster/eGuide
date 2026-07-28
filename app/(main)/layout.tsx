@@ -211,7 +211,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className={`layout-container theme-${theme}`}>
       <SplashScreen />
-      <header className="header fade-in" style={{ padding: '20px 24px' }}>
+      <header className="header fade-in" style={{ padding: '20px 24px', paddingTop: 'max(44px, env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img 
             src={`/uiux/${theme === 'light' ? 'Light Mode' : 'Dark Mode'}/eGovibes Icon_eGuide Logo-${theme === 'light' ? 'Light' : 'Dark'}.svg`}
