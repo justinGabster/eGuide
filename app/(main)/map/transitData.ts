@@ -456,7 +456,7 @@ export const bgcBusEastExpressLine: TransitLine = {
 
 // --- BGC Bus North Route ---
 const bgcBusNorthStations: Station[] = [
-  { name: 'EDSA Ayala Terminal', coords: [14.5493, 121.0290] },
+  { name: 'EDSA Ayala Terminal', coords: [14.5493, 121.0291] },
   { name: 'HSBC', coords: [14.5535, 121.0484] },
   { name: 'BGC Turf', coords: [14.5549, 121.0524] },
   { name: 'Avida 34th', coords: [14.5544, 121.05465] },
@@ -471,8 +471,6 @@ export const bgcBusNorthLine: TransitLine = {
   color: '#E91E63', // Magenta
   stations: bgcBusNorthStations,
   routingWaypoints: [
-    // Zone 1 Fix: Forces a direct right turn from the terminal onto McKinley Road without looping up EDSA
-    { name: 'McKinley Road Turn', coords: [14.549494, 121.030105], afterStation: 'EDSA Ayala Terminal' },
     // Zone 3 Fix: Forces route to turn left onto 5th Ave (Fort Victoria) avoiding the Federacion Drive triangular loop
     { name: '5th Ave Southbound', coords: [14.546468, 121.045975], afterStation: 'BGC Arts Center' }
   ]
