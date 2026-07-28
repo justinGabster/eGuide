@@ -10,7 +10,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Valid amount is required" }, { status: 400 });
     }
 
-    const paymentData = await createPaymentLink(Number(amount));
+    const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
+    const host = request.headers.get('host') || 'localhost:3000';
+    const appUrl = `${protocol}://${host}`;
+
+    const paymentData = await createPaymentLink(Number(amount), "eGuide Wallet Top-up", appUrl);
 
     return NextResponse.json(paymentData, { status: 200 });
   } catch (error: any) {
