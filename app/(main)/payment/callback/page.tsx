@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function PaymentCallback() {
   const router = useRouter();
   const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
+  const [isTopup, setIsTopup] = useState(true);
 
   useEffect(() => {
     // In a real app, the eGov gateway might pass the UUID or TxnID back in the URL search params.
@@ -54,6 +55,8 @@ export default function PaymentCallback() {
           } catch (e) {
             console.error("Failed to send topup sms", e);
           }
+        } else {
+          setIsTopup(false);
         }
 
         setStatus('success');
@@ -79,7 +82,9 @@ export default function PaymentCallback() {
         <div className="glass-card fade-in">
           <div style={{ fontSize: '64px', color: 'var(--success)', marginBottom: '16px' }}>✓</div>
           <h2 className="title mb-2">Payment Successful!</h2>
-          <p className="text-muted mb-6">Your eGuide Wallet has been topped up.</p>
+          <p className="text-muted mb-6">
+            {isTopup ? 'Your eGuide Wallet has been topped up.' : 'Your transaction was processed successfully.'}
+          </p>
           
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', marginBottom: '24px', textAlign: 'left' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>

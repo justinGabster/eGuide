@@ -57,7 +57,7 @@ export async function createPaymentLink(amount: number, description: string = "e
     currency: "PHP",
     digest: digest,
     callback_url: `${appUrl}/api/epay/callback`,
-    redirect_url: `${appUrl}/payment/callback`,
+    redirect_url: `${appUrl}/api/epay/redirect`,
     txnid: txnid,
     name: "eGuide User",
     items: [
