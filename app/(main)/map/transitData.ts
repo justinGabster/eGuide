@@ -471,12 +471,10 @@ export const bgcBusNorthLine: TransitLine = {
   color: '#E91E63', // Magenta
   stations: bgcBusNorthStations,
   routingWaypoints: [
-    // Zone 1 Fix: Forces route to enter BGC via McKinley Parkway instead of taking Kalayaan Avenue
-    { name: 'McKinley Parkway', coords: [14.5451, 121.0464], afterStation: 'EDSA Ayala Terminal' },
-    // Zone 2 Fix: Forces the Uptown route to smoothly follow 11th Ave to 36th St without diagonal cutting
-    { name: '11th Ave Northbound', coords: [14.5563, 121.0545], afterStation: 'Avida 34th' },
-    // Zone 4 Fix: Forces route to turn left onto 5th Ave (Fort Victoria) avoiding the Federacion Drive loop
-    { name: '5th Ave Southbound', coords: [14.5465, 121.0458], afterStation: 'BGC Arts Center' }
+    // Zone 1 Fix: Forces a direct right turn from the terminal onto McKinley Road without looping up EDSA
+    { name: 'McKinley Road Turn', coords: [14.549494, 121.030105], afterStation: 'EDSA Ayala Terminal' },
+    // Zone 3 Fix: Forces route to turn left onto 5th Ave (Fort Victoria) avoiding the Federacion Drive triangular loop
+    { name: '5th Ave Southbound', coords: [14.546468, 121.045975], afterStation: 'BGC Arts Center' }
   ]
 };
 
