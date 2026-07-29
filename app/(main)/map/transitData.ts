@@ -310,7 +310,18 @@ const edsaCarouselStations: Station[] = [
   { name: 'Ayala', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET] },
   { name: 'Taft Avenue', coords: [14.5373, 121.0017] },
   { name: 'SM Mall of Asia (EDSA Carousel)', coords: [14.53503, 120.98326] },
-  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] }
+  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] },
+  // Hidden return stations for the dual-leg true loop (PITX -> Monumento)
+  { name: 'SM Mall of Asia (Return)', coords: [14.53503, 120.98326], isHidden: true },
+  { name: 'Taft Avenue (Return)', coords: [14.5373, 121.0017], isHidden: true },
+  { name: 'Ayala (Return)', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Guadalupe (Return)', coords: [14.5670, 121.0460 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Ortigas (Return)', coords: [14.5877, 121.0570 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Main Ave (Return)', coords: [14.6192, 121.0514 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Kamuning (Return)', coords: [14.6350, 121.0436 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Quezon Avenue (Return)', coords: [14.6430, 121.0390 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Trinoma (Return)', coords: [14.6518, 121.0326 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Balintawak (Return)', coords: [14.6574, 121.0024], isHidden: true }
 ];
 
 const getEdsaCoord = (name: string) => edsaCarouselStations.find(s => s.name === name)?.coords || [0, 0];
@@ -321,10 +332,15 @@ export const edsaCarousel: TransitLine = {
   name: 'EDSA Carousel',
   color: '#FF4D4D',
   stations: edsaCarouselStations,
-  routingWaypoints: [
-    { name: 'Ortigas Via', coords: [14.5877, 121.0570], afterStation: 'Main Ave' },
-    { name: 'EDSA Extension Via 1', coords: [14.5358, 120.9880], afterStation: 'Taft Avenue' },
-    { name: 'EDSA Extension Via 2', coords: [14.5348, 120.9855], afterStation: 'Taft Avenue' }
+  outboundWaypoints: [
+    { name: 'Ortigas Via', coords: [14.5877, 121.0570] },
+    { name: 'Taft Via', coords: [14.5373, 121.0017] },
+    { name: 'Macapagal Blvd Via', coords: [14.5348, 120.9855] }
+  ],
+  returnWaypoints: [
+    { name: 'Macapagal Blvd Via', coords: [14.5348, 120.9855] },
+    { name: 'Taft Via', coords: [14.5373, 121.0017] },
+    { name: 'Ortigas Via', coords: [14.5877, 121.0570] }
   ]
 };
 
