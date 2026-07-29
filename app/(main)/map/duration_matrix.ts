@@ -100,7 +100,7 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     fleetSizePeak: 20,
     fleetSizeOffPeak: 12,
     dwellTimeSec: 30,
-    legDurations: [120, 135, 200, 140, 160, 180, 130, 120, 180, 240, 180, 180, 240, 180, 120, 130, 180, 160, 140, 200, 135, 120] // 22 legs (Outbound + Return)
+    legDurations: [120, 135, 200, 140, 160, 180, 130, 120, 180, 240] // 10 legs
   },
   'mrt-7': {
     peakHeadwaySec: 240, // 4 mins

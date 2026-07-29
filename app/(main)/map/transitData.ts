@@ -2,7 +2,6 @@ export interface Station {
   name: string;
   coords: [number, number]; // [lat, lng]
   isVia?: boolean;
-  isHidden?: boolean; // Hides the station marker while keeping it for routing
   afterStation?: string; // For routingWaypoints, specifying which station this waypoint follows
 }
 
@@ -26,6 +25,7 @@ export interface TransitLine {
 }
 
 export const lrt1: TransitLine = {
+  type: 'rail',
   id: 'lrt-1',
   name: 'LRT-1 (Green Line)',
   color: '#00B140', // or #28a745
@@ -59,6 +59,7 @@ export const lrt1: TransitLine = {
 };
 
 export const lrt2: TransitLine = {
+  type: 'rail',
   id: 'lrt-2',
   name: 'LRT-2 (Purple Line)',
   color: '#A020F0',
@@ -80,6 +81,7 @@ export const lrt2: TransitLine = {
 };
 
 export const mrt3: TransitLine = {
+  type: 'rail',
   id: 'mrt-3',
   name: 'MRT-3 (Yellow Line)',
   color: '#FFCC00',
@@ -129,6 +131,7 @@ const pnrExtendedStations: Station[] = [
 ];
 
 export const pnrNscr: TransitLine = {
+  type: 'rail',
   id: 'pnr-nscr',
   name: 'PNR Metro (Suspended)',
   color: '#E65100', // or #FF6F00
@@ -153,6 +156,7 @@ const pnrSouthStations: Station[] = [
 ];
 
 export const pnrSouth: TransitLine = {
+  type: 'rail',
   id: 'pnr-south',
   name: 'PNR South (Active)',
   color: '#E65100',
@@ -166,6 +170,7 @@ const pnrBicolStations: Station[] = [
 ];
 
 export const pnrBicol: TransitLine = {
+  type: 'rail',
   id: 'pnr-bicol',
   name: 'PNR Bicol (Active)',
   color: '#E65100',
@@ -173,6 +178,7 @@ export const pnrBicol: TransitLine = {
 };
 
 export const pasigFerry: TransitLine = {
+  type: 'ferry',
   id: 'pasig-ferry',
   name: 'Pasig River Ferry',
   color: '#00BFFF', // Deep Sky Blue for the river ferry
@@ -310,21 +316,48 @@ const edsaCarouselStations: Station[] = [
   { name: 'Ayala', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET] },
   { name: 'Taft Avenue', coords: [14.5373, 121.0017] },
   { name: 'SM Mall of Asia (EDSA Carousel)', coords: [14.53503, 120.98326] },
-  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] },
-  // Hidden return stations for the dual-leg true loop (PITX -> Monumento)
-  { name: 'SM Mall of Asia (Return)', coords: [14.53503, 120.98326], isHidden: true },
-  { name: 'Taft Avenue (Return)', coords: [14.5373, 121.0017], isHidden: true },
-  { name: 'Ayala (Return)', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Guadalupe (Return)', coords: [14.5670, 121.0460 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Ortigas (Return)', coords: [14.5877, 121.0570 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Main Ave (Return)', coords: [14.6192, 121.0514 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Kamuning (Return)', coords: [14.6350, 121.0436 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Quezon Avenue (Return)', coords: [14.6430, 121.0390 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Trinoma (Return)', coords: [14.6518, 121.0326 + LONGITUDE_OFFSET], isHidden: true },
-  { name: 'Balintawak (Return)', coords: [14.6574, 121.0024], isHidden: true }
+  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] }
 ];
 
 const getEdsaCoord = (name: string) => edsaCarouselStations.find(s => s.name === name)?.coords || [0, 0];
+
+export const edsaCarouselPath: [number, number][] = [
+  // 1. Monumento Terminal (Caloocan)
+  getEdsaCoord('Monumento (EDSA Carousel)'),
+  
+  // 2. EDSA Northern Stretch (Monumento -> Balintawak)
+  [14.6572, 120.9930],
+  getEdsaCoord('Balintawak (EDSA Carousel)'),
+  [14.6570, 121.0110], // Kaingin / Roosevelt area
+  
+  // 3. Turning down EDSA Curve toward SM North / Trinoma
+  [14.6560, 121.0200],
+  [14.6545, 121.0260], // SM North EDSA
+  getEdsaCoord('Trinoma'),
+  
+  // 4. Following MRT-3 / EDSA Corridor Southbound (Offset East)
+  getEdsaCoord('Quezon Avenue'),
+  getEdsaCoord('Kamuning'),
+  getEdsaCoord('Main Ave'),
+  [14.6080, 121.0560 + LONGITUDE_OFFSET], // Santolan / Annapolis
+  getEdsaCoord('Ortigas'),
+  [14.5800, 121.0535 + LONGITUDE_OFFSET], // Shaw Boulevard
+  getEdsaCoord('Guadalupe'),
+  getEdsaCoord('Ayala'),
+  [14.5385, 121.0200 + LONGITUDE_OFFSET], // Magallanes / Pasay Road
+  getEdsaCoord('Taft Avenue'),
+  
+  // 5. EDSA Extension toward MOA Loop
+  [14.5358, 120.9880], // Roxas Blvd
+  [14.5348, 120.9855], // Macapagal Blvd Crossing
+  getEdsaCoord('SM Mall of Asia (EDSA Carousel)'),
+  
+  // 6. Southbound along Macapagal Blvd down to PITX Terminal
+  [14.5302, 120.9882], // Coral Way / Macapagal turn
+  [14.5225, 120.9912], // Aseana / City of Dreams
+  [14.5152, 120.9930], // Pacific Ave / NAIAX
+  getEdsaCoord('PITX Terminal (EDSA Carousel)')
+];
 
 export const edsaCarousel: TransitLine = {
   type: 'bus',
@@ -332,16 +365,7 @@ export const edsaCarousel: TransitLine = {
   name: 'EDSA Carousel',
   color: '#FF4D4D',
   stations: edsaCarouselStations,
-  outboundWaypoints: [
-    { name: 'Ortigas Via', coords: [14.5877, 121.0570] },
-    { name: 'Taft Via', coords: [14.5373, 121.0017] },
-    { name: 'Macapagal Blvd Via', coords: [14.5348, 120.9855] }
-  ],
-  returnWaypoints: [
-    { name: 'Macapagal Blvd Via', coords: [14.5348, 120.9855] },
-    { name: 'Taft Via', coords: [14.5373, 121.0017] },
-    { name: 'Ortigas Via', coords: [14.5877, 121.0570] }
-  ]
+  path: edsaCarouselPath
 };
 
 // --- BGC Bus West Route ---
@@ -410,6 +434,7 @@ export const bgcBusWestPath: [number, number][] = [
 ];
 
 export const bgcBusWestLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-west',
   name: 'BGC Bus (West Route)',
   color: '#00C4D6',
@@ -429,6 +454,7 @@ const bgcBusEastExpressStations: Station[] = [
 ];
 
 export const bgcBusEastExpressLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-east-express',
   name: 'BGC Bus (East Express)',
   color: '#FF8800',
@@ -451,6 +477,7 @@ const bgcBusNorthStations: Station[] = [
 ];
 
 export const bgcBusNorthLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-north',
   name: 'BGC Bus (North Route)',
   color: '#E91E63', // Magenta
@@ -464,6 +491,7 @@ export const bgcBusNorthLine: TransitLine = {
 };
 
 export const mrt7: TransitLine = {
+  type: 'rail',
   id: 'mrt-7',
   name: 'MRT-7 (Red Line)',
   color: '#DC143C', // Crimson red

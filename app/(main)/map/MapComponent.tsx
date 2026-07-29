@@ -144,17 +144,16 @@ export default function MapComponent() {
     // TODO: Self-host OSRM or switch to Mapbox Map Matching API for production.
     const fetchOsrmRoutes = async () => {
       setIsOsrmLoading(true);
-      const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus') || l.id === 'edsa-carousel');
+      const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus'));
       
       for (const bgcLine of bgcLines) {
         try {
           let route: [number, number][] = [];
           
-          if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints) {
-            // Dual-leg true loop (e.g., East Express, EDSA Carousel)
+          if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints && bgcLine.stations.length === 2) {
+            // Dual-leg true loop (e.g., East Express)
             const start = bgcLine.stations[0];
-            const endIdx = bgcLine.stations.findIndex(s => s.isHidden);
-            const end = endIdx > 0 ? bgcLine.stations[endIdx - 1] : bgcLine.stations[bgcLine.stations.length - 1];
+            const end = bgcLine.stations[1];
             
             // 1. Outbound (Start -> Outbound Vias -> End)
             const outStops = [start, ...bgcLine.outboundWaypoints, end];
@@ -294,7 +293,7 @@ export default function MapComponent() {
       // Handle loop routes (like BGC buses) which only list unique stations
       // but are driven as a continuous loop back to the start terminal.
       // This provides the missing 'endDist' for the final return leg.
-      if (line.id.startsWith('bgc-bus') || line.id === 'edsa-carousel') {
+      if (line.id.startsWith('bgc-bus')) {
         stationDists.push(totalDist);
       }
 
@@ -435,35 +434,20 @@ export default function MapComponent() {
           const isFerry = line.id === 'pasig-ferry';
           const isEastWest = line.id === 'lrt-2' || isFerry || line.id === 'bgc-bus-east-express' || line.id === 'bgc-bus-west';
           
-          let logicalIsForward = pos.isForward;
-          if (line.id === 'edsa-carousel' || line.id === 'bgc-bus-east-express') {
-            const turnaroundIdx = line.stations.findIndex(s => s.isHidden);
-            const mid = turnaroundIdx > 0 ? turnaroundIdx : 1;
-            logicalIsForward = pos.startStationIdx < mid;
-          }
-
-          let headingText = logicalIsForward ? 'Southbound' : 'Northbound';
+          let headingText = pos.isForward ? 'Southbound' : 'Northbound';
           if (isFerry) {
-            headingText = logicalIsForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
+            headingText = pos.isForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
           } else if (isEastWest) {
-            headingText = logicalIsForward ? 'Eastbound' : 'Westbound';
+            headingText = pos.isForward ? 'Eastbound' : 'Westbound';
           }
 
           const safeStartIdx = pos.startStationIdx % line.stations.length;
           const safeEndIdx = pos.endStationIdx % line.stations.length;
-          
-          let boundFor = '';
-          if (line.id === 'edsa-carousel' || line.id === 'bgc-bus-east-express') {
-             const turnaroundIdx = line.stations.findIndex(s => s.isHidden);
-             const mid = turnaroundIdx > 0 ? turnaroundIdx - 1 : 1;
-             boundFor = logicalIsForward ? line.stations[mid].name : line.stations[0].name;
-          } else {
-             const safeM = M % line.stations.length;
-             boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
-          }
+          const safeM = M % line.stations.length;
 
           const startName = line.stations[safeStartIdx].name;
           const endName = line.stations[safeEndIdx].name;
+          const boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
 
           const minsToNext = Math.max(1, Math.ceil(pos.nextStationEtaMs / 60000));
           let statusText = pos.isDwelling 
@@ -1495,7 +1479,7 @@ export default function MapComponent() {
               
               {/* Render the station markers */}
               {(line.id === 'pasig-ferry' ? (snappedFerryStations || []) : line.stations)
-                .filter(s => !s.isVia && !s.isHidden)
+                .filter(s => !s.isVia)
                 .map((station, idx) => (
                 <CircleMarker
                   key={`${line.id}-${idx}-${showAllLabels}-${isFaded}`}
