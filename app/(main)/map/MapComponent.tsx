@@ -294,7 +294,7 @@ export default function MapComponent() {
       // Handle loop routes (like BGC buses) which only list unique stations
       // but are driven as a continuous loop back to the start terminal.
       // This provides the missing 'endDist' for the final return leg.
-      if (line.id.startsWith('bgc-bus') || line.id === 'edsa-carousel') {
+      if (line.id.startsWith('bgc-bus')) {
         stationDists.push(totalDist);
       }
 
@@ -436,7 +436,7 @@ export default function MapComponent() {
           const isEastWest = line.id === 'lrt-2' || isFerry || line.id === 'bgc-bus-east-express' || line.id === 'bgc-bus-west';
           
           let logicalIsForward = pos.isForward;
-          if (line.id === 'edsa-carousel' || line.id === 'bgc-bus-east-express') {
+          if (line.id === 'bgc-bus-east-express') {
             const turnaroundIdx = line.stations.findIndex(s => s.isHidden);
             const mid = turnaroundIdx > 0 ? turnaroundIdx : 1;
             logicalIsForward = pos.startStationIdx < mid;
@@ -453,7 +453,7 @@ export default function MapComponent() {
           const safeEndIdx = pos.endStationIdx % line.stations.length;
           
           let boundFor = '';
-          if (line.id === 'edsa-carousel' || line.id === 'bgc-bus-east-express') {
+          if (line.id === 'bgc-bus-east-express') {
              const turnaroundIdx = line.stations.findIndex(s => s.isHidden);
              const mid = turnaroundIdx > 0 ? turnaroundIdx - 1 : 1;
              boundFor = logicalIsForward ? line.stations[mid].name : line.stations[0].name;

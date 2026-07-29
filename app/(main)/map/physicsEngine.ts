@@ -24,7 +24,7 @@ export const getLineRoundTripMs = (lineId: string): number => {
   
   const M = config.legDurations.length;
   const oneWayMs = totalLegsMs + (M + 1) * dwellMs;
-  const isLoop = lineId.startsWith('bgc-bus') || lineId === 'edsa-carousel';
+  const isLoop = lineId.startsWith('bgc-bus');
   return isLoop ? oneWayMs : 2 * oneWayMs;
 };
 
@@ -38,7 +38,7 @@ export const getVehiclePosition = (t: number, lineId: string): PhysicsPosition |
   // Normalized progress fraction from 0.0 to 1.0
   const progressFraction = t / loopDurationMs;
 
-  const isLoop = lineId.startsWith('bgc-bus') || lineId === 'edsa-carousel';
+  const isLoop = lineId.startsWith('bgc-bus');
   
   // Determine direction based on loop half
   const isReturnLeg = isLoop ? false : progressFraction > 0.5;
