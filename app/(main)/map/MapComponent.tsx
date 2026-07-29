@@ -6,6 +6,17 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ChevronUp, ChevronDown, MapPin, Circle, Map } from 'lucide-react';
 import { transitLines } from './transitData';
+import { philippineAirports } from './philippineAirports';
+
+const airportIcon = L.divIcon({
+  className: 'custom-airport-icon',
+  html: `<div style="background-color: #6366f1; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.7l-1.3 2.6c-.2.4-.1.9.3 1.2L9 14l-4.5 4.5-2.7-.9c-.4-.1-.8.1-1 .5l-.5 1c-.1.3 0 .7.3.9l3.4 1.4 1.4 3.4c.2.3.6.4.9.3l1-.5c.4-.2.6-.6.5-1l-.9-2.7 4.5-4.5 3.3 6.3c.3.4.8.5 1.2.3l2.6-1.3c.5-.2.8-.6.7-1.1z"/></svg>
+  </div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+  popupAnchor: [0, -13],
+});
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
 
@@ -51,6 +62,7 @@ export default function MapComponent() {
   const [isOsrmLoading, setIsOsrmLoading] = useState<boolean>(false);
   const [showPastStations, setShowPastStations] = useState<boolean>(false);
   const [isStationSelectionMode, setIsStationSelectionMode] = useState<boolean>(true);
+  const [showAirports, setShowAirports] = useState<boolean>(false);
 
   const [lineViewConfig, setLineViewConfig] = useState<{
     lineId: string;
@@ -238,12 +250,23 @@ export default function MapComponent() {
       let totalDist = 0;
       let dists: number[] = [0];
 
+      let rawPoints: [number, number][] = [];
       if (osrmPaths[line.id]) {
-         points = osrmPaths[line.id];
+         rawPoints = osrmPaths[line.id];
       } else if (line.path) {
-         points = line.path;
+         rawPoints = line.path;
       } else {
-         line.stations.forEach(st => points.push(st.coords));
+         line.stations.forEach(st => rawPoints.push(st.coords));
+      }
+
+      // Safety check: filter out duplicate/zero-length segments gracefully
+      points = [rawPoints[0]];
+      for (let i = 1; i < rawPoints.length; i++) {
+        const p1 = rawPoints[i-1];
+        const p2 = rawPoints[i];
+        if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
+           points.push(p2);
+        }
       }
 
       for (let i = 1; i < points.length; i++) {
@@ -266,6 +289,13 @@ export default function MapComponent() {
         });
         return nearestDist;
       });
+
+      // Handle loop routes (like BGC buses) which only list unique stations
+      // but are driven as a continuous loop back to the start terminal.
+      // This provides the missing 'endDist' for the final return leg.
+      if (line.id.startsWith('bgc-bus')) {
+        stationDists.push(totalDist);
+      }
 
       paths[line.id] = { points, totalDist, dists, stationDists };
     });
@@ -326,8 +356,13 @@ export default function MapComponent() {
           const pos = getVehiclePosition(t, line.id);
           if (!pos) continue;
 
-          const startDist = pathInfo.stationDists[pos.startStationIdx];
-          const endDist = pathInfo.stationDists[pos.endStationIdx];
+          // Wrap indices gracefully to prevent out-of-bounds console errors 
+          // if a route's leg config doesn't perfectly match its station array size
+          const validStartIdx = pos.startStationIdx % pathInfo.stationDists.length;
+          const validEndIdx = pos.endStationIdx % pathInfo.stationDists.length;
+          
+          const startDist = pathInfo.stationDists[validStartIdx];
+          const endDist = pathInfo.stationDists[validEndIdx];
           
           let baseCoords: [number, number] = pathInfo.points[0];
           let p0 = pathInfo.points[0];
@@ -406,9 +441,13 @@ export default function MapComponent() {
             headingText = pos.isForward ? 'Eastbound' : 'Westbound';
           }
 
-          const startName = line.stations[pos.startStationIdx].name;
-          const endName = line.stations[pos.endStationIdx].name;
-          const boundFor = pos.isForward ? line.stations[M].name : line.stations[0].name;
+          const safeStartIdx = pos.startStationIdx % line.stations.length;
+          const safeEndIdx = pos.endStationIdx % line.stations.length;
+          const safeM = M % line.stations.length;
+
+          const startName = line.stations[safeStartIdx].name;
+          const endName = line.stations[safeEndIdx].name;
+          const boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
 
           const minsToNext = Math.max(1, Math.ceil(pos.nextStationEtaMs / 60000));
           let statusText = pos.isDwelling 
@@ -626,7 +665,7 @@ export default function MapComponent() {
     return {
       forwardMins: Math.max(1, Math.ceil(minForwardMs / 60000)),
       backwardMins: Math.max(1, Math.ceil(minBackwardMs / 60000)),
-      forwardName: line.stations[M].name,
+      forwardName: line.stations[M % line.stations.length].name,
       backwardName: line.stations[0].name
     };
   };
@@ -1316,34 +1355,62 @@ export default function MapComponent() {
         {isLineViewOpen && (isStationSelectionMode ? renderStationSelectionPrompt() : renderLineViewContent())}
       </div>
 
-      {isOsrmLoading && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          backgroundColor: '#1e293b',
-          color: '#38bdf8',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
-          border: '1px solid #334155'
-        }}>
-          <svg style={{ animation: 'spin 1s linear infinite', width: '16px', height: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-          Loading map routes...
-        </div>
-      )}
+      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+        {isOsrmLoading && (
+          <div style={{
+            backgroundColor: '#1e293b',
+            color: '#38bdf8',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+            border: '1px solid #334155'
+          }}>
+            <svg style={{ animation: 'spin 1s linear infinite', width: '16px', height: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
+              <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+            Loading map routes...
+          </div>
+        )}
+
+        <button
+          onClick={() => {
+            const nextState = !showAirports;
+            setShowAirports(nextState);
+            if (nextState && mapRef.current) {
+              const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+              mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+            }
+          }}
+          style={{
+            backgroundColor: showAirports ? '#3b82f6' : '#1e293b',
+            color: showAirports ? 'white' : '#94a3b8',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: '1px solid #334155',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.7l-1.3 2.6c-.2.4-.1.9.3 1.2L9 14l-4.5 4.5-2.7-.9c-.4-.1-.8.1-1 .5l-.5 1c-.1.3 0 .7.3.9l3.4 1.4 1.4 3.4c.2.3.6.4.9.3l1-.5c.4-.2.6-.6.5-1l-.9-2.7 4.5-4.5 3.3 6.3c.3.4.8.5 1.2.3l2.6-1.3c.5-.2.8-.6.7-1.1z"/></svg>
+          {showAirports ? 'Hide Airports' : 'Show Airports'}
+        </button>
+      </div>
 
       <MapContainer 
+        ref={mapRef}
         center={[14.6500, 121.0300]} 
         zoom={11} 
         scrollWheelZoom={true} 
@@ -1684,6 +1751,25 @@ export default function MapComponent() {
             </React.Fragment>
           );
         })}
+        {showAirports && philippineAirports.map((airport, idx) => (
+          <Marker 
+            key={`airport-${idx}`}
+            position={airport.coords}
+            icon={airportIcon}
+          >
+            <Popup className="custom-station-popup">
+              <div style={{ padding: '4px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0f172a', marginBottom: '4px' }}>
+                  {airport.name}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  IATA: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.iata}</span> &bull; 
+                  ICAO: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.icao}</span>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
       
       {showCarouselBanner && (
