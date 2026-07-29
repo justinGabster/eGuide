@@ -62,6 +62,14 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     dwellTimeSec: 120,
     legDurations: [2400, 2700] // 2 legs
   },
+  'bgc-bus-west': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 6,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 15,
+    legDurations: [120, 120, 120, 120, 120, 120, 120] // 7 legs
+  },
   'bgc-bus-east-express': {
     peakHeadwaySec: 600, // 10 mins
     offPeakHeadwaySec: 1200, // 20 mins
@@ -92,7 +100,7 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     fleetSizePeak: 20,
     fleetSizeOffPeak: 12,
     dwellTimeSec: 30,
-    legDurations: [120, 135, 200, 140, 160, 180, 130, 120, 180, 240] // 10 legs
+    legDurations: [120, 135, 200, 140, 160, 180, 130, 120, 180, 240, 180, 180, 240, 180, 120, 130, 180, 160, 140, 200, 135, 120] // 22 legs (Outbound + Return)
   },
   'mrt-7': {
     peakHeadwaySec: 240, // 4 mins

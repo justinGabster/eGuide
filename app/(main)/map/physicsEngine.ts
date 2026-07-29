@@ -24,7 +24,8 @@ export const getLineRoundTripMs = (lineId: string): number => {
   
   const M = config.legDurations.length;
   const oneWayMs = totalLegsMs + (M + 1) * dwellMs;
-  return 2 * oneWayMs;
+  const isLoop = lineId.startsWith('bgc-bus') || lineId === 'edsa-carousel';
+  return isLoop ? oneWayMs : 2 * oneWayMs;
 };
 
 export const getVehiclePosition = (t: number, lineId: string): PhysicsPosition | null => {
@@ -37,9 +38,11 @@ export const getVehiclePosition = (t: number, lineId: string): PhysicsPosition |
   // Normalized progress fraction from 0.0 to 1.0
   const progressFraction = t / loopDurationMs;
 
+  const isLoop = lineId.startsWith('bgc-bus') || lineId === 'edsa-carousel';
+  
   // Determine direction based on loop half
-  const isReturnLeg = progressFraction > 0.5;
-  const legProgress = isReturnLeg ? (progressFraction - 0.5) * 2 : progressFraction * 2;
+  const isReturnLeg = isLoop ? false : progressFraction > 0.5;
+  const legProgress = isLoop ? progressFraction : (isReturnLeg ? (progressFraction - 0.5) * 2 : progressFraction * 2);
   const isForward = !isReturnLeg;
 
   // Calculate scaled progress across the stations

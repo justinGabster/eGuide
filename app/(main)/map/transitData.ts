@@ -2,6 +2,7 @@ export interface Station {
   name: string;
   coords: [number, number]; // [lat, lng]
   isVia?: boolean;
+  isHidden?: boolean; // Hides the station marker while keeping it for routing
   afterStation?: string; // For routingWaypoints, specifying which station this waypoint follows
 }
 
@@ -11,6 +12,7 @@ export interface TransitSegment {
 }
 
 export interface TransitLine {
+  type?: 'rail' | 'bus' | 'ferry';
   id: string;
   name: string;
   color: string;
@@ -308,55 +310,34 @@ const edsaCarouselStations: Station[] = [
   { name: 'Ayala', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET] },
   { name: 'Taft Avenue', coords: [14.5373, 121.0017] },
   { name: 'SM Mall of Asia (EDSA Carousel)', coords: [14.53503, 120.98326] },
-  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] }
+  { name: 'PITX Terminal (EDSA Carousel)', coords: [14.5098, 120.9908] },
+  // Hidden return stations for the dual-leg true loop (PITX -> Monumento)
+  { name: 'SM Mall of Asia (Return)', coords: [14.53503, 120.98326], isHidden: true },
+  { name: 'Taft Avenue (Return)', coords: [14.5373, 121.0017], isHidden: true },
+  { name: 'Ayala (Return)', coords: [14.5489, 121.0282 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Guadalupe (Return)', coords: [14.5670, 121.0460 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Ortigas (Return)', coords: [14.5877, 121.0570 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Main Ave (Return)', coords: [14.6192, 121.0514 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Kamuning (Return)', coords: [14.6350, 121.0436 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Quezon Avenue (Return)', coords: [14.6430, 121.0390 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Trinoma (Return)', coords: [14.6518, 121.0326 + LONGITUDE_OFFSET], isHidden: true },
+  { name: 'Balintawak (Return)', coords: [14.6574, 121.0024], isHidden: true }
 ];
 
 const getEdsaCoord = (name: string) => edsaCarouselStations.find(s => s.name === name)?.coords || [0, 0];
 
-export const edsaCarouselPath: [number, number][] = [
-  // 1. Monumento Terminal (Caloocan)
-  getEdsaCoord('Monumento (EDSA Carousel)'),
-  
-  // 2. EDSA Northern Stretch (Monumento -> Balintawak)
-  [14.6572, 120.9930],
-  getEdsaCoord('Balintawak (EDSA Carousel)'),
-  [14.6570, 121.0110], // Kaingin / Roosevelt area
-  
-  // 3. Turning down EDSA Curve toward SM North / Trinoma
-  [14.6560, 121.0200],
-  [14.6545, 121.0260], // SM North EDSA
-  getEdsaCoord('Trinoma'),
-  
-  // 4. Following MRT-3 / EDSA Corridor Southbound (Offset East)
-  getEdsaCoord('Quezon Avenue'),
-  getEdsaCoord('Kamuning'),
-  getEdsaCoord('Main Ave'),
-  [14.6080, 121.0560 + LONGITUDE_OFFSET], // Santolan / Annapolis
-  getEdsaCoord('Ortigas'),
-  [14.5800, 121.0535 + LONGITUDE_OFFSET], // Shaw Boulevard
-  getEdsaCoord('Guadalupe'),
-  getEdsaCoord('Ayala'),
-  [14.5385, 121.0200 + LONGITUDE_OFFSET], // Magallanes / Pasay Road
-  getEdsaCoord('Taft Avenue'),
-  
-  // 5. EDSA Extension toward MOA Loop
-  [14.5358, 120.9880], // Roxas Blvd
-  [14.5348, 120.9855], // Macapagal Blvd Crossing
-  getEdsaCoord('SM Mall of Asia (EDSA Carousel)'),
-  
-  // 6. Southbound along Macapagal Blvd down to PITX Terminal
-  [14.5302, 120.9882], // Coral Way / Macapagal turn
-  [14.5225, 120.9912], // Aseana / City of Dreams
-  [14.5152, 120.9930], // Pacific Ave / NAIAX
-  getEdsaCoord('PITX Terminal (EDSA Carousel)')
-];
-
 export const edsaCarousel: TransitLine = {
+  type: 'bus',
   id: 'edsa-carousel',
   name: 'EDSA Carousel',
   color: '#FF4D4D',
   stations: edsaCarouselStations,
-  path: edsaCarouselPath
+  outboundWaypoints: [
+    { name: 'Ortigas Via', coords: [14.5877, 121.0570] }
+  ],
+  returnWaypoints: [
+    { name: 'Ortigas Via', coords: [14.5877, 121.0570] }
+  ]
 };
 
 // --- BGC Bus West Route ---

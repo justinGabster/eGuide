@@ -144,16 +144,17 @@ export default function MapComponent() {
     // TODO: Self-host OSRM or switch to Mapbox Map Matching API for production.
     const fetchOsrmRoutes = async () => {
       setIsOsrmLoading(true);
-      const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus'));
+      const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus') || l.id === 'edsa-carousel');
       
       for (const bgcLine of bgcLines) {
         try {
           let route: [number, number][] = [];
           
-          if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints && bgcLine.stations.length === 2) {
-            // Dual-leg true loop (e.g., East Express)
+          if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints) {
+            // Dual-leg true loop (e.g., East Express, EDSA Carousel)
             const start = bgcLine.stations[0];
-            const end = bgcLine.stations[1];
+            const endIdx = bgcLine.stations.findIndex(s => s.isHidden);
+            const end = endIdx > 0 ? bgcLine.stations[endIdx - 1] : bgcLine.stations[bgcLine.stations.length - 1];
             
             // 1. Outbound (Start -> Outbound Vias -> End)
             const outStops = [start, ...bgcLine.outboundWaypoints, end];
@@ -293,7 +294,7 @@ export default function MapComponent() {
       // Handle loop routes (like BGC buses) which only list unique stations
       // but are driven as a continuous loop back to the start terminal.
       // This provides the missing 'endDist' for the final return leg.
-      if (line.id.startsWith('bgc-bus')) {
+      if (line.id.startsWith('bgc-bus') || line.id === 'edsa-carousel') {
         stationDists.push(totalDist);
       }
 
@@ -432,22 +433,37 @@ export default function MapComponent() {
 
           const angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
           const isFerry = line.id === 'pasig-ferry';
-          const isEastWest = line.id === 'lrt-2' || isFerry;
+          const isEastWest = line.id === 'lrt-2' || isFerry || line.id === 'bgc-bus-east-express' || line.id === 'bgc-bus-west';
           
-          let headingText = pos.isForward ? 'Southbound' : 'Northbound';
+          let logicalIsForward = pos.isForward;
+          if (line.id === 'edsa-carousel' || line.id === 'bgc-bus-east-express') {
+            const turnaroundIdx = line.stations.findIndex(s => s.isHidden);
+            const mid = turnaroundIdx > 0 ? turnaroundIdx : 1;
+            logicalIsForward = pos.startStationIdx < mid;
+          }
+
+          let headingText = logicalIsForward ? 'Southbound' : 'Northbound';
           if (isFerry) {
-            headingText = pos.isForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
+            headingText = logicalIsForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
           } else if (isEastWest) {
-            headingText = pos.isForward ? 'Eastbound' : 'Westbound';
+            headingText = logicalIsForward ? 'Eastbound' : 'Westbound';
           }
 
           const safeStartIdx = pos.startStationIdx % line.stations.length;
           const safeEndIdx = pos.endStationIdx % line.stations.length;
-          const safeM = M % line.stations.length;
+          
+          let boundFor = '';
+          if (line.id === 'edsa-carousel' || line.id === 'bgc-bus-east-express') {
+             const turnaroundIdx = line.stations.findIndex(s => s.isHidden);
+             const mid = turnaroundIdx > 0 ? turnaroundIdx - 1 : 1;
+             boundFor = logicalIsForward ? line.stations[mid].name : line.stations[0].name;
+          } else {
+             const safeM = M % line.stations.length;
+             boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
+          }
 
           const startName = line.stations[safeStartIdx].name;
           const endName = line.stations[safeEndIdx].name;
-          const boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
 
           const minsToNext = Math.max(1, Math.ceil(pos.nextStationEtaMs / 60000));
           let statusText = pos.isDwelling 
@@ -493,8 +509,10 @@ export default function MapComponent() {
 
   const createVehicleIcon = (lineId: string, color: string, isFaded: boolean, headingText: string) => {
     const opacity = isFaded ? 0.2 : 1;
-    const isTrain = ['lrt-1', 'lrt-2', 'mrt-3', 'pnr-south', 'pnr-bicol'].includes(lineId);
-    const isFerry = lineId === 'pasig-ferry';
+    const line = transitLines.find(l => l.id === lineId);
+    const isTrain = line?.type === 'rail';
+    const isFerry = line?.type === 'ferry';
+    const isBus = line?.type === 'bus';
     
     let dirCode = 'NB';
     if (headingText.includes('Southbound')) dirCode = 'SB';
@@ -518,10 +536,14 @@ export default function MapComponent() {
       z-index: 10;
     ">${dirCode}</div>`;
 
-    if (isTrain || isFerry) {
+    if (isTrain || isFerry || isBus) {
       const trainSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2.23v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm6 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z"/></svg>`;
       const ferrySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg>`;
-      const iconSvg = isFerry ? ferrySvg : trainSvg;
+      const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14px" height="14px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M4 6 5.2 3.6a2 2 0 0 1 1.8-1.1h10a2 2 0 0 1 1.8 1.1L20 6"/><path d="M2.5 12h19"/><path d="M18 6H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/><path d="M6 19v2"/><path d="M18 19v2"/><circle cx="7" cy="15" r="1"/><circle cx="17" cy="15" r="1"/></svg>`;
+      
+      let iconSvg = trainSvg;
+      if (isFerry) iconSvg = ferrySvg;
+      if (isBus) iconSvg = busSvg;
 
       return L.divIcon({
         className: 'custom-vehicle-marker',
@@ -1473,7 +1495,7 @@ export default function MapComponent() {
               
               {/* Render the station markers */}
               {(line.id === 'pasig-ferry' ? (snappedFerryStations || []) : line.stations)
-                .filter(s => !s.isVia)
+                .filter(s => !s.isVia && !s.isHidden)
                 .map((station, idx) => (
                 <CircleMarker
                   key={`${line.id}-${idx}-${showAllLabels}-${isFaded}`}
