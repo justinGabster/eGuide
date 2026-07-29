@@ -62,6 +62,22 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     dwellTimeSec: 120,
     legDurations: [2400, 2700] // 2 legs
   },
+  'bgc-bus-east-express': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 5,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 20,
+    legDurations: [480, 480] // EDSA Ayala -> Market Market -> EDSA Ayala (approx 8 mins per leg)
+  },
+  'bgc-bus-north': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 6,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 15,
+    legDurations: [240, 90, 60, 60, 30, 90, 240] // 7 legs
+  },
   'pasig-ferry': {
     peakHeadwaySec: 900, // 15 mins
     offPeakHeadwaySec: 1800, // 30 mins

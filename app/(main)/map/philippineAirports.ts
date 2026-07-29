@@ -1,0 +1,58 @@
+export interface Airport {
+  name: string;
+  iata: string;
+  icao: string;
+  coords: [number, number]; // [lat, lng]
+}
+
+export const philippineAirports: Airport[] = [
+  { "name": "Angeles City Clark International Airport", "iata": "CRK", "icao": "RPLC", "coords": [15.1858, 120.5597] },
+  { "name": "Bacolod City Silay International Airport", "iata": "BCD", "icao": "RPVB", "coords": [10.7764, 123.0153] },
+  { "name": "Baguio Loakan Airport", "iata": "BAG", "icao": "RPUB", "coords": [16.3752, 120.6183] },
+  { "name": "Basco Airport", "iata": "BSO", "icao": "RPUO", "coords": [20.4513, 121.9798] },
+  { "name": "Borongan Airport", "iata": "BPA", "icao": "RPVW", "coords": [11.6702, 125.4792] },
+  { "name": "Busuanga Airport", "iata": "USU", "icao": "RPVV", "coords": [12.1221, 120.1001] },
+  { "name": "Butuan Bancasi Airport", "iata": "BXU", "icao": "RPME", "coords": [8.9511, 125.4778] },
+  { "name": "Cagayan de Oro Laguindingan Airport", "iata": "CGY", "icao": "RPMY", "coords": [8.6119, 124.4558] },
+  { "name": "Calbayog Airport", "iata": "CYP", "icao": "RPVC", "coords": [12.0725, 124.5447] },
+  { "name": "Catarman National Airport", "iata": "CRM", "icao": "RPVF", "coords": [12.5023, 124.6366] },
+  { "name": "Caticlan Boracay Airport", "iata": "MPH", "icao": "RPVE", "coords": [11.9247, 121.9550] },
+  { "name": "Cauayan Airport", "iata": "CYZ", "icao": "RPUY", "coords": [16.9297, 121.7531] },
+  { "name": "Cebu Mactan International Airport", "iata": "CEB", "icao": "RPVM", "coords": [10.3072, 123.9789] },
+  { "name": "Cotabato Awang Airport", "iata": "CBO", "icao": "RPMC", "coords": [7.1650, 124.2094] },
+  { "name": "Cuyo Airport", "iata": "CYU", "icao": "RPLO", "coords": [10.8601, 121.0425] },
+  { "name": "Davao City Francisco Bangoy International Airport", "iata": "DVO", "icao": "RPMD", "coords": [7.1253, 125.6458] },
+  { "name": "Del Carmen Sayak Airport", "iata": "IAO", "icao": "RPNS", "coords": [9.8587, 126.0463] },
+  { "name": "Dipolog Airport", "iata": "DPL", "icao": "RPMG", "coords": [8.6017, 123.3425] },
+  { "name": "Dumaguete City Sibulan Airport", "iata": "DGT", "icao": "RPVD", "coords": [9.3336, 123.3006] },
+  { "name": "El Nido Airport", "iata": "ENI", "icao": "RPEN", "coords": [11.2014, 119.4162] },
+  { "name": "Gasan Marinduque Airport", "iata": "MRQ", "icao": "RPUW", "coords": [13.3615, 121.8252] },
+  { "name": "General Santos International Airport", "iata": "GES", "icao": "RPMR", "coords": [6.0578, 125.0958] },
+  { "name": "Iloilo International Airport", "iata": "ILO", "icao": "RPVI", "coords": [10.8328, 122.4933] },
+  { "name": "Kalibo International Airport", "iata": "KLO", "icao": "RPVK", "coords": [11.6792, 122.3758] },
+  { "name": "Laoag City International Airport", "iata": "LAO", "icao": "RPLI", "coords": [18.1781, 120.5319] },
+  { "name": "Legazpi Bicol International Airport", "iata": "DRP", "icao": "RPLK", "coords": [13.1122, 123.6772] },
+  { "name": "Mambajao Camiguin Airport", "iata": "CGM", "icao": "RPMH", "coords": [9.2523, 124.7061] },
+  { "name": "Mamburao Airport", "iata": "MBO", "icao": "RPUM", "coords": [13.2104, 120.6052] },
+  { "name": "Manila Ninoy Aquino International Airport", "iata": "MNL", "icao": "RPLL", "coords": [14.5086, 121.0194] },
+  { "name": "Masbate Moises R. Espinosa Airport", "iata": "MBT", "icao": "RPVJ", "coords": [12.3686, 123.6293] },
+  { "name": "Naga Airport", "iata": "WNP", "icao": "RPUN", "coords": [13.5847, 123.2700] },
+  { "name": "Ormoc Airport", "iata": "OMC", "icao": "RPVO", "coords": [11.0558, 124.5647] },
+  { "name": "Ozamiz Labo Airport", "iata": "OZC", "icao": "RPMO", "coords": [8.1786, 123.8414] },
+  { "name": "Pagadian Airport", "iata": "PAG", "icao": "RPMP", "coords": [7.8272, 123.4583] },
+  { "name": "Panglao Bohol International Airport", "iata": "TAG", "icao": "RPSP", "coords": [9.5644, 123.7658] },
+  { "name": "Puerto Princesa City International Airport", "iata": "PPS", "icao": "RPVP", "coords": [9.7419, 118.7589] },
+  { "name": "Roxas City Airport", "iata": "RXS", "icao": "RPVR", "coords": [11.5975, 122.7517] },
+  { "name": "San Jose Airport", "iata": "SJI", "icao": "RPUH", "coords": [12.3614, 121.0467] },
+  { "name": "San Jose de Buenavista Evelio Javier Airport", "iata": "EUQ", "icao": "RPVS", "coords": [10.7661, 121.9333] },
+  { "name": "San Vicente Airport", "iata": "SWL", "icao": "RPSV", "coords": [10.5248, 119.2713] },
+  { "name": "Siquijor Airport", "iata": "IQR", "icao": "RPVZ", "coords": [9.2133, 123.4682] },
+  { "name": "Subic Bay International Airport", "iata": "SFS", "icao": "RPLB", "coords": [14.7933, 120.2711] },
+  { "name": "Surigao Airport", "iata": "SUG", "icao": "RPMS", "coords": [9.7554, 125.4808] },
+  { "name": "Tablas Tugdan Airport", "iata": "TBH", "icao": "RPVU", "coords": [12.3114, 122.0804] },
+  { "name": "Tacloban Daniel Z. Romualdez Airport", "iata": "TAC", "icao": "RPVA", "coords": [11.2275, 125.0278] },
+  { "name": "Tawi Tawi Sanga Sanga Airport", "iata": "TWT", "icao": "RPMN", "coords": [5.0469, 119.7428] },
+  { "name": "Tuguegarao Airport", "iata": "TUG", "icao": "RPUT", "coords": [17.6472, 121.7328] },
+  { "name": "Virac Airport", "iata": "VRC", "icao": "RPUV", "coords": [13.5786, 124.2064] },
+  { "name": "Zamboanga International Airport", "iata": "ZAM", "icao": "RPMZ", "coords": [6.9222, 122.0597] }
+];
