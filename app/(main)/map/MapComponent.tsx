@@ -87,11 +87,29 @@ export default function MapComponent() {
   const [isLineViewOpen, setIsLineViewOpen] = useState(false);
   const [showCarouselBanner, setShowCarouselBanner] = useState(false);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
 
   // Force re-render periodically for simulation
   const [tick, setTick] = useState(0);
 
   const mapRef = useRef<any>(null);
+
+  const zoomToLines = (lineIds: string[]) => {
+    if (!mapRef.current) return;
+    const coords: [number, number][] = [];
+    transitLines.filter(l => lineIds.includes(l.id)).forEach(line => {
+      line.stations.forEach(s => coords.push(s.coords));
+      if (osrmPaths[line.id]) {
+        coords.push(...osrmPaths[line.id]);
+      } else if (line.path) {
+        coords.push(...line.path);
+      }
+    });
+    if (coords.length > 0) {
+      const bounds = L.latLngBounds(coords);
+      mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+    }
+  };
 
   useEffect(() => {
     const fetchFerryData = async () => {
@@ -1162,6 +1180,214 @@ export default function MapComponent() {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
+      {/* Top Dropdown Controls */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        display: 'flex',
+        gap: '4px',
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(10px)',
+        padding: '6px',
+        borderRadius: '12px',
+        border: '1px solid var(--border-color)',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        alignItems: 'center'
+      }}>
+        {/* Trains Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+            borderRadius: '6px',
+            border: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid transparent'
+          }}>
+            <button
+              onClick={() => setExpandedDropdown(expandedDropdown === 'trains' ? null : 'trains')}
+              style={{
+                background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+              }}
+            >
+              <ChevronDown size={14} style={{ transform: expandedDropdown === 'trains' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+            <button
+              onClick={() => {
+                const isDeselect = selectedLine === 'category-trains';
+                setSelectedLine(isDeselect ? 'all' : 'category-trains');
+                if (!isDeselect) zoomToLines(['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol']);
+              }}
+              style={{
+                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+              }}
+            >
+              Trains
+            </button>
+          </div>
+          {expandedDropdown === 'trains' && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)',
+              border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+            }}>
+              {transitLines.filter(l => ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(l.id)).map(l => (
+                <button
+                  key={l.id}
+                  onClick={() => { 
+                    const isDeselect = selectedLine === l.id;
+                    setSelectedLine(isDeselect ? 'all' : l.id); 
+                    setExpandedDropdown(null); 
+                    if (!isDeselect) zoomToLines([l.id]);
+                  }}
+                  style={{
+                    background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                  }}
+                >{l.name}</button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Buses Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+            borderRadius: '6px',
+            border: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid transparent'
+          }}>
+            <button
+              onClick={() => setExpandedDropdown(expandedDropdown === 'buses' ? null : 'buses')}
+              style={{
+                background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+              }}
+            >
+              <ChevronDown size={14} style={{ transform: expandedDropdown === 'buses' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+            <button
+              onClick={() => {
+                const isDeselect = selectedLine === 'category-buses';
+                setSelectedLine(isDeselect ? 'all' : 'category-buses');
+                if (!isDeselect) zoomToLines(['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north']);
+              }}
+              style={{
+                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+              }}
+            >
+              Buses
+            </button>
+          </div>
+          {expandedDropdown === 'buses' && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)',
+              border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '180px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+            }}>
+              {transitLines.filter(l => ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(l.id)).map(l => (
+                <button
+                  key={l.id}
+                  onClick={() => { 
+                    const isDeselect = selectedLine === l.id;
+                    setSelectedLine(isDeselect ? 'all' : l.id); 
+                    setExpandedDropdown(null); 
+                    if (!isDeselect) zoomToLines([l.id]);
+                  }}
+                  style={{
+                    background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                  }}
+                >{l.name}</button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Airplane Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: showAirports ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+            borderRadius: '6px',
+            border: showAirports ? '1px solid #3b82f6' : '1px solid transparent'
+          }}>
+            <button
+              onClick={() => {
+                const nextState = !showAirports;
+                setShowAirports(nextState);
+                if (nextState && mapRef.current) {
+                  const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                }
+              }}
+              style={{
+                background: 'transparent', border: 'none', color: showAirports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+              }}
+            >
+              <ChevronDown size={14} />
+            </button>
+            <button
+              onClick={() => {
+                const nextState = !showAirports;
+                setShowAirports(nextState);
+                if (nextState && mapRef.current) {
+                  const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                }
+              }}
+              style={{
+                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+              }}
+            >
+              Airplane
+            </button>
+          </div>
+        </div>
+
+        {/* Ships Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: showSeaports ? 'rgba(13, 148, 136, 0.2)' : 'transparent',
+            borderRadius: '6px',
+            border: showSeaports ? '1px solid #0d9488' : '1px solid transparent'
+          }}>
+            <button
+              onClick={() => {
+                const nextState = !showSeaports;
+                setShowSeaports(nextState);
+                if (nextState && mapRef.current) {
+                  const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                }
+              }}
+              style={{
+                background: 'transparent', border: 'none', color: showSeaports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+              }}
+            >
+              <ChevronDown size={14} />
+            </button>
+            <button
+              onClick={() => {
+                const nextState = !showSeaports;
+                setShowSeaports(nextState);
+                if (nextState && mapRef.current) {
+                  const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                }
+              }}
+              style={{
+                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+              }}
+            >
+              Ships
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Control Overlay */}
       <div style={{
         position: 'absolute',
@@ -1195,28 +1421,6 @@ export default function MapComponent() {
 
         {!isPanelCollapsed && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-            <select 
-              id="line-filter"
-              value={selectedLine}
-              onChange={(e) => setSelectedLine(e.target.value)}
-              style={{
-                background: '#0f172a',
-                color: '#f8fafc',
-                border: '1px solid #475569',
-                borderRadius: '4px',
-                padding: '8px',
-                fontSize: '13px',
-                outline: 'none',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <option value="all">All Lines</option>
-              {transitLines.map(l => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-            
             {/* Toggle Station Names */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
               <input 
@@ -1396,63 +1600,6 @@ export default function MapComponent() {
             Loading map routes...
           </div>
         )}
-
-        <button
-          onClick={() => {
-            const nextState = !showAirports;
-            setShowAirports(nextState);
-            if (nextState && mapRef.current) {
-              const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
-              mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-            }
-          }}
-          style={{
-            backgroundColor: showAirports ? '#3b82f6' : '#1e293b',
-            color: showAirports ? 'white' : '#94a3b8',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            border: '1px solid #334155',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.7l-1.3 2.6c-.2.4-.1.9.3 1.2L9 14l-4.5 4.5-2.7-.9c-.4-.1-.8.1-1 .5l-.5 1c-.1.3 0 .7.3.9l3.4 1.4 1.4 3.4c.2.3.6.4.9.3l1-.5c.4-.2.6-.6.5-1l-.9-2.7 4.5-4.5 3.3 6.3c.3.4.8.5 1.2.3l2.6-1.3c.5-.2.8-.6.7-1.1z"/></svg>
-          {showAirports ? 'Hide Airports' : 'Show Airports'}
-        </button>
-        <button
-          onClick={() => {
-            const nextState = !showSeaports;
-            setShowSeaports(nextState);
-            if (nextState && mapRef.current) {
-              const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
-              mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-            }
-          }}
-          style={{
-            backgroundColor: showSeaports ? '#0d9488' : '#1e293b',
-            color: showSeaports ? 'white' : '#94a3b8',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            border: '1px solid #334155',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            boxShadow: showSeaports ? '0 0 10px rgba(13, 148, 136, 0.4)' : 'none',
-            transition: 'all 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>
-          {showSeaports ? 'Hide Seaports' : 'Show Seaports'}
-        </button>
       </div>
 
       <MapContainer 
@@ -1470,8 +1617,10 @@ export default function MapComponent() {
         />
 
         {transitLines.map((line) => {
-          const isSelected = selectedLine === 'all' || selectedLine === line.id;
-          const isFaded = selectedLine !== 'all' && selectedLine !== line.id;
+          const isSelected = selectedLine === 'all' || selectedLine === line.id || 
+            (selectedLine === 'category-trains' && ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(line.id)) ||
+            (selectedLine === 'category-buses' && ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(line.id));
+          const isFaded = selectedLine !== 'all' && !isSelected;
 
           const lineColor = isFaded ? '#4A5568' : line.color;
           const lineWeight = isFaded ? 3 : 5;
@@ -1733,8 +1882,8 @@ export default function MapComponent() {
                         {/* Header Row */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
-                              {line.id === 'pasig-ferry' ? 'Ferry Details' : 'Train Details'}
+                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
+                              {line.type === 'bus' ? 'Bus Details' : line.type === 'ferry' ? 'Ferry Details' : 'Train Details'}
                             </h3>
                             <span style={{ backgroundColor: line.color, color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                               {line.id.toUpperCase()}
@@ -1774,10 +1923,12 @@ export default function MapComponent() {
 
                         {/* Telemetry Grid */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                          <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>SPEED</div>
-                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{speed} km/h</div>
-                          </div>
+                          {line.type !== 'ferry' && (
+                            <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>SPEED</div>
+                              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{speed} km/h</div>
+                            </div>
+                          )}
                           <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                             <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>DIRECTION</div>
                             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{v.headingText.split(' ')[0]}</div>
