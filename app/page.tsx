@@ -68,7 +68,7 @@ export default function Login() {
       <div className="glass-card text-center fade-in" style={{ maxWidth: '380px', width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
           <video 
-            src="/e.G_gif.mp4" 
+            src="/uiux/EG%20GIF.webm" 
             autoPlay 
             loop 
             muted 

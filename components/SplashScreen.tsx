@@ -52,7 +52,7 @@ export default function SplashScreen() {
       }}
     >
       <video 
-        src="/e.G_gif.mp4" 
+        src="/uiux/EG%20GIF.webm" 
         autoPlay 
         loop 
         muted 
