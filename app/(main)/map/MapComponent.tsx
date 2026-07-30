@@ -7,6 +7,17 @@ import 'leaflet/dist/leaflet.css';
 import { ChevronUp, ChevronDown, MapPin, Circle, Map } from 'lucide-react';
 import { transitLines } from './transitData';
 import { philippineAirports } from './philippineAirports';
+import { philippineSeaports } from './philippineSeaports';
+
+const seaportIcon = L.divIcon({
+  className: 'custom-seaport-icon',
+  html: `<div style="background-color: #0d9488; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>
+  </div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+  popupAnchor: [0, -13],
+});
 
 const airportIcon = L.divIcon({
   className: 'custom-airport-icon',
@@ -63,6 +74,7 @@ export default function MapComponent() {
   const [showPastStations, setShowPastStations] = useState<boolean>(false);
   const [isStationSelectionMode, setIsStationSelectionMode] = useState<boolean>(true);
   const [showAirports, setShowAirports] = useState<boolean>(false);
+  const [showSeaports, setShowSeaports] = useState<boolean>(false);
 
   const [lineViewConfig, setLineViewConfig] = useState<{
     lineId: string;
@@ -1413,6 +1425,34 @@ export default function MapComponent() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.7l-1.3 2.6c-.2.4-.1.9.3 1.2L9 14l-4.5 4.5-2.7-.9c-.4-.1-.8.1-1 .5l-.5 1c-.1.3 0 .7.3.9l3.4 1.4 1.4 3.4c.2.3.6.4.9.3l1-.5c.4-.2.6-.6.5-1l-.9-2.7 4.5-4.5 3.3 6.3c.3.4.8.5 1.2.3l2.6-1.3c.5-.2.8-.6.7-1.1z"/></svg>
           {showAirports ? 'Hide Airports' : 'Show Airports'}
         </button>
+        <button
+          onClick={() => {
+            const nextState = !showSeaports;
+            setShowSeaports(nextState);
+            if (nextState && mapRef.current) {
+              const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+              mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+            }
+          }}
+          style={{
+            backgroundColor: showSeaports ? '#0d9488' : '#1e293b',
+            color: showSeaports ? 'white' : '#94a3b8',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: '1px solid #334155',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            boxShadow: showSeaports ? '0 0 10px rgba(13, 148, 136, 0.4)' : 'none',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>
+          {showSeaports ? 'Hide Seaports' : 'Show Seaports'}
+        </button>
       </div>
 
       <MapContainer 
@@ -1771,6 +1811,25 @@ export default function MapComponent() {
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
                   IATA: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.iata}</span> &bull; 
                   ICAO: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.icao}</span>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+        {showSeaports && philippineSeaports.map((seaport, idx) => (
+          <Marker 
+            key={`seaport-${idx}`}
+            position={seaport.coords}
+            icon={seaportIcon}
+          >
+            <Popup className="custom-station-popup">
+              <div style={{ padding: '4px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0f172a', marginBottom: '4px' }}>
+                  {seaport.name}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  LOCODE: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.locode}</span> &bull; 
+                  Region: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.region}</span>
                 </div>
               </div>
             </Popup>
