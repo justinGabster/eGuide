@@ -36,7 +36,7 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     fleetSizePeak: 18,
     fleetSizeOffPeak: 10,
     dwellTimeSec: 20,
-    legDurations: [130, 115, 140, 120, 105, 110, 135, 125, 115, 130, 145, 120, 110, 135, 125, 140, 130, 115, 120] // 19 legs
+    legDurations: [130, 115, 140, 120, 105, 110, 135, 125, 115, 130, 145, 120, 110, 135, 125, 140, 130, 115, 120, 135, 125, 140, 130, 145] // 24 legs (includes Cavite Extension Phase 1 to Dr. Santos)
   },
   'lrt-2': {
     peakHeadwaySec: 360, // 6 mins
