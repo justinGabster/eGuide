@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       // 1. Generate the eGovPay Payment Link
       const paymentData = await createPaymentLink(fare);
 
-      const ticketMessage = `eGuide e-Ticket: \nName: Commuter\nLine: ${parsedData.line}\nFrom: ${parsedData.origin}\nTo: ${parsedData.dest}\nFare: P${parsedData.fare} (${parsedData.type})\nThank you for using eGovPay!`;
+      const ticketMessage = `[eGovPay] 🚀 Trip Confirmed!\n\n🎟️ e-Ticket Details\n• Passenger: Commuter\n• Route: ${parsedData.line} (${parsedData.origin} ➔ ${parsedData.dest})\n• Fare: ₱${Number(parsedData.fare).toFixed(2)} (${parsedData.type})\n\n💳 eGuide Wallet\n• Balance: Updated on app\n\nThank you for moving with eGovPay!`;
 
       // 2. Send SMS receipt securely (awaiting it so Vercel doesn't kill it early!)
       const phones: string[] = [];
