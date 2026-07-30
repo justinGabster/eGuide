@@ -200,7 +200,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { label: 'Log out', icon: <LogOut size={20} />, path: '/' },
   ];
 
-  const settingsSections = [
+  type SettingsItem = { label: string; icon: React.ReactNode; value?: string; action?: () => void };
+  const settingsSections: { title: string, items: SettingsItem[] }[] = [
     {
       title: 'PRIVACY AND SECURITY',
       items: [
