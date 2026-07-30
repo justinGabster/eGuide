@@ -134,6 +134,7 @@ export const pnrNscr: TransitLine = {
   type: 'rail',
   id: 'pnr-nscr',
   name: 'PNR Metro (Suspended)',
+  isUnderConstruction: true,
   color: '#E65100', // or #FF6F00
   stations: [...pnrActiveStations, ...pnrExtendedStations.slice(1)],
   segments: [

@@ -7,6 +7,7 @@ import AiChatWidget from '@/components/AiChatWidget';
 import { BeepCard } from '@/lib/fareTypes';
 import { useTheme } from '@/components/ThemeProvider';
 import { CreditCard } from 'lucide-react';
+import { transitLines } from '@/app/(main)/map/transitData';
 
 export default function Home() {
   const router = useRouter();
@@ -19,6 +20,46 @@ export default function Home() {
     { message: 'MRT-3 operating on limited capacity due to technical issue.', timestamp: Date.now() - 30 * 60000 }
   ]);
   const { theme } = useTheme();
+
+  const handleSearch = (overrideQuery?: string) => {
+    const q = overrideQuery !== undefined ? overrideQuery : searchQuery;
+    if (!q.trim()) {
+      router.push('/map');
+      return;
+    }
+    
+    const query = q.toLowerCase().trim();
+    let matchedStation = null;
+    let matchedLineId = null;
+
+    for (const line of transitLines) {
+      const stationMatch = line.stations.find(s => s.name.toLowerCase().includes(query));
+      if (stationMatch) {
+        matchedStation = stationMatch;
+        matchedLineId = line.id;
+        break;
+      }
+      
+      if (line.segments && !matchedStation) {
+        for (const segment of line.segments) {
+          const segStationMatch = segment.stations.find(s => s.name.toLowerCase().includes(query));
+          if (segStationMatch) {
+            matchedStation = segStationMatch;
+            matchedLineId = line.id;
+            break;
+          }
+        }
+      }
+      
+      if (matchedStation) break;
+    }
+
+    if (matchedStation) {
+      router.push(`/map?targetLine=${matchedLineId}&targetStation=${encodeURIComponent(matchedStation.name)}&lat=${matchedStation.coords[0]}&lng=${matchedStation.coords[1]}`);
+    } else {
+      router.push('/map');
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 60000);
@@ -76,7 +117,7 @@ export default function Home() {
             placeholder="Search your drop-off"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') router.push('/map'); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
             style={{
               width: '100%',
               padding: '12px 16px',
@@ -89,7 +130,7 @@ export default function Home() {
             }}
           />
           <span 
-            onClick={() => router.push('/map')}
+            onClick={() => handleSearch()}
             style={{ position: 'absolute', right: '16px', top: '11px', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', cursor: 'pointer' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -100,14 +141,14 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-          <div onClick={() => router.push('/map')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <div onClick={() => handleSearch('Cubao')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
             Araneta Center - Cubao
           </div>
-          <div onClick={() => router.push('/map')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <div onClick={() => handleSearch('North')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
