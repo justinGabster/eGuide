@@ -40,12 +40,20 @@ export default function PaymentCallback() {
           localStorage.setItem('has_new_transaction', 'true');
           localStorage.removeItem('pending_topup');
 
+          // Add EG points for top-up! (Boosted for demo)
+          const topupAmt = Number(pendingAmount);
+          const earnedPoints = Math.max(25, Math.floor(topupAmt / 10)); // Generous top-up points
+          const currentPoints = Number(localStorage.getItem('mock_eg_points')) || 120;
+          const newPoints = Math.min(500, currentPoints + earnedPoints);
+          localStorage.setItem('mock_eg_points', newPoints.toString());
+          window.dispatchEvent(new Event('eg-points-updated'));
+
           // Send SMS Receipt for Top-up!
           try {
             const pData = localStorage.getItem('profileData');
             const parsed = pData ? JSON.parse(pData) : null;
             const phones = parsed && parsed.phone ? [parsed.phone] : [];
-            const message = `eGuide Wallet:\nYou successfully added P${pendingAmount} via eGovPay.\nNew Balance: P${newBalance.toFixed(2)}`;
+            const message = `[eGovPay] 🚀 Top-Up Confirmed!\n\n💳 eGuide Wallet\n• Top-Up: +₱${Number(pendingAmount).toFixed(2)}\n• Balance: ₱${newBalance.toFixed(2)}\n\nThank you for moving with eGovPay!`;
             
             phones.forEach(p => {
               fetch('/api/emessage', {

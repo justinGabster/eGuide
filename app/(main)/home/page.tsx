@@ -45,6 +45,12 @@ export default function Home() {
     if (savedNotifs) {
       setRecentNotifs(JSON.parse(savedNotifs).slice(0, 2));
     }
+
+    const handlePointsUpdate = () => {
+      setEgPoints(Number(localStorage.getItem('mock_eg_points')) || 120);
+    };
+    window.addEventListener('eg-points-updated', handlePointsUpdate);
+    return () => window.removeEventListener('eg-points-updated', handlePointsUpdate);
   }, []);
 
   return (
@@ -173,7 +179,7 @@ export default function Home() {
           <div className="glass-card fade-in" style={{ padding: '16px', background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', color: 'white', borderRadius: '16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ fontWeight: 'bold', fontSize: '18px', fontStyle: 'italic', letterSpacing: '-0.5px' }}>beep</div>
-              <Link href="/payment" style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px', color: 'white', textDecoration: 'none', fontSize: '10px', fontWeight: 'bold' }}>
+              <Link href="/payment?tab=topup" style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px', color: 'white', textDecoration: 'none', fontSize: '10px', fontWeight: 'bold' }}>
                 Reload
               </Link>
             </div>

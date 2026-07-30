@@ -31,6 +31,12 @@ export default function RideAndPay() {
         if (parsed.name) setUserName(parsed.name);
       } catch (e) {}
     }
+    
+    // Check for tab query parameter
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('tab') === 'topup') {
+      setActiveTab('TOPUP');
+    }
   }, []);  
   const [mode, setMode] = useState<TransitMode>('MRT-3');
   const [originIndex, setOriginIndex] = useState<number | ''>('');
@@ -117,17 +123,15 @@ export default function RideAndPay() {
           const newBalance = currentBalance - fareAmount;
           localStorage.setItem('mock_balance', newBalance.toFixed(2));
 
-          // Calculate and Award EG Points
-          let earnedPoints = Math.floor(fareAmount / 10);
+          // Calculate and Award EG Points (Boosted for demo)
+          let earnedPoints = Math.max(15, Math.floor(fareAmount / 2)); // At least 15 pts
           const today = new Date().toDateString();
           const lastRideDate = localStorage.getItem('last_ride_date');
           let ridesToday = Number(localStorage.getItem('rides_today')) || 0;
           
           if (lastRideDate === today) {
             ridesToday += 1;
-            if (ridesToday === 2) {
-              earnedPoints += 5; // Bonus for 2nd ride
-            }
+            earnedPoints += (ridesToday * 10); // Escalating bonus for multiple rides
           } else {
             ridesToday = 1;
             localStorage.setItem('last_ride_date', today);
@@ -137,6 +141,7 @@ export default function RideAndPay() {
           const currentPoints = Number(localStorage.getItem('mock_eg_points')) || 120;
           const newPoints = Math.min(500, currentPoints + earnedPoints);
           localStorage.setItem('mock_eg_points', newPoints.toString());
+          window.dispatchEvent(new Event('eg-points-updated'));
 
           window.location.href = data.url;
         }

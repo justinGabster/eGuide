@@ -7,6 +7,7 @@ import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, Mess
 
 import SplashScreen from '@/components/SplashScreen';
 import AiChatWidget from '@/components/AiChatWidget';
+import Walkthrough from '@/components/Walkthrough';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,6 +32,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [profileError, setProfileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, toggleTheme } = useTheme();
+  const [globalEgPoints, setGlobalEgPoints] = useState(0);
 
   useEffect(() => {
     const savedImage = localStorage.getItem('profileImage');
@@ -67,6 +69,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
     const checkNewData = () => {
       setHasNewTransaction(localStorage.getItem('has_new_transaction') === 'true');
+      setGlobalEgPoints(Number(localStorage.getItem('mock_eg_points')) || 120);
       
       const newNotifFlag = localStorage.getItem('has_new_notification') === 'true';
       if (newNotifFlag !== lastNotifFlag.current) {
@@ -167,6 +170,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   const menuItems = [
     { label: 'Personal Information', icon: <User size={20} />, action: () => { setEditForm(profileData); setIsEditingProfile(true); } },
+    { label: 'Meet EG (App Tour)', icon: <HelpCircle size={20} />, action: () => { 
+      setIsProfileOpen(false);
+      window.dispatchEvent(new Event('trigger-walkthrough'));
+    } },
     { label: 'FAQs', icon: <HelpCircle size={20} /> },
     { label: 'About eGovPH', icon: <Info size={20} /> },
     { label: 'Privacy Notice', icon: <Shield size={20} /> },
@@ -193,7 +200,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { label: 'Log out', icon: <LogOut size={20} />, path: '/' },
   ];
 
-  const settingsSections = [
+  type SettingsItem = { label: string; icon: React.ReactNode; value?: string; action?: () => void };
+  const settingsSections: { title: string, items: SettingsItem[] }[] = [
     {
       title: 'PRIVACY AND SECURITY',
       items: [
@@ -214,6 +222,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className={`layout-container theme-${theme}`}>
       <SplashScreen />
+      <Walkthrough />
       <header className="header fade-in" style={{ padding: '20px 24px', paddingTop: 'max(32px, env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img 
@@ -222,7 +231,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             style={{ height: '28px', objectFit: 'contain' }} 
           />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div id="tour-theme-profile" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}>
+            <span style={{ fontSize: '14px', lineHeight: '1' }}>🪙</span>
+            <span style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1' }}>{globalEgPoints}</span>
+          </div>
           <button 
             onClick={toggleTheme}
             style={{ 
@@ -267,10 +289,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <nav className="bottom-nav fade-in">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
+          let id = '';
+          if (item.name === 'Home') id = 'tour-home';
+          if (item.name === 'Ride & Pay') id = 'tour-ride-pay';
+          if (item.name === 'Maps') id = 'tour-map';
+          if (item.name === 'Notifications') id = 'tour-notifications';
+          if (item.name === 'Transactions') id = 'tour-transactions';
+
           return (
             <Link 
               key={item.path} 
               href={item.path} 
+              id={id}
               className={`nav-item ${isActive ? 'active' : ''}`}
             >
               <div className={item.name === 'Maps' ? 'nav-icon-map' : 'nav-icon'}>
@@ -447,7 +477,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                    <div key={itemIdx} onClick={item.action} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: item.action ? 'pointer' : 'default' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                         <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         {item.label}
