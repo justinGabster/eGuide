@@ -62,6 +62,14 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     dwellTimeSec: 120,
     legDurations: [2400, 2700] // 2 legs
   },
+  'bgc-bus-west': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 6,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 15,
+    legDurations: [120, 120, 120, 120, 120, 120, 120] // 7 legs
+  },
   'bgc-bus-east-express': {
     peakHeadwaySec: 600, // 10 mins
     offPeakHeadwaySec: 1200, // 20 mins

@@ -11,6 +11,7 @@ export interface TransitSegment {
 }
 
 export interface TransitLine {
+  type?: 'rail' | 'bus' | 'ferry';
   id: string;
   name: string;
   color: string;
@@ -24,6 +25,7 @@ export interface TransitLine {
 }
 
 export const lrt1: TransitLine = {
+  type: 'rail',
   id: 'lrt-1',
   name: 'LRT-1 (Green Line)',
   color: '#00B140', // or #28a745
@@ -57,6 +59,7 @@ export const lrt1: TransitLine = {
 };
 
 export const lrt2: TransitLine = {
+  type: 'rail',
   id: 'lrt-2',
   name: 'LRT-2 (Purple Line)',
   color: '#A020F0',
@@ -78,6 +81,7 @@ export const lrt2: TransitLine = {
 };
 
 export const mrt3: TransitLine = {
+  type: 'rail',
   id: 'mrt-3',
   name: 'MRT-3 (Yellow Line)',
   color: '#FFCC00',
@@ -127,6 +131,7 @@ const pnrExtendedStations: Station[] = [
 ];
 
 export const pnrNscr: TransitLine = {
+  type: 'rail',
   id: 'pnr-nscr',
   name: 'PNR Metro (Suspended)',
   color: '#E65100', // or #FF6F00
@@ -151,6 +156,7 @@ const pnrSouthStations: Station[] = [
 ];
 
 export const pnrSouth: TransitLine = {
+  type: 'rail',
   id: 'pnr-south',
   name: 'PNR South (Active)',
   color: '#E65100',
@@ -164,6 +170,7 @@ const pnrBicolStations: Station[] = [
 ];
 
 export const pnrBicol: TransitLine = {
+  type: 'rail',
   id: 'pnr-bicol',
   name: 'PNR Bicol (Active)',
   color: '#E65100',
@@ -171,6 +178,7 @@ export const pnrBicol: TransitLine = {
 };
 
 export const pasigFerry: TransitLine = {
+  type: 'ferry',
   id: 'pasig-ferry',
   name: 'Pasig River Ferry',
   color: '#00BFFF', // Deep Sky Blue for the river ferry
@@ -352,6 +360,7 @@ export const edsaCarouselPath: [number, number][] = [
 ];
 
 export const edsaCarousel: TransitLine = {
+  type: 'bus',
   id: 'edsa-carousel',
   name: 'EDSA Carousel',
   color: '#FF4D4D',
@@ -425,6 +434,7 @@ export const bgcBusWestPath: [number, number][] = [
 ];
 
 export const bgcBusWestLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-west',
   name: 'BGC Bus (West Route)',
   color: '#00C4D6',
@@ -444,6 +454,7 @@ const bgcBusEastExpressStations: Station[] = [
 ];
 
 export const bgcBusEastExpressLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-east-express',
   name: 'BGC Bus (East Express)',
   color: '#FF8800',
@@ -466,6 +477,7 @@ const bgcBusNorthStations: Station[] = [
 ];
 
 export const bgcBusNorthLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-north',
   name: 'BGC Bus (North Route)',
   color: '#E91E63', // Magenta
@@ -479,6 +491,7 @@ export const bgcBusNorthLine: TransitLine = {
 };
 
 export const mrt7: TransitLine = {
+  type: 'rail',
   id: 'mrt-7',
   name: 'MRT-7 (Red Line)',
   color: '#DC143C', // Crimson red
