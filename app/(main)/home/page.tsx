@@ -161,8 +161,8 @@ export default function Home() {
       {/* Quick Access Buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '0 8px' }}>
         {[
-          { name: 'Trains', icon: 'Trains', href: '/map' },
-          { name: 'Buses', icon: 'Buses', href: '/map' },
+          { name: 'Trains', icon: 'Trains', href: '/map?mode=trains' },
+          { name: 'Buses', icon: 'Buses', href: '/map?mode=buses' },
           { name: 'PUVs', icon: 'PUVs', href: '/map' },
           { name: 'Report', icon: 'Report', href: '/report' }
         ].map((item, idx) => (

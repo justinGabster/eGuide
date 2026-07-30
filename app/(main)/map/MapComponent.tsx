@@ -130,9 +130,20 @@ export default function MapComponent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    const mode = searchParams?.get('mode');
     const targetLine = searchParams?.get('targetLine');
     const lat = searchParams?.get('lat');
     const lng = searchParams?.get('lng');
+
+    if (mode) {
+      if (mode === 'trains') {
+        setSelectedLine('category-trains');
+        setExpandedDropdown('trains');
+      } else if (mode === 'buses') {
+        setSelectedLine('category-buses');
+        setExpandedDropdown('buses');
+      }
+    }
 
     if (targetLine) {
       setSelectedLine(targetLine);
@@ -1328,8 +1339,9 @@ export default function MapComponent() {
                 </label>
               </div>
               
-              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                <Circle size={10} fill="#22c55e" color="#22c55e" style={{ display: 'inline-block', marginRight: '4px' }} /> {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#cbd5e1' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+                <span>{vehicles.length} active vehicles</span>
               </div>
             </div>
 
@@ -1686,7 +1698,7 @@ export default function MapComponent() {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
               <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }`}</style>
             Loading map routes...
           </div>
         )}
