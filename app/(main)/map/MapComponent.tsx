@@ -236,6 +236,140 @@ export default function MapComponent() {
   // Force re-render periodically for simulation
   const [tick, setTick] = useState(0);
 
+  const [watchedStations, setWatchedStations] = useState<Record<string, boolean>>({});
+  const notifiedVehicles = useRef<Set<string>>(new Set());
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'default'>('default');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const [watchedStationsSms, setWatchedStationsSms] = useState<Record<string, boolean>>({});
+  const [userPhone, setUserPhone] = useState<string>('');
+
+  useEffect(() => {
+    try {
+      const savedProfile = localStorage.getItem('profileData');
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed.phone) setUserPhone(parsed.phone);
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleToggleSmsWatch = (stationKey: string) => {
+    setWatchedStationsSms(prev => ({
+      ...prev,
+      [stationKey]: !prev[stationKey]
+    }));
+  };
+
+  const handleToggleWatch = async (stationKey: string) => {
+    let perm = notificationPermission;
+    if (perm === 'default') {
+      perm = await Notification.requestPermission();
+      setNotificationPermission(perm);
+    }
+    if (perm === 'granted') {
+      setWatchedStations(prev => ({
+        ...prev,
+        [stationKey]: !prev[stationKey]
+      }));
+    } else {
+      alert("Please enable notifications in your browser settings to use this feature.");
+    }
+  };
+
+  useEffect(() => {
+    Object.keys(watchedStations).forEach(key => {
+      if (!watchedStations[key]) return;
+      const parts = key.split('_');
+      const lineId = parts[0];
+      const stationName = parts.slice(1).join('_');
+      const line = transitLines.find(l => l.id === lineId);
+      if (!line) return;
+      const idx = line.stations.findIndex((s: any) => s.name === stationName);
+      if (idx === -1) return;
+
+      const arrivals = getUpcomingArrivals(lineId, idx);
+      if (!arrivals) return;
+
+      if (arrivals.forwardMins !== null && arrivals.forwardMins <= 3) {
+        const notifKey = `${key}_fwd`;
+        if (!notifiedVehicles.current.has(notifKey)) {
+          const title = `Approaching ${stationName}`;
+          const body = `A ${line.id.toUpperCase()} vehicle to ${arrivals.forwardName} is arriving in ${Math.round(arrivals.forwardMins)} mins!`;
+          
+          // Trigger In-App Banner
+          const existingNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
+          localStorage.setItem('mock_notifications', JSON.stringify([{ message: `${title} - ${body}`, timestamp: Date.now() }, ...existingNotifs]));
+          
+          // Toggle the flag so layout.tsx's 1s interval picks it up
+          localStorage.setItem('has_new_notification', 'false');
+          setTimeout(() => {
+            localStorage.setItem('has_new_notification', 'true');
+          }, 1100);
+
+          // Trigger Native Browser Notification
+          if (notificationPermission === 'granted') {
+            new Notification(title, { body });
+          }
+
+          // Trigger SMS Notification if opted in
+          if (watchedStationsSms[`${key}`] && userPhone) {
+             const smsBody = `eGuide Alert: A ${line.id.toUpperCase()} vehicle to ${arrivals.forwardName} is approaching ${stationName} — arriving in ${Math.round(arrivals.forwardMins)} mins!`;
+             fetch('/api/emessage', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ number: userPhone, message: smsBody })
+             }).catch(e => console.error('SMS trigger failed', e));
+          }
+
+          notifiedVehicles.current.add(notifKey);
+          setTimeout(() => notifiedVehicles.current.delete(notifKey), 5 * 60 * 1000);
+        }
+      }
+      if (arrivals.backwardMins !== null && arrivals.backwardMins <= 3) {
+        const notifKey = `${key}_bwd`;
+        if (!notifiedVehicles.current.has(notifKey)) {
+          const title = `Approaching ${stationName}`;
+          const body = `A ${line.id.toUpperCase()} vehicle to ${arrivals.backwardName} is arriving in ${Math.round(arrivals.backwardMins)} mins!`;
+          
+          // Trigger In-App Banner
+          const existingNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
+          localStorage.setItem('mock_notifications', JSON.stringify([{ message: `${title} - ${body}`, timestamp: Date.now() }, ...existingNotifs]));
+          
+          // Toggle the flag so layout.tsx's 1s interval picks it up
+          localStorage.setItem('has_new_notification', 'false');
+          setTimeout(() => {
+            localStorage.setItem('has_new_notification', 'true');
+          }, 1100);
+
+          // Trigger Native Browser Notification
+          if (notificationPermission === 'granted') {
+            new Notification(title, { body });
+          }
+
+          // Trigger SMS Notification if opted in
+          if (watchedStationsSms[`${key}`] && userPhone) {
+             const smsBody = `eGuide Alert: A ${line.id.toUpperCase()} vehicle to ${arrivals.backwardName} is approaching ${stationName} — arriving in ${Math.round(arrivals.backwardMins)} mins!`;
+             fetch('/api/emessage', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ number: userPhone, message: smsBody })
+             }).catch(e => console.error('SMS trigger failed', e));
+          }
+
+          notifiedVehicles.current.add(notifKey);
+          setTimeout(() => notifiedVehicles.current.delete(notifKey), 5 * 60 * 1000);
+        }
+      }
+    });
+  }, [tick, watchedStations, notificationPermission]); // intentionally omitted transitLines to avoid unnecessary re-runs
+
+
   const mapRef = useRef<any>(null);
   const searchParams = useSearchParams();
 
@@ -2072,6 +2206,65 @@ export default function MapComponent() {
                           </div>
                         );
                       })()}
+                      {/* Notification Toggle */}
+                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e2e8f0' }}>Notify me when approaching</span>
+                          {notificationPermission === 'denied' && (
+                            <span style={{ fontSize: '10px', color: '#ef4444' }}>Notifications blocked by browser</span>
+                          )}
+                        </div>
+                        <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={!!watchedStations[`${line.id}_${station.name}`]}
+                            onChange={() => handleToggleWatch(`${line.id}_${station.name}`)}
+                            style={{ opacity: 0, width: 0, height: 0 }}
+                          />
+                          <span style={{
+                            position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: watchedStations[`${line.id}_${station.name}`] ? '#10b981' : '#475569',
+                            transition: '.4s', borderRadius: '20px'
+                          }}>
+                            <span style={{
+                              position: 'absolute', content: '""', height: '14px', width: '14px', left: '3px', bottom: '3px',
+                              backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                              transform: watchedStations[`${line.id}_${station.name}`] ? 'translateX(16px)' : 'none'
+                            }} />
+                          </span>
+                        </label>
+                      </div>
+                      {/* SMS Toggle */}
+                      {watchedStations[`${line.id}_${station.name}`] && (
+                        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8' }}>Also notify me via SMS</span>
+                            {!userPhone && (
+                              <span style={{ fontSize: '9px', color: '#f59e0b', marginTop: '2px' }}>Set your phone number in Account Profile</span>
+                            )}
+                          </div>
+                          <label style={{ position: 'relative', display: 'inline-block', width: '28px', height: '16px', opacity: userPhone ? 1 : 0.5 }}>
+                            <input 
+                              type="checkbox" 
+                              disabled={!userPhone}
+                              checked={!!watchedStationsSms[`${line.id}_${station.name}`]}
+                              onChange={() => handleToggleSmsWatch(`${line.id}_${station.name}`)}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                              position: 'absolute', cursor: userPhone ? 'pointer' : 'not-allowed', top: 0, left: 0, right: 0, bottom: 0,
+                              backgroundColor: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? '#3b82f6' : '#475569',
+                              transition: '.4s', borderRadius: '16px'
+                            }}>
+                              <span style={{
+                                position: 'absolute', content: '""', height: '10px', width: '10px', left: '3px', bottom: '3px',
+                                backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                transform: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? 'translateX(12px)' : 'none'
+                              }} />
+                            </span>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </Popup>
                 </CircleMarker>
