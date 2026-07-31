@@ -25,3 +25,14 @@ export type BeepCard = {
   nickname?: string;
   linkedDate: string;
 };
+
+export type WalletCard = {
+  id: string;
+  cardName: string;
+  provider: string;
+  cardNumber: string;
+  cardBgImage: string;
+  providerLogo: string;
+  networkLogo: string;
+  isDefault: boolean;
+};

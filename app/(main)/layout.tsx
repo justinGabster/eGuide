@@ -170,7 +170,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   const menuItems = [
     { label: 'Personal Information', icon: <User size={20} />, action: () => { setEditForm(profileData); setIsEditingProfile(true); } },
-    { label: 'Meet EG (App Tour)', icon: <HelpCircle size={20} />, action: () => { 
+    { label: 'Meet E.G. (App Tour)', icon: <HelpCircle size={20} />, action: () => { 
       setIsProfileOpen(false);
       window.dispatchEvent(new Event('trigger-walkthrough'));
     } },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { 
   mrt3Stations, mrt3Matrix, 
@@ -10,10 +10,44 @@ import {
   calculateFareDetails, calculateRoadFare,
   APP_DISCOUNT_RATE
 } from '@/lib/fareMatrix';
-import { TransitMode, PassengerType, BeepCard } from '@/lib/fareTypes';
+import { TransitMode, PassengerType, BeepCard, WalletCard } from '@/lib/fareTypes';
+
+const DEFAULT_WALLET_CARDS: WalletCard[] = [
+  {
+    id: 'beep-01',
+    cardName: 'Beep Transit Card',
+    provider: 'Beep',
+    cardNumber: '•••• 4321',
+    cardBgImage: '/assets/cards/beep-card-bg.webp',
+    providerLogo: '/assets/logos/beep-logo.png',
+    networkLogo: '/assets/logos/contactless.png',
+    isDefault: true
+  },
+  {
+    id: 'gotyme-01',
+    cardName: 'GoTyme Visa',
+    provider: 'GoTyme Bank',
+    cardNumber: '•••• 9999',
+    cardBgImage: '/assets/cards/gotyme-card-bg.jpg',
+    providerLogo: '/assets/logos/gotyme-logo.png',
+    networkLogo: '/assets/logos/visa-white.png',
+    isDefault: false
+  },
+  {
+    id: 'gcash-01',
+    cardName: 'GCash Card',
+    provider: 'GCash',
+    cardNumber: '•••• 8812',
+    cardBgImage: '/assets/cards/gcash-card-bg.jpg',
+    providerLogo: '/assets/logos/gcash-logo.png',
+    networkLogo: '/assets/logos/mastercard.png',
+    isDefault: false
+  }
+];
 
 export default function RideAndPay() {
   const [activeTab, setActiveTab] = useState<'TICKET' | 'TOPUP'>('TICKET');
+  const carouselRef = useRef<HTMLDivElement>(null);
   
   // TICKET State
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
@@ -51,6 +85,9 @@ export default function RideAndPay() {
   const [balance, setBalance] = useState(500.00);
   const [originUrl, setOriginUrl] = useState('');
   
+  const [walletCards, setWalletCards] = useState<WalletCard[]>([]);
+  const [activeCardId, setActiveCardId] = useState<string>('');
+  
   const [beepCard, setBeepCard] = useState<BeepCard | null>(null);
   const [beepInput, setBeepInput] = useState('');
 
@@ -85,6 +122,20 @@ export default function RideAndPay() {
       try {
         setBeepCard(JSON.parse(savedBeep));
       } catch(e) {}
+    }
+
+    const savedCards = localStorage.getItem('wallet_cards');
+    if (savedCards && !savedCards.includes('.png') && savedCards.includes('.jpg')) {
+      try {
+        const parsed = JSON.parse(savedCards);
+        setWalletCards(parsed);
+        const defaultCard = parsed.find((c: WalletCard) => c.isDefault) || parsed[0];
+        if (defaultCard) setActiveCardId(defaultCard.id);
+      } catch(e) {}
+    } else {
+      setWalletCards(DEFAULT_WALLET_CARDS);
+      setActiveCardId(DEFAULT_WALLET_CARDS[0].id);
+      localStorage.setItem('wallet_cards', JSON.stringify(DEFAULT_WALLET_CARDS));
     }
   }, []);
 
@@ -123,7 +174,7 @@ export default function RideAndPay() {
           const newBalance = currentBalance - fareAmount;
           localStorage.setItem('mock_balance', newBalance.toFixed(2));
 
-          // Calculate and Award EG Points (Boosted for demo)
+          // Calculate and Award E.G. Points (Boosted for demo)
           let earnedPoints = Math.max(15, Math.floor(fareAmount / 2)); // At least 15 pts
           const today = new Date().toDateString();
           const lastRideDate = localStorage.getItem('last_ride_date');
@@ -509,47 +560,162 @@ export default function RideAndPay() {
       {activeTab === 'TOPUP' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* Beep Card Section */}
+          {/* Multi-Card Carousel Section */}
           <div className="glass-card fade-in" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Manage Beep Card</h3>
+            <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Digital Wallets</h3>
             
-            {beepCard ? (
-              <div style={{ background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', borderRadius: '12px', padding: '16px', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '18px', fontStyle: 'italic' }}>beep</div>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </div>
-                <div style={{ fontSize: '18px', letterSpacing: '2px', marginBottom: '12px', fontFamily: 'monospace' }}>
-                  {beepCard.cardNumber.slice(0, 4)} **** **** {beepCard.cardNumber.slice(-4)}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontSize: '12px' }}>
-                  <div>Linked: {new Date(beepCard.linkedDate).toLocaleDateString()}</div>
-                  <button onClick={unlinkBeepCard} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Unlink</button>
-                </div>
+            {/* Carousel Container */}
+            <div 
+              ref={carouselRef}
+              style={{ 
+                display: 'flex', 
+                overflowX: 'auto', 
+                scrollSnapType: 'x mandatory', 
+                gap: '16px', 
+                paddingBottom: '16px',
+                margin: '0 -16px',
+                padding: '0 16px 16px 16px'
+              }}
+              className="hide-scrollbar"
+              onScroll={(e) => {
+                const container = e.currentTarget;
+                const scrollLeft = container.scrollLeft;
+                const cardWidth = 280 + 16; // Estimated card width + gap
+                const index = Math.round(scrollLeft / cardWidth);
+                if (walletCards[index] && walletCards[index].id !== activeCardId) {
+                  setActiveCardId(walletCards[index].id);
+                  localStorage.setItem('active_wallet_card_id', walletCards[index].id);
+                }
+              }}
+            >
+              {walletCards.map((card) => {
+                const isActive = activeCardId === card.id;
+                return (
+                  <div 
+                    key={card.id}
+                    style={{
+                      scrollSnapAlign: 'center',
+                      flexShrink: 0,
+                      width: '280px',
+                      height: '180px',
+                      borderRadius: '16px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      transform: isActive ? 'scale(1)' : 'scale(0.95)',
+                      opacity: isActive ? 1 : 0.6,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: isActive ? '0 8px 24px rgba(0,0,0,0.2)' : 'none',
+                      background: `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%), ${
+                        card.provider === 'Beep' ? 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)' :
+                        card.provider === 'GoTyme Bank' ? 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)' :
+                        card.provider === 'GCash' ? 'linear-gradient(135deg, #007DFE 0%, #005bb5 100%)' :
+                        '#333'
+                      }`,
+                    }}
+                  >
+                    {/* Background Image SLOT */}
+                    {card.cardBgImage && (
+                      <div 
+                        style={{
+                          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                          backgroundImage: `url('${card.cardBgImage}')`,
+                          backgroundSize: '100% 100%',
+                          backgroundPosition: 'center',
+                          opacity: 1,
+                          zIndex: 0
+                        }}
+                      />
+                    )}
+                    
+                    {/* Foreground Content */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '18px', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {/* Provider Logo SLOT */}
+                          {card.providerLogo ? (
+                             <img src={card.providerLogo} alt={card.provider} style={{ height: '24px', objectFit: 'contain' }} onError={(e) => e.currentTarget.style.display = 'none'} />
+                          ) : card.provider}
+                        </div>
+                        {card.networkLogo && (
+                          <img src={card.networkLogo} alt="Network" style={{ height: '20px', objectFit: 'contain' }} onError={(e) => e.currentTarget.style.display = 'none'} />
+                        )}
+                      </div>
+                      
+                      <div>
+                        <div style={{ fontSize: '10px', opacity: 0.9, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>{card.cardName}</div>
+                        <div style={{ fontSize: '18px', letterSpacing: '3px', fontFamily: 'monospace' }}>
+                          {card.cardNumber}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Add / Link Card Tile */}
+              <div 
+                style={{
+                  scrollSnapAlign: 'center',
+                  flexShrink: 0,
+                  width: '280px',
+                  height: '180px',
+                  borderRadius: '16px',
+                  border: '2px dashed var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  background: 'var(--bg-color)',
+                  color: 'var(--text-secondary)'
+                }}
+                onClick={() => {
+                  alert('Linking new cards modal would open here.');
+                }}
+              >
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>+</div>
+                <div style={{ fontWeight: 'bold' }}>Link New Card</div>
               </div>
-            ) : (
-              <div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                  Link your Beep card to reload remotely via eGovPay. (Limit 1 per account).
-                </p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input 
-                    type="text" 
-                    placeholder="16-digit Beep Card #" 
-                    value={beepInput}
-                    onChange={(e) => setBeepInput(e.target.value.replace(/\D/g, '').slice(0, 16))}
-                    style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}
-                  />
-                  <button onClick={linkBeepCard} className="btn-primary" style={{ padding: '0 16px', borderRadius: '8px', fontSize: '14px' }}>
-                    Link
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '16px' }}>
-              Disclaimer: Remote reloading powered by eGovPay. Physical tap required at station for fare deduction.
             </div>
+
+            {/* Pagination Indicators */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
+              {walletCards.map((card) => (
+                <div 
+                  key={card.id}
+                  style={{
+                    width: '6px', height: '6px', borderRadius: '50%',
+                    background: activeCardId === card.id ? 'var(--primary-color)' : 'var(--border-color)',
+                    transition: 'all 0.2s ease'
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Dropdown Fallback */}
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Active Payment Method</label>
+              <select 
+                value={activeCardId}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  setActiveCardId(newId);
+                  localStorage.setItem('active_wallet_card_id', newId);
+                  
+                  const cardIndex = walletCards.findIndex(c => c.id === newId);
+                  if (cardIndex !== -1 && carouselRef.current) {
+                    const cardWidth = 280 + 16;
+                    carouselRef.current.scrollTo({ left: cardIndex * cardWidth, behavior: 'smooth' });
+                  }
+                }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}
+              >
+                {walletCards.map(c => (
+                  <option key={c.id} value={c.id}>{c.provider} •••• {c.cardNumber.slice(-4)}</option>
+                ))}
+              </select>
+            </div>
+            
           </div>
 
           <div className="glass-card fade-in" style={{ padding: '16px' }}>
@@ -595,14 +761,14 @@ export default function RideAndPay() {
                 {loading ? 'Processing...' : 'Pay via eGovPay'}
               </button>
               
-              {beepCard && (
+              {walletCards.length > 0 && (
                 <button 
                   className="btn-secondary w-full" 
                   onClick={() => handleTopup(true)}
                   disabled={loading || !amount || Number(amount) <= 0}
-                  style={{ padding: '14px', fontSize: '14px', fontWeight: 'bold', background: 'var(--bg-color)', color: 'var(--primary-color)', border: '1px solid var(--primary-color)' }}
+                  style={{ padding: '14px', fontSize: '14px', fontWeight: 'bold', background: 'var(--bg-color)', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', borderRadius: '12px' }}
                 >
-                  {loading ? 'Processing...' : 'Reload Beep Card'}
+                  {loading ? 'Processing...' : `Reload ${walletCards.find(c => c.id === activeCardId)?.provider || 'Card'}`}
                 </button>
               )}
 

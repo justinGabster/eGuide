@@ -40,7 +40,7 @@ export default function PaymentCallback() {
           localStorage.setItem('has_new_transaction', 'true');
           localStorage.removeItem('pending_topup');
 
-          // Add EG points for top-up! (Boosted for demo)
+          // Add E.G. Points for top-up! (Boosted for demo)
           const topupAmt = Number(pendingAmount);
           const earnedPoints = Math.max(25, Math.floor(topupAmt / 10)); // Generous top-up points
           const currentPoints = Number(localStorage.getItem('mock_eg_points')) || 120;
