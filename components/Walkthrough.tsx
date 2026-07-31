@@ -195,7 +195,9 @@ export default function Walkthrough() {
             boxShadow: '0 12px 32px rgba(0,0,0,0.3)'
           }}
         >
-          <div style={{ 
+          <div 
+            className="mascot-container"
+            style={{ 
             position: 'absolute', 
             top: '-50px', 
             left: '-20px', 
@@ -203,15 +205,13 @@ export default function Walkthrough() {
             height: '110px', 
             zIndex: 2
           }}>
-            <img 
-              src="/uiux/EG GIF.webp" 
-              alt="E.G. Mascot"
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
-              }} 
+            <video 
+              src="/uiux/EG GIF.webm" 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              className="mascot-video"
             />
           </div>
           <button 

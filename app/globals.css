@@ -464,3 +464,29 @@ a {
 .leaflet-bottom.leaflet-left {
   bottom: 110px !important;
 }
+
+/* Mascot styling with iOS Safari fallback */
+.mascot-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+@supports (-webkit-touch-callout: none) {
+  .mascot-container {
+    background-color: white !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 4px solid var(--primary-color) !important;
+  }
+  .mascot-video {
+    width: 90%;
+    height: 90%;
+    filter: none;
+  }
+}
