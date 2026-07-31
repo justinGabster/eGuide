@@ -187,7 +187,7 @@ export default function Walkthrough() {
           style={{ 
             width: '100%',
             padding: '24px',
-            paddingTop: '36px',
+            paddingTop: '48px',
             position: 'relative',
             background: 'var(--card-bg)',
             border: '1px solid var(--border-color)',
@@ -197,7 +197,7 @@ export default function Walkthrough() {
         >
           <div style={{ 
             position: 'absolute', 
-            top: '-75px', 
+            top: '-50px', 
             left: '-20px', 
             width: '110px', 
             height: '110px', 
@@ -232,7 +232,7 @@ export default function Walkthrough() {
             <X size={20} />
           </button>
 
-          <h3 style={{ margin: '0 0 12px 0', color: 'var(--primary-color)', fontSize: '18px', fontWeight: 'bold' }}>
+          <h3 style={{ margin: '0 0 16px 0', color: 'var(--primary-color)', fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>
             {step.title}
           </h3>
           
