@@ -1,7 +1,7 @@
 # eGuide: Gabay mo, saan ka man patungo. 🚇 🚍
 > **eGov2026 Hackathon | Team eGovibes**
 
-**eGuide** is a unified transit tracking, predictive crowding, and scan-to-pay mobile platform designed as a Progressive Web App (PWA) for Metro Manila commuters. It replaces the guesswork in commuting with certainty, powered by the **eGovPH ecosystem**.
+**eGuide** is a unified transit tracking and scan-to-pay mobile platform designed as a Progressive Web App (PWA) for Metro Manila commuters. It replaces the guesswork in commuting with certainty, powered by the **eGovPH ecosystem**.
 
 ---
 
@@ -26,11 +26,11 @@ eGuide brings all transit modes into a single app using the **eGovPH API Ecosyst
 1. **eGovPH SSO & eVerify**: Single sign-on and mandatory eKYC verification to link your National ID.
 2. **eGovAI Transit Assistant**: Smart assistant to answer queries like *"Puno ba MRT Cubao?"*
 3. **eGovPay (Scan-to-Pay)**: Generate a National ID-linked QR code to pay at turnstiles instantly, or remotely reload Beep cards.
-4. **Live Map & Puno Na-Bayan? Indicator**: Real-time vehicle tracking overlaid on Google Maps, plus predictive 0-10 crowd density indicators (🟢 Seats Available, 🟡 Standing Room, 🔴 Sardines Mode).
+4. **Live Map**: Real-time vehicle tracking overlaid on custom map tiles (simulated via Project LIGTAS paths).
 5. **eMessage Proximity Alerts**: Get a 5-minute SMS or Push notification before your ride arrives.
 
 ## 📈 Impact, Value & Cost-Benefit
-* **Impact**: Turns commuting from guesswork into certainty. Juan checks the app and *knows* the Carousel is 8 minutes away and the MRT is at 40% capacity.
+* **Impact**: Turns commuting from guesswork into certainty. Juan checks the app and *knows* the Carousel is 8 minutes away.
 * **Value**: Commuters save time and gain peace of mind. Government agencies (LRTA, MRT-3, DOTr) receive a unified data layer instead of fragmented systems—a true working example of eGovPH interoperability.
 * **Cost-Benefit**: Shared infrastructure is significantly cheaper than each agency building and maintaining separate apps.
 
@@ -48,7 +48,7 @@ While initially planned as a native Android app, we pivoted to a **Progressive W
 ### The Simulated Data Engine (Project LIGTAS)
 To guarantee a flawless demo without the risk of live GPS hardware failure during the pitch, our Next.js backend uses a simulated data engine.
 * We mapped real-world route coordinates and historical congestion patterns directly from **Project LIGTAS**.
-* The server acts as an intermediary, simulating live movement and 0-10 crowd density metrics.
+* The server acts as an intermediary, simulating live movement.
 * **Scalability**: The architecture is fully modular—swapping the mock streams for live agency WebSocket feeds in production requires zero frontend rewrites.
 
 ---
