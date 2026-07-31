@@ -152,7 +152,7 @@ export default function Home() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-        {/* EG Points Tile */}
+        {/* E.G. Points Tile */}
         <Link href="/rewards" style={{ display: 'block', textDecoration: 'none', height: '100%' }}>
           <div className="glass-card fade-in" style={{ padding: '16px', background: 'linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%)', color: 'white', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -173,7 +173,7 @@ export default function Home() {
                 {egPoints < 100 ? 'Commuter' : egPoints < 500 ? 'Transit Ranger' : 'Train Master'}
               </div>
               <div style={{ fontSize: '24px', fontWeight: 'bold', lineHeight: '1' }}>{egPoints}</div>
-              <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>EG Points</div>
+              <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>E.G. Points</div>
             </div>
           </div>
         </Link>

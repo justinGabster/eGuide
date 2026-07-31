@@ -57,7 +57,7 @@ export default function Rewards() {
 
   const handleRedeem = (reward: Reward) => {
     if (egPoints < reward.cost) {
-      alert("Not enough EG Points!");
+      alert("Not enough E.G. Points!");
       return;
     }
     setSelectedReward(reward);
@@ -80,7 +80,7 @@ export default function Rewards() {
         <Link href="/home" style={{ textDecoration: 'none', color: 'var(--text-primary)' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </Link>
-        <h2 className="title" style={{ margin: 0, fontSize: '18px' }}>EG Points Marketplace</h2>
+        <h2 className="title" style={{ margin: 0, fontSize: '18px' }}>E.G. Points Marketplace</h2>
       </div>
 
       {/* Point Balance Sticky Card */}

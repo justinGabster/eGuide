@@ -174,7 +174,7 @@ export default function RideAndPay() {
           const newBalance = currentBalance - fareAmount;
           localStorage.setItem('mock_balance', newBalance.toFixed(2));
 
-          // Calculate and Award EG Points (Boosted for demo)
+          // Calculate and Award E.G. Points (Boosted for demo)
           let earnedPoints = Math.max(15, Math.floor(fareAmount / 2)); // At least 15 pts
           const today = new Date().toDateString();
           const lastRideDate = localStorage.getItem('last_ride_date');
@@ -619,9 +619,9 @@ export default function RideAndPay() {
                         style={{
                           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                           backgroundImage: `url('${card.cardBgImage}')`,
-                          backgroundSize: 'cover',
+                          backgroundSize: '100% 100%',
                           backgroundPosition: 'center',
-                          opacity: 0.8,
+                          opacity: 1,
                           zIndex: 0
                         }}
                       />

@@ -6,9 +6,9 @@ import { X } from 'lucide-react';
 const WALKTHROUGH_STEPS = [
   {
     targetId: 'tour-theme-profile',
-    title: 'Dark Mode / Light Mode & Profile',
-    dialogue: "Hi, I'm E.G., your personal AI guide! Up here, you can switch between Dark/Light mode, or tap your profile to tweak your account settings.",
-    features: ["Quick Theme Toggle: One-tap switching between Dark Mode and Light Mode for visual comfort.", "Account Management: View and edit personal profiles, contact details, and account credentials.", "Personal Preferences: Manage accessibility settings and app display defaults."]
+    title: 'E.G. Points, Theme & Profile',
+    dialogue: "Hi, I'm E.G., your personal AI guide! Up here, you can view your E.G. Points, switch between Dark/Light mode, or tap your profile to tweak your account settings.",
+    features: ["E.G. Points Balance: Check your current rewards points.", "Quick Theme Toggle: One-tap switching between Dark Mode and Light Mode for visual comfort.", "Account Management: View and edit personal profiles, contact details, and account credentials."]
   },
   {
     targetId: 'tour-home',
@@ -195,14 +195,21 @@ export default function Walkthrough() {
             boxShadow: '0 12px 32px rgba(0,0,0,0.3)'
           }}
         >
-          {/* E.G. Mascot positioned on the upper-left corner */}
           <div style={{ 
             position: 'absolute', 
             top: '-75px', 
-            left: '-40px', 
+            left: '-20px', 
             width: '110px', 
             height: '110px', 
-            zIndex: 2
+            zIndex: 2,
+            backgroundColor: 'white',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px solid rgba(0,0,0,0.05)'
           }}>
             <video 
               src="/uiux/EG GIF.webm" 
@@ -211,10 +218,9 @@ export default function Walkthrough() {
               muted 
               playsInline
               style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
+                width: '90%', 
+                height: '90%', 
+                objectFit: 'contain'
               }} 
             />
           </div>
