@@ -305,8 +305,16 @@ export default function RideAndPay() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || 'Failed to generate payment link');
 
+      // Calculate and Add E.G. Points
+      const earnedPoints = Math.max(2, Math.floor(Number(fare) / 5)); // Base 2 points, +1 per 5 PHP
+      const currentPoints = Number(localStorage.getItem('mock_eg_points')) || 120;
+      const newPoints = Math.min(500, currentPoints + earnedPoints);
+      localStorage.setItem('mock_eg_points', newPoints.toString());
+      localStorage.setItem('latest_earned_points', earnedPoints.toString());
+      window.dispatchEvent(new Event('eg-points-updated'));
+
       // Push Notification to mock_notifications
-      const newNotif = { message: `e-Ticket: ${mode} fare (₱${fare}) deducted.`, timestamp: Date.now() };
+      const newNotif = { message: `e-Ticket: ${mode} fare (₱${fare}) deducted. (+${earnedPoints} E.G. Points)`, timestamp: Date.now() };
       const savedNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
       localStorage.setItem('mock_notifications', JSON.stringify([newNotif, ...savedNotifs]));
       localStorage.setItem('has_new_notification', 'true');
