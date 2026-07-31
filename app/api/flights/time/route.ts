@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getOpenSkyToken } from '@/lib/opensky';
 
+export const runtime = 'edge';
+
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const icao24 = searchParams.get('icao24');
+
   try {
-    const { searchParams } = new URL(request.url);
-    const icao24 = searchParams.get('icao24');
 
     if (!icao24) {
       return NextResponse.json({ error: 'Missing icao24 parameter' }, { status: 400 });
