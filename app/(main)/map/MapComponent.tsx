@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -86,13 +87,81 @@ export default function MapComponent() {
   
   const [isLineViewOpen, setIsLineViewOpen] = useState(false);
   const [showCarouselBanner, setShowCarouselBanner] = useState(false);
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const dragStartY = useRef(0);
+  const currentDragY = useRef(0);
+  const dragType = useRef<'mouse'|'touch'|null>(null);
+
+  useEffect(() => {
+    if (!isDragging || dragType.current !== 'mouse') return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - dragStartY.current;
+      currentDragY.current = deltaY;
+      setDragY(deltaY);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      dragType.current = null;
+      if (isPanelCollapsed && currentDragY.current > 40) setIsPanelCollapsed(false);
+      else if (!isPanelCollapsed && currentDragY.current < -40) setIsPanelCollapsed(true);
+      setDragY(0);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseleave', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseleave', handleMouseUp);
+    };
+  }, [isDragging, isPanelCollapsed]);
   const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
 
   // Force re-render periodically for simulation
   const [tick, setTick] = useState(0);
 
   const mapRef = useRef<any>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const mode = searchParams?.get('mode');
+    const targetLine = searchParams?.get('targetLine');
+    const lat = searchParams?.get('lat');
+    const lng = searchParams?.get('lng');
+
+    if (mode) {
+      if (mode === 'trains') {
+        setSelectedLine('category-trains');
+        setExpandedDropdown('trains');
+      } else if (mode === 'buses') {
+        setSelectedLine('category-buses');
+        setExpandedDropdown('buses');
+      }
+    }
+
+    if (targetLine) {
+      setSelectedLine(targetLine);
+      if (['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(targetLine)) {
+        setExpandedDropdown('trains');
+      } else if (['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(targetLine)) {
+        setExpandedDropdown('buses');
+      }
+      
+      if (lat && lng) {
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.flyTo([parseFloat(lat), parseFloat(lng)], 15, { duration: 1.5 });
+          }
+        }, 500);
+      }
+    }
+  }, [searchParams]);
 
   const zoomToLines = (lineIds: string[]) => {
     if (!mapRef.current) return;
@@ -1180,248 +1249,49 @@ export default function MapComponent() {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Top Dropdown Controls */}
+
+      {/* Top Sheet Overlay */}
       <div style={{
         position: 'absolute',
-        top: '20px',
+        top: '10px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
-        display: 'flex',
-        gap: '4px',
-        background: 'rgba(15, 23, 42, 0.95)',
+        background: '#1C2436',
         backdropFilter: 'blur(10px)',
-        padding: '6px',
-        borderRadius: '12px',
+        borderRadius: '16px',
         border: '1px solid var(--border-color)',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-        alignItems: 'center'
-      }}>
-        {/* Trains Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            background: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-            borderRadius: '6px',
-            border: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid transparent'
-          }}>
-            <button
-              onClick={() => setExpandedDropdown(expandedDropdown === 'trains' ? null : 'trains')}
-              style={{
-                background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-              }}
-            >
-              <ChevronDown size={14} style={{ transform: expandedDropdown === 'trains' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </button>
-            <button
-              onClick={() => {
-                const isDeselect = selectedLine === 'category-trains';
-                setSelectedLine(isDeselect ? 'all' : 'category-trains');
-                if (!isDeselect) zoomToLines(['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol']);
-              }}
-              style={{
-                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-              }}
-            >
-              Trains
-            </button>
-          </div>
-          {expandedDropdown === 'trains' && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)',
-              border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-            }}>
-              {transitLines.filter(l => ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(l.id)).map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => { 
-                    const isDeselect = selectedLine === l.id;
-                    setSelectedLine(isDeselect ? 'all' : l.id); 
-                    setExpandedDropdown(null); 
-                    if (!isDeselect) zoomToLines([l.id]);
-                  }}
-                  style={{
-                    background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
-                  }}
-                >{l.name}</button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Buses Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            background: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-            borderRadius: '6px',
-            border: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid transparent'
-          }}>
-            <button
-              onClick={() => setExpandedDropdown(expandedDropdown === 'buses' ? null : 'buses')}
-              style={{
-                background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-              }}
-            >
-              <ChevronDown size={14} style={{ transform: expandedDropdown === 'buses' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </button>
-            <button
-              onClick={() => {
-                const isDeselect = selectedLine === 'category-buses';
-                setSelectedLine(isDeselect ? 'all' : 'category-buses');
-                if (!isDeselect) zoomToLines(['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north']);
-              }}
-              style={{
-                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-              }}
-            >
-              Buses
-            </button>
-          </div>
-          {expandedDropdown === 'buses' && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)',
-              border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '180px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-            }}>
-              {transitLines.filter(l => ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(l.id)).map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => { 
-                    const isDeselect = selectedLine === l.id;
-                    setSelectedLine(isDeselect ? 'all' : l.id); 
-                    setExpandedDropdown(null); 
-                    if (!isDeselect) zoomToLines([l.id]);
-                  }}
-                  style={{
-                    background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
-                  }}
-                >{l.name}</button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Airplane Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            background: showAirports ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-            borderRadius: '6px',
-            border: showAirports ? '1px solid #3b82f6' : '1px solid transparent'
-          }}>
-            <button
-              onClick={() => {
-                const nextState = !showAirports;
-                setShowAirports(nextState);
-                if (nextState && mapRef.current) {
-                  const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
-                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                }
-              }}
-              style={{
-                background: 'transparent', border: 'none', color: showAirports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-              }}
-            >
-              <ChevronDown size={14} />
-            </button>
-            <button
-              onClick={() => {
-                const nextState = !showAirports;
-                setShowAirports(nextState);
-                if (nextState && mapRef.current) {
-                  const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
-                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                }
-              }}
-              style={{
-                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-              }}
-            >
-              Airplane
-            </button>
-          </div>
-        </div>
-
-        {/* Ships Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            background: showSeaports ? 'rgba(13, 148, 136, 0.2)' : 'transparent',
-            borderRadius: '6px',
-            border: showSeaports ? '1px solid #0d9488' : '1px solid transparent'
-          }}>
-            <button
-              onClick={() => {
-                const nextState = !showSeaports;
-                setShowSeaports(nextState);
-                if (nextState && mapRef.current) {
-                  const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
-                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                }
-              }}
-              style={{
-                background: 'transparent', border: 'none', color: showSeaports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-              }}
-            >
-              <ChevronDown size={14} />
-            </button>
-            <button
-              onClick={() => {
-                const nextState = !showSeaports;
-                setShowSeaports(nextState);
-                if (nextState && mapRef.current) {
-                  const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
-                  mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                }
-              }}
-              style={{
-                background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-              }}
-            >
-              Ships
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Control Overlay */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000,
-        background: 'rgba(15, 23, 42, 0.95)',
-        backdropFilter: 'blur(10px)',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        border: '1px solid var(--border-color)',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '6px',
-        transition: 'all 0.3s ease-in-out',
-        width: isPanelCollapsed ? 'auto' : '260px'
+        width: '92%',
+        maxWidth: '400px',
+        padding: '12px',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-            MAP CONTROLS
-          </label>
-          <button 
-            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            aria-label="Toggle Panel"
-          >
-            {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </button>
-        </div>
+        {/* Collapsible Top Section */}
+        <div style={{ 
+            maxHeight: isDragging ? Math.max(0, (isPanelCollapsed ? 0 : 250) + dragY) : (isPanelCollapsed ? 0 : 250),
+            opacity: isDragging ? Math.min(1, Math.max(0.3, (isPanelCollapsed ? 0 : 1) + (dragY / 150))) : (isPanelCollapsed ? 0 : 1),
+            overflow: 'hidden',
+            transition: isDragging ? 'none' : 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            width: '100%'
+        }}>
+           <div style={{ padding: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                  MAP CONTROLS
+                </label>
+                <button 
+                  onClick={() => setIsPanelCollapsed(true)}
+                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  aria-label="Collapse Panel"
+                >
+                  <ChevronUp size={16} />
+                </button>
+              </div>
 
-        {!isPanelCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-            {/* Toggle Station Names */}
+              {/* Toggle Station Names */}
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
               <input 
                 id="label-toggle"
@@ -1443,7 +1313,10 @@ export default function MapComponent() {
               </label>
             </div>
 
-            {/* Toggle Live Vehicles */}
+            
+
+              {/* Toggle Live Vehicles */}
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input 
@@ -1466,12 +1339,16 @@ export default function MapComponent() {
                 </label>
               </div>
               
-              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                <Circle size={10} fill="#22c55e" color="#22c55e" style={{ display: 'inline-block', marginRight: '4px' }} /> {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#cbd5e1' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+                <span>{vehicles.length} active vehicles</span>
               </div>
             </div>
 
-            {/* Direction Filter */}
+            
+
+              {/* Direction Filter */}
+
             {showLiveVehicles && (
               <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155', marginTop: '4px' }}>
                 <button 
@@ -1489,7 +1366,10 @@ export default function MapComponent() {
               </div>
             )}
 
-            {/* Toggle Line View Button */}
+            
+
+              {/* Toggle Line View Button */}
+
             <button 
               onClick={() => {
                 if (!isLineViewOpen) {
@@ -1513,8 +1393,230 @@ export default function MapComponent() {
             >
               {isLineViewOpen ? 'Close Schematic' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Map size={16} /> Open Line View</span>}
             </button>
-          </div>
-        )}
+            
+           </div>
+        </div>
+
+
+            {/* Transit Categories Row */}
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '0', justifyContent: 'center' }}>
+              {/* Trains Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => setExpandedDropdown(expandedDropdown === 'trains' ? null : 'trains')}
+                    style={{
+                      background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'trains' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const isDeselect = selectedLine === 'category-trains';
+                      setSelectedLine(isDeselect ? 'all' : 'category-trains');
+                      if (!isDeselect) zoomToLines(['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol']);
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Trains
+                  </button>
+                </div>
+                {expandedDropdown === 'trains' && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    {transitLines.filter(l => ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(l.id)).map(l => (
+                      <button
+                        key={l.id}
+                        onClick={() => { 
+                          const isDeselect = selectedLine === l.id;
+                          setSelectedLine(isDeselect ? 'all' : l.id); 
+                          setExpandedDropdown(null); 
+                          if (!isDeselect) zoomToLines([l.id]);
+                        }}
+                        style={{
+                          background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                        }}
+                      >{l.name}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+      
+              {/* Buses Dropdown */}
+              {/* Buses Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => setExpandedDropdown(expandedDropdown === 'buses' ? null : 'buses')}
+                    style={{
+                      background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'buses' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const isDeselect = selectedLine === 'category-buses';
+                      setSelectedLine(isDeselect ? 'all' : 'category-buses');
+                      if (!isDeselect) zoomToLines(['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north']);
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Buses
+                  </button>
+                </div>
+                {expandedDropdown === 'buses' && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '180px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    {transitLines.filter(l => ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(l.id)).map(l => (
+                      <button
+                        key={l.id}
+                        onClick={() => { 
+                          const isDeselect = selectedLine === l.id;
+                          setSelectedLine(isDeselect ? 'all' : l.id); 
+                          setExpandedDropdown(null); 
+                          if (!isDeselect) zoomToLines([l.id]);
+                        }}
+                        style={{
+                          background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                        }}
+                      >{l.name}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+      
+              {/* Airplane Dropdown */}
+              {/* Airplane Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: showAirports ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: showAirports ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => {
+                      const nextState = !showAirports;
+                      setShowAirports(nextState);
+                      if (nextState && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', border: 'none', color: showAirports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const nextState = !showAirports;
+                      setShowAirports(nextState);
+                      if (nextState && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Airplane
+                  </button>
+                </div>
+              </div>
+      
+              {/* Ships Dropdown */}
+              {/* Ships Dropdown */}
+              
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: showSeaports ? 'rgba(13, 148, 136, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: showSeaports ? '1px solid #0d9488' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => {
+                      const nextState = !showSeaports;
+                      setShowSeaports(nextState);
+                      if (nextState && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', border: 'none', color: showSeaports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const nextState = !showSeaports;
+                      setShowSeaports(nextState);
+                      if (nextState && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Ships
+                  </button>
+                </div>
+              </div>
+            
+            </div>
+
+
+        {/* Drag Handle Area */}
+        <div 
+          onMouseDown={(e) => { setIsDragging(true); dragType.current = 'mouse'; dragStartY.current = e.clientY; currentDragY.current = 0; setDragY(0); }}
+          onTouchStart={(e) => { setIsDragging(true); dragType.current = 'touch'; dragStartY.current = e.touches[0].clientY; currentDragY.current = 0; setDragY(0); }}
+          onTouchMove={(e) => { 
+            if (!isDragging) return; 
+            const deltaY = e.touches[0].clientY - dragStartY.current; 
+            currentDragY.current = deltaY; 
+            setDragY(deltaY); 
+          }}
+          onTouchEnd={() => { 
+            setIsDragging(false); 
+            if (isPanelCollapsed && currentDragY.current > 40) setIsPanelCollapsed(false); 
+            else if (!isPanelCollapsed && currentDragY.current < -40) setIsPanelCollapsed(true);
+            setDragY(0); 
+          }}
+          style={{ width: '100%', padding: '8px 0 0 0', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+        >
+          <div style={{ width: '40px', height: '4px', backgroundColor: '#475569', borderRadius: '2px' }} />
+        </div>
       </div>
 
       <style>{`
@@ -1596,7 +1698,7 @@ export default function MapComponent() {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
               <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }`}</style>
             Loading map routes...
           </div>
         )}
@@ -1606,6 +1708,7 @@ export default function MapComponent() {
         ref={mapRef}
         center={[14.6500, 121.0300]} 
         zoom={11} 
+        zoomControl={false}
         scrollWheelZoom={true} 
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
@@ -1613,6 +1716,7 @@ export default function MapComponent() {
         {/* Dark mode tiles using CartoDB Dark Matter */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
@@ -1956,7 +2060,7 @@ export default function MapComponent() {
           >
             <Popup className="custom-station-popup">
               <div style={{ padding: '4px', textAlign: 'center' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0f172a', marginBottom: '4px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#f8fafc', marginBottom: '4px' }}>
                   {airport.name}
                 </div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
@@ -1975,7 +2079,7 @@ export default function MapComponent() {
           >
             <Popup className="custom-station-popup">
               <div style={{ padding: '4px', textAlign: 'center' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0f172a', marginBottom: '4px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#f8fafc', marginBottom: '4px' }}>
                   {seaport.name}
                 </div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
