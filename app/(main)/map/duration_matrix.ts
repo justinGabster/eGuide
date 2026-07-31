@@ -36,7 +36,7 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     fleetSizePeak: 18,
     fleetSizeOffPeak: 10,
     dwellTimeSec: 20,
-    legDurations: [130, 115, 140, 120, 105, 110, 135, 125, 115, 130, 145, 120, 110, 135, 125, 140, 130, 115, 120] // 19 legs
+    legDurations: [130, 115, 140, 120, 105, 110, 135, 125, 115, 130, 145, 120, 110, 135, 125, 140, 130, 115, 120, 135, 125, 140, 130, 145] // 24 legs (includes Cavite Extension Phase 1 to Dr. Santos)
   },
   'lrt-2': {
     peakHeadwaySec: 360, // 6 mins
@@ -62,6 +62,30 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     dwellTimeSec: 120,
     legDurations: [2400, 2700] // 2 legs
   },
+  'bgc-bus-west': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 6,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 15,
+    legDurations: [120, 120, 120, 120, 120, 120, 120] // 7 legs
+  },
+  'bgc-bus-east-express': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 5,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 20,
+    legDurations: [480, 480] // EDSA Ayala -> Market Market -> EDSA Ayala (approx 8 mins per leg)
+  },
+  'bgc-bus-north': {
+    peakHeadwaySec: 600, // 10 mins
+    offPeakHeadwaySec: 1200, // 20 mins
+    fleetSizePeak: 6,
+    fleetSizeOffPeak: 3,
+    dwellTimeSec: 15,
+    legDurations: [240, 90, 60, 60, 30, 90, 240] // 7 legs
+  },
   'pasig-ferry': {
     peakHeadwaySec: 900, // 15 mins
     offPeakHeadwaySec: 1800, // 30 mins
@@ -77,5 +101,13 @@ export const LINE_CONFIGS: Record<string, LineConfig> = {
     fleetSizeOffPeak: 12,
     dwellTimeSec: 30,
     legDurations: [120, 135, 200, 140, 160, 180, 130, 120, 180, 240] // 10 legs
+  },
+  'mrt-7': {
+    peakHeadwaySec: 240, // 4 mins
+    offPeakHeadwaySec: 480, // 8 mins
+    fleetSizePeak: 12,
+    fleetSizeOffPeak: 6,
+    dwellTimeSec: 20,
+    legDurations: [120, 130, 125, 140, 135, 150, 145, 130, 125, 140, 135, 150, 160] // 13 legs
   }
 };

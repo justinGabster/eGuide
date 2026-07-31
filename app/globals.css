@@ -459,3 +459,8 @@ a {
 /* Hide scrollbar for carousel */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Position zoom controls above bottom navigation */
+.leaflet-bottom.leaflet-left {
+  bottom: 110px !important;
+}

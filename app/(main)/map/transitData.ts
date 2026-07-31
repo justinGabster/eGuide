@@ -1,9 +1,8 @@
-
-
 export interface Station {
   name: string;
   coords: [number, number]; // [lat, lng]
   isVia?: boolean;
+  afterStation?: string; // For routingWaypoints, specifying which station this waypoint follows
 }
 
 export interface TransitSegment {
@@ -12,6 +11,7 @@ export interface TransitSegment {
 }
 
 export interface TransitLine {
+  type?: 'rail' | 'bus' | 'ferry';
   id: string;
   name: string;
   color: string;
@@ -19,9 +19,13 @@ export interface TransitLine {
   segments?: TransitSegment[];
   path?: [number, number][]; // Optional custom polyline path (e.g. for rivers)
   routingWaypoints?: Station[]; // Used only for OSRM routing, not rendered
+  outboundWaypoints?: Station[]; // Specific via-waypoints for outbound leg
+  returnWaypoints?: Station[]; // Specific via-waypoints for return leg
+  isUnderConstruction?: boolean;
 }
 
 export const lrt1: TransitLine = {
+  type: 'rail',
   id: 'lrt-1',
   name: 'LRT-1 (Green Line)',
   color: '#00B140', // or #28a745
@@ -55,6 +59,7 @@ export const lrt1: TransitLine = {
 };
 
 export const lrt2: TransitLine = {
+  type: 'rail',
   id: 'lrt-2',
   name: 'LRT-2 (Purple Line)',
   color: '#A020F0',
@@ -76,6 +81,7 @@ export const lrt2: TransitLine = {
 };
 
 export const mrt3: TransitLine = {
+  type: 'rail',
   id: 'mrt-3',
   name: 'MRT-3 (Yellow Line)',
   color: '#FFCC00',
@@ -125,8 +131,10 @@ const pnrExtendedStations: Station[] = [
 ];
 
 export const pnrNscr: TransitLine = {
+  type: 'rail',
   id: 'pnr-nscr',
   name: 'PNR Metro (Suspended)',
+  isUnderConstruction: true,
   color: '#E65100', // or #FF6F00
   stations: [...pnrActiveStations, ...pnrExtendedStations.slice(1)],
   segments: [
@@ -149,6 +157,7 @@ const pnrSouthStations: Station[] = [
 ];
 
 export const pnrSouth: TransitLine = {
+  type: 'rail',
   id: 'pnr-south',
   name: 'PNR South (Active)',
   color: '#E65100',
@@ -162,6 +171,7 @@ const pnrBicolStations: Station[] = [
 ];
 
 export const pnrBicol: TransitLine = {
+  type: 'rail',
   id: 'pnr-bicol',
   name: 'PNR Bicol (Active)',
   color: '#E65100',
@@ -169,6 +179,7 @@ export const pnrBicol: TransitLine = {
 };
 
 export const pasigFerry: TransitLine = {
+  type: 'ferry',
   id: 'pasig-ferry',
   name: 'Pasig River Ferry',
   color: '#00BFFF', // Deep Sky Blue for the river ferry
@@ -350,6 +361,7 @@ export const edsaCarouselPath: [number, number][] = [
 ];
 
 export const edsaCarousel: TransitLine = {
+  type: 'bus',
   id: 'edsa-carousel',
   name: 'EDSA Carousel',
   color: '#FF4D4D',
@@ -423,6 +435,7 @@ export const bgcBusWestPath: [number, number][] = [
 ];
 
 export const bgcBusWestLine: TransitLine = {
+  type: 'bus',
   id: 'bgc-bus-west',
   name: 'BGC Bus (West Route)',
   color: '#00C4D6',
@@ -435,4 +448,71 @@ export const bgcBusWestLine: TransitLine = {
   ]
 };
 
-export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, bgcBusWestLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];
+// --- BGC Bus East Express Route ---
+const bgcBusEastExpressStations: Station[] = [
+  { name: 'EDSA-Ayala Terminal', coords: [14.5493, 121.0291] },
+  { name: 'Market! Market! Terminal', coords: [14.5489, 121.05645] }
+];
+
+export const bgcBusEastExpressLine: TransitLine = {
+  type: 'bus',
+  id: 'bgc-bus-east-express',
+  name: 'BGC Bus (East Express)',
+  color: '#FF8800',
+  stations: bgcBusEastExpressStations,
+  outboundWaypoints: [
+    { name: '7th Ave & 26th St', coords: [14.5482, 121.0495] }
+  ],
+  returnWaypoints: []
+};
+
+// --- BGC Bus North Route ---
+const bgcBusNorthStations: Station[] = [
+  { name: 'EDSA Ayala Terminal', coords: [14.5493, 121.0290] },
+  { name: 'HSBC', coords: [14.5535, 121.0484] },
+  { name: 'BGC Turf', coords: [14.5549, 121.0524] },
+  { name: 'Avida 34th', coords: [14.5544, 121.05465] },
+  { name: 'Uptown Mall', coords: [14.5565, 121.0534] },
+  { name: 'The Globe Tower', coords: [14.5518, 121.0498] },
+  { name: 'BGC Arts Center', coords: [14.5480, 121.0498] }
+];
+
+export const bgcBusNorthLine: TransitLine = {
+  type: 'bus',
+  id: 'bgc-bus-north',
+  name: 'BGC Bus (North Route)',
+  color: '#E91E63', // Magenta
+  stations: bgcBusNorthStations,
+  routingWaypoints: [
+    // Zone 1 Fix: Forces a direct right turn from the terminal onto McKinley Road without looping up EDSA
+    { name: 'McKinley Road Turn', coords: [14.549494, 121.030105], afterStation: 'EDSA Ayala Terminal' },
+    // Zone 3 Fix: Forces route to turn left onto 5th Ave (Fort Victoria) avoiding the Federacion Drive triangular loop
+    { name: '5th Ave Southbound', coords: [14.546468, 121.045975], afterStation: 'BGC Arts Center' }
+  ]
+};
+
+export const mrt7: TransitLine = {
+  type: 'rail',
+  id: 'mrt-7',
+  name: 'MRT-7 (Red Line)',
+  color: '#DC143C', // Crimson red
+  isUnderConstruction: true,
+  stations: [
+    { name: 'North EDSA', coords: [14.6553, 121.0333] },
+    { name: 'Quezon Memorial Circle', coords: [14.6523, 121.0475] },
+    { name: 'University Avenue', coords: [14.6550, 121.0549] },
+    { name: 'Tandang Sora', coords: [14.6634, 121.0674] },
+    { name: 'Don Antonio', coords: [14.6770, 121.0826] },
+    { name: 'Batasan', coords: [14.6850, 121.0864] },
+    { name: 'Manggahan', coords: [14.6975, 121.0872] },
+    { name: 'Doña Carmen', coords: [14.7051, 121.0783] },
+    { name: 'Regalado Avenue', coords: [14.7203, 121.0658] },
+    { name: 'Mindanao Avenue', coords: [14.7328, 121.0611] },
+    { name: 'Quirino', coords: [14.7355, 121.0669] },
+    { name: 'Sacred Heart', coords: [14.7539, 121.0850] },
+    { name: 'Tala', coords: [14.7722, 121.0892] },
+    { name: 'San Jose Del Monte', coords: [14.7931, 121.0819] }
+  ]
+};
+
+export const transitLines = [lrt1, lrt2, edsaCarousel, mrt3, mrt7, bgcBusWestLine, bgcBusEastExpressLine, bgcBusNorthLine, pnrNscr, pnrSouth, pnrBicol, pasigFerry];

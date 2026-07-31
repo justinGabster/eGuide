@@ -1,11 +1,36 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { getFlightRoute } from '@/lib/adsbdb';
+import { getFlightTime } from '@/lib/flightTime';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ChevronUp, ChevronDown, MapPin, Circle, Map } from 'lucide-react';
+import { ChevronUp, ChevronDown, MapPin, Circle, Map, Plane } from 'lucide-react';
 import { transitLines } from './transitData';
+import { philippineAirports } from './philippineAirports';
+import { philippineSeaports } from './philippineSeaports';
+
+const seaportIcon = L.divIcon({
+  className: 'custom-seaport-icon',
+  html: `<div style="background-color: #0d9488; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>
+  </div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+  popupAnchor: [0, -13],
+});
+
+const airportIcon = L.divIcon({
+  className: 'custom-airport-icon',
+  html: `<div style="background-color: #6366f1; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.7l-1.3 2.6c-.2.4-.1.9.3 1.2L9 14l-4.5 4.5-2.7-.9c-.4-.1-.8.1-1 .5l-.5 1c-.1.3 0 .7.3.9l3.4 1.4 1.4 3.4c.2.3.6.4.9.3l1-.5c.4-.2.6-.6.5-1l-.9-2.7 4.5-4.5 3.3 6.3c.3.4.8.5 1.2.3l2.6-1.3c.5-.2.8-.6.7-1.1z"/></svg>
+  </div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+  popupAnchor: [0, -13],
+});
 import { LINE_CONFIGS, isPeakHour } from './duration_matrix';
 import { getLineRoundTripMs, getVehiclePosition, getTravelTimeMs } from './physicsEngine';
 
@@ -37,6 +62,112 @@ export interface VehicleState {
   totalLegMs: number;
 }
 
+
+function AircraftPopupInfo({ plane }: { plane: any }) {
+  const [route, setRoute] = useState<any>(undefined);
+  const [flightTime, setFlightTime] = useState<any>(undefined);
+
+  useEffect(() => {
+    let mounted = true;
+    getFlightRoute(plane.callsign).then(res => {
+      if (mounted) setRoute(res);
+    });
+    getFlightTime(plane.icao24).then(res => {
+      if (mounted) setFlightTime(res);
+    });
+    return () => { mounted = false; };
+  }, [plane.callsign, plane.icao24]);
+
+  const formatTime = (unix: number) => {
+    if (!unix) return 'N/A';
+    return new Date(unix * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getArrivalInfo = () => {
+    if (plane.on_ground) return 'Arrived';
+    
+    // If no destination coords or velocity is 0, we can't calculate ETA
+    if (!route || !route.destination || !route.destination.lat || !route.destination.lng || !plane.velocity) {
+      if (flightTime !== undefined) {
+        return flightTime ? formatTime(flightTime.lastSeen) : 'Time unavailable'; // fallback to last updated if ETA impossible
+      }
+      return 'Loading...';
+    }
+    
+    // Haversine formula
+    const R = 6371;
+    const dLat = (route.destination.lat - plane.latitude) * Math.PI / 180;
+    const dLon = (route.destination.lng - plane.longitude) * Math.PI / 180;
+    const lat1 = plane.latitude * Math.PI / 180;
+    const lat2 = route.destination.lat * Math.PI / 180;
+    
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distanceKm = R * c;
+    
+    if (distanceKm < 15) return 'Landing soon';
+    
+    const velocityKmh = plane.velocity * 3.6;
+    const hoursRemaining = distanceKm / velocityKmh;
+    const secondsRemaining = hoursRemaining * 60 * 60;
+    
+    const estimatedArrivalUnix = Math.floor(Date.now() / 1000) + secondsRemaining;
+    return formatTime(estimatedArrivalUnix);
+  };
+
+  const isShowingETA = () => {
+    return !plane.on_ground && route && route.destination && route.destination.lat && route.destination.lng && plane.velocity;
+  };
+
+  return (
+    <div style={{ padding: '8px', background: '#0f172a', borderRadius: '8px', color: '#e2e8f0', minWidth: '180px' }}>
+      <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155' }}>
+        <Plane size={16} color="#38bdf8" />
+        Flight {plane.callsign}
+      </div>
+      
+      {route && (route.origin || route.destination) && (
+        <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155', textAlign: 'center', color: '#f8fafc', fontSize: '12px' }}>
+          {route.airline && <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>{route.airline}</div>}
+          <div style={{ fontWeight: 'bold' }}>
+            {route.origin ? `${route.origin.name} (${route.origin.iata})` : 'Unknown'} 
+            {' → '} 
+            {route.destination ? `${route.destination.name} (${route.destination.iata})` : 'Unknown'}
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', textAlign: 'center', fontSize: '12px' }}>
+        <div>
+          <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '2px' }}>Departure</div>
+          <div style={{ color: '#f8fafc', fontWeight: '500' }}>
+            {flightTime !== undefined ? (flightTime ? formatTime(flightTime.firstSeen) : 'Time unavailable') : 'Loading...'}
+          </div>
+        </div>
+        <div>
+          <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '2px' }}>
+            {isShowingETA() ? 'Estimated Arrival' : 'Last Updated'}
+          </div>
+          <div style={{ color: '#f8fafc', fontWeight: '500' }}>
+            {getArrivalInfo()}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
+        <div style={{ color: '#94a3b8' }}>Country:</div>
+        <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.origin_country || 'Unknown'}</div>
+        
+        <div style={{ color: '#94a3b8' }}>Altitude:</div>
+        <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.altitude ? `${Math.round(plane.altitude)} m` : 'N/A'}</div>
+        
+        <div style={{ color: '#94a3b8' }}>Velocity:</div>
+        <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.velocity ? `${Math.round(plane.velocity * 3.6)} km/h` : 'N/A'}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function MapComponent() {
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
@@ -51,6 +182,10 @@ export default function MapComponent() {
   const [isOsrmLoading, setIsOsrmLoading] = useState<boolean>(false);
   const [showPastStations, setShowPastStations] = useState<boolean>(false);
   const [isStationSelectionMode, setIsStationSelectionMode] = useState<boolean>(true);
+  const [showAirports, setShowAirports] = useState<boolean>(false);
+  const [showLiveAircraft, setShowLiveAircraft] = useState<boolean>(false);
+  const [liveAircraft, setLiveAircraft] = useState<any[]>([]);
+  const [showSeaports, setShowSeaports] = useState<boolean>(false);
 
   const [lineViewConfig, setLineViewConfig] = useState<{
     lineId: string;
@@ -62,12 +197,130 @@ export default function MapComponent() {
   
   const [isLineViewOpen, setIsLineViewOpen] = useState(false);
   const [showCarouselBanner, setShowCarouselBanner] = useState(false);
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const dragStartY = useRef(0);
+  const currentDragY = useRef(0);
+  const dragType = useRef<'mouse'|'touch'|null>(null);
+
+  useEffect(() => {
+    if (!isDragging || dragType.current !== 'mouse') return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - dragStartY.current;
+      currentDragY.current = deltaY;
+      setDragY(deltaY);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      dragType.current = null;
+      if (isPanelCollapsed && currentDragY.current > 40) setIsPanelCollapsed(false);
+      else if (!isPanelCollapsed && currentDragY.current < -40) setIsPanelCollapsed(true);
+      setDragY(0);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseleave', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseleave', handleMouseUp);
+    };
+  }, [isDragging, isPanelCollapsed]);
+  const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
 
   // Force re-render periodically for simulation
   const [tick, setTick] = useState(0);
 
   const mapRef = useRef<any>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (showLiveAircraft) {
+      const fetchFlights = async () => {
+        try {
+          const res = await fetch('/api/flights');
+          if (res.ok) {
+            const data = await res.json();
+            console.log('[FRONTEND] Received OpenSky data:', data);
+            if (data.flights) {
+              console.log('[FRONTEND] Setting liveAircraft array with length:', data.flights.length);
+              setLiveAircraft(data.flights);
+            } else {
+              console.warn('[FRONTEND] No flights array found in response');
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch live aircraft", e);
+        }
+      };
+      
+      fetchFlights();
+      intervalId = setInterval(fetchFlights, 25000);
+    } else {
+      setLiveAircraft([]);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [showLiveAircraft]);
+
+  useEffect(() => {
+    const mode = searchParams?.get('mode');
+    const targetLine = searchParams?.get('targetLine');
+    const lat = searchParams?.get('lat');
+    const lng = searchParams?.get('lng');
+
+    if (mode) {
+      if (mode === 'trains') {
+        setSelectedLine('category-trains');
+        setExpandedDropdown('trains');
+      } else if (mode === 'buses') {
+        setSelectedLine('category-buses');
+        setExpandedDropdown('buses');
+      }
+    }
+
+    if (targetLine) {
+      setSelectedLine(targetLine);
+      if (['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(targetLine)) {
+        setExpandedDropdown('trains');
+      } else if (['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(targetLine)) {
+        setExpandedDropdown('buses');
+      }
+      
+      if (lat && lng) {
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.flyTo([parseFloat(lat), parseFloat(lng)], 15, { duration: 1.5 });
+          }
+        }, 500);
+      }
+    }
+  }, [searchParams]);
+
+  const zoomToLines = (lineIds: string[]) => {
+    if (!mapRef.current) return;
+    const coords: [number, number][] = [];
+    transitLines.filter(l => lineIds.includes(l.id)).forEach(line => {
+      line.stations.forEach(s => coords.push(s.coords));
+      if (osrmPaths[line.id]) {
+        coords.push(...osrmPaths[line.id]);
+      } else if (line.path) {
+        coords.push(...line.path);
+      }
+    });
+    if (coords.length > 0) {
+      const bounds = L.latLngBounds(coords);
+      mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+    }
+  };
 
   useEffect(() => {
     const fetchFerryData = async () => {
@@ -132,74 +385,98 @@ export default function MapComponent() {
     // TODO: Self-host OSRM or switch to Mapbox Map Matching API for production.
     const fetchOsrmRoutes = async () => {
       setIsOsrmLoading(true);
-      const bgcLine = transitLines.find(l => l.id === 'bgc-bus-west');
-      if (bgcLine) {
+      const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus'));
+      
+      for (const bgcLine of bgcLines) {
         try {
-          let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
+          let route: [number, number][] = [];
           
-          bgcLine.stations.forEach(s => {
-            stopsToRoute.push({ lat: s.coords[0], lng: s.coords[1], rad: 'unlimited' });
+          if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints && bgcLine.stations.length === 2) {
+            // Dual-leg true loop (e.g., East Express)
+            const start = bgcLine.stations[0];
+            const end = bgcLine.stations[1];
             
-            // Inject via-point after Arya to force the route up 9th Ave
-            // (OSRM does not map Federacion Drive as a through-road)
-            if (s.name === 'Arya Residences' && bgcLine.routingWaypoints) {
-              const via9th = bgcLine.routingWaypoints.find(w => w.name === 'Via 9th Ave');
-              if (via9th) {
-                stopsToRoute.push({ lat: via9th.coords[0], lng: via9th.coords[1], rad: 'unlimited' });
-              }
+            // 1. Outbound (Start -> Outbound Vias -> End)
+            const outStops = [start, ...bgcLine.outboundWaypoints, end];
+            const outString = outStops.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
+            const outUrl = `https://router.project-osrm.org/route/v1/driving/${outString}?overview=full&geometries=geojson`;
+            
+            // 2. Return (End -> Return Vias -> Start)
+            const retStops = [end, ...bgcLine.returnWaypoints, start];
+            const retString = retStops.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
+            const retUrl = `https://router.project-osrm.org/route/v1/driving/${retString}?overview=full&geometries=geojson`;
+            
+            const [outRes, retRes] = await Promise.all([fetch(outUrl), fetch(retUrl)]);
+            const outData = await outRes.json();
+            const retData = await retRes.json();
+            
+            if (outData.code !== 'Ok' || retData.code !== 'Ok') {
+              throw new Error(`OSRM API Error for dual-leg route`);
             }
-          });
+            
+            const outCoords = outData.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+            const retCoords = retData.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+            
+            // Combine both legs
+            route = [...outCoords, ...retCoords];
+          } else {
+            // Standard single-call route (e.g., West Route)
+            let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
+            
+            bgcLine.stations.forEach(s => {
+              // Zone 3 Fix: The user's exact HSBC coordinate falls precisely on the Southbound lane of 5th Ave (which has a median).
+              // This naturally forces OSRM to U-turn around 30th/32nd streets. By dynamically nudging the routing target 
+              // slightly East here (without modifying the user's base coordinate array), we snap perfectly to the Northbound lane.
+              const isHSBCNorth = bgcLine.id === 'bgc-bus-north' && s.name === 'HSBC';
+              const routingLng = isHSBCNorth ? 121.0486 : s.coords[1];
+              
+              stopsToRoute.push({ lat: s.coords[0], lng: routingLng, rad: 'unlimited' });
+              
+              // Inject generic via-points specified in transitData (using afterStation property)
+              if (bgcLine.routingWaypoints) {
+                const vias = bgcLine.routingWaypoints.filter(w => w.afterStation === s.name || (s.name === 'Arya Residences' && w.name === 'Via 9th Ave'));
+                vias.forEach(via => {
+                  stopsToRoute.push({ lat: via.coords[0], lng: via.coords[1], rad: 'unlimited' });
+                });
+              }
+            });
 
-          // Close the loop by returning to the first station
-          if (bgcLine.stations.length > 0) {
-            const firstStation = bgcLine.stations[0];
-            stopsToRoute.push({ lat: firstStation.coords[0], lng: firstStation.coords[1], rad: 'unlimited' });
-          }
+            // Close the loop by returning to the first station
+            if (bgcLine.stations.length > 0) {
+              const firstStation = bgcLine.stations[0];
+              stopsToRoute.push({ lat: firstStation.coords[0], lng: firstStation.coords[1], rad: 'unlimited' });
+            }
 
-          const coordsString = stopsToRoute.map(s => `${s.lng},${s.lat}`).join(';');
-          const radiuses = stopsToRoute.map(s => s.rad).join(';');
-          const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson&radiuses=${radiuses}`;
-          
-          const response = await fetch(url);
-          const data = await response.json();
-          
-          console.log("OSRM Raw Response:", data);
-          
-          if (data.code !== 'Ok') {
-            throw new Error(`OSRM API Error: ${data.code} - ${data.message || ''}`);
+            const coordsString = stopsToRoute.map(s => `${s.lng},${s.lat}`).join(';');
+            const radiuses = stopsToRoute.map(s => s.rad).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson&radiuses=${radiuses}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.code !== 'Ok') {
+              throw new Error(`OSRM API Error: ${data.code} - ${data.message || ''}`);
+            }
+            
+            const coordinates = data.routes[0].geometry.coordinates;
+            route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
           }
           
-          const coordinates = data.routes[0].geometry.coordinates;
-          // Convert [lng, lat] to [lat, lng] for Leaflet
-          let route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-          
-          // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus West
+          // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus routes ending at EDSA
           // OSRM forces a U-turn on Ayala because it thinks the left turn into the terminal is illegal.
           // This creates a Westbound overshoot, a U-turn spike, and an Eastbound backtrack (zigzag).
           // We filter out these redundant coordinates from the arrival sequence to simulate a clean left turn.
-          if (bgcLine.id === 'bgc-bus-west') {
-            let blueDotIndex = -1;
-            let minDiff = 999;
-            for (let i = 0; i < route.length; i++) {
-              const diff = Math.abs(route[i][0] - 14.5493) + Math.abs(route[i][1] - 121.0291);
-              if (diff < minDiff) {
-                minDiff = diff;
-                blueDotIndex = i;
-              }
-            }
-            
-            if (blueDotIndex !== -1) {
-              const filteredArrival = route.slice(0, blueDotIndex).filter(
-                (c: [number, number]) => !(c[0] > 14.5495 && c[1] < 121.0301)
-              );
-              const restOfRoute = route.slice(blueDotIndex);
-              route = [...filteredArrival, ...restOfRoute];
-            }
-          }
+          // We only apply this filter to the final 30% of the route to avoid breaking outbound paths, 
+          // and use an expanded bounding box to ensure no stray triangle artifacts are left behind.
+          const filterStartIdx = Math.floor(route.length * 0.7);
+          const filteredArrival = route.slice(filterStartIdx).filter(
+            (c: [number, number]) => !(c[0] > 14.5493 && c[1] < 121.0305)
+          );
+          route = [...route.slice(0, filterStartIdx), ...filteredArrival];
           
-          setOsrmPaths(prev => ({ ...prev, 'bgc-bus-west': route }));
+          setOsrmPaths(prev => ({ ...prev, [bgcLine.id]: route }));
         } catch (error) {
-          console.error('Failed to get OSRM route for BGC Bus West, falling back to straight lines:', error);
+          console.error(`Failed to get OSRM route for ${bgcLine.name}, falling back to straight lines:`, error);
         }
       }
       setIsOsrmLoading(false);
@@ -214,12 +491,23 @@ export default function MapComponent() {
       let totalDist = 0;
       let dists: number[] = [0];
 
+      let rawPoints: [number, number][] = [];
       if (osrmPaths[line.id]) {
-         points = osrmPaths[line.id];
+         rawPoints = osrmPaths[line.id];
       } else if (line.path) {
-         points = line.path;
+         rawPoints = line.path;
       } else {
-         line.stations.forEach(st => points.push(st.coords));
+         line.stations.forEach(st => rawPoints.push(st.coords));
+      }
+
+      // Safety check: filter out duplicate/zero-length segments gracefully
+      points = [rawPoints[0]];
+      for (let i = 1; i < rawPoints.length; i++) {
+        const p1 = rawPoints[i-1];
+        const p2 = rawPoints[i];
+        if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
+           points.push(p2);
+        }
       }
 
       for (let i = 1; i < points.length; i++) {
@@ -242,6 +530,13 @@ export default function MapComponent() {
         });
         return nearestDist;
       });
+
+      // Handle loop routes (like BGC buses) which only list unique stations
+      // but are driven as a continuous loop back to the start terminal.
+      // This provides the missing 'endDist' for the final return leg.
+      if (line.id.startsWith('bgc-bus')) {
+        stationDists.push(totalDist);
+      }
 
       paths[line.id] = { points, totalDist, dists, stationDists };
     });
@@ -282,7 +577,7 @@ export default function MapComponent() {
       const newVehicles: VehicleState[] = [];
 
       transitLines.forEach(line => {
-        if (line.id === 'pnr-nscr') return;
+        if (line.isUnderConstruction) return;
         
         const config = LINE_CONFIGS[line.id];
         if (!config) return;
@@ -302,8 +597,13 @@ export default function MapComponent() {
           const pos = getVehiclePosition(t, line.id);
           if (!pos) continue;
 
-          const startDist = pathInfo.stationDists[pos.startStationIdx];
-          const endDist = pathInfo.stationDists[pos.endStationIdx];
+          // Wrap indices gracefully to prevent out-of-bounds console errors 
+          // if a route's leg config doesn't perfectly match its station array size
+          const validStartIdx = pos.startStationIdx % pathInfo.stationDists.length;
+          const validEndIdx = pos.endStationIdx % pathInfo.stationDists.length;
+          
+          const startDist = pathInfo.stationDists[validStartIdx];
+          const endDist = pathInfo.stationDists[validEndIdx];
           
           let baseCoords: [number, number] = pathInfo.points[0];
           let p0 = pathInfo.points[0];
@@ -373,7 +673,7 @@ export default function MapComponent() {
 
           const angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
           const isFerry = line.id === 'pasig-ferry';
-          const isEastWest = line.id === 'lrt-2' || isFerry;
+          const isEastWest = line.id === 'lrt-2' || isFerry || line.id === 'bgc-bus-east-express' || line.id === 'bgc-bus-west';
           
           let headingText = pos.isForward ? 'Southbound' : 'Northbound';
           if (isFerry) {
@@ -382,9 +682,13 @@ export default function MapComponent() {
             headingText = pos.isForward ? 'Eastbound' : 'Westbound';
           }
 
-          const startName = line.stations[pos.startStationIdx].name;
-          const endName = line.stations[pos.endStationIdx].name;
-          const boundFor = pos.isForward ? line.stations[M].name : line.stations[0].name;
+          const safeStartIdx = pos.startStationIdx % line.stations.length;
+          const safeEndIdx = pos.endStationIdx % line.stations.length;
+          const safeM = M % line.stations.length;
+
+          const startName = line.stations[safeStartIdx].name;
+          const endName = line.stations[safeEndIdx].name;
+          const boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
 
           const minsToNext = Math.max(1, Math.ceil(pos.nextStationEtaMs / 60000));
           let statusText = pos.isDwelling 
@@ -430,8 +734,10 @@ export default function MapComponent() {
 
   const createVehicleIcon = (lineId: string, color: string, isFaded: boolean, headingText: string) => {
     const opacity = isFaded ? 0.2 : 1;
-    const isTrain = ['lrt-1', 'lrt-2', 'mrt-3', 'pnr-south', 'pnr-bicol'].includes(lineId);
-    const isFerry = lineId === 'pasig-ferry';
+    const line = transitLines.find(l => l.id === lineId);
+    const isTrain = line?.type === 'rail';
+    const isFerry = line?.type === 'ferry';
+    const isBus = line?.type === 'bus';
     
     let dirCode = 'NB';
     if (headingText.includes('Southbound')) dirCode = 'SB';
@@ -455,10 +761,14 @@ export default function MapComponent() {
       z-index: 10;
     ">${dirCode}</div>`;
 
-    if (isTrain || isFerry) {
+    if (isTrain || isFerry || isBus) {
       const trainSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2.23v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm6 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z"/></svg>`;
       const ferrySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg>`;
-      const iconSvg = isFerry ? ferrySvg : trainSvg;
+      const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14px" height="14px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M4 6 5.2 3.6a2 2 0 0 1 1.8-1.1h10a2 2 0 0 1 1.8 1.1L20 6"/><path d="M2.5 12h19"/><path d="M18 6H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/><path d="M6 19v2"/><path d="M18 19v2"/><circle cx="7" cy="15" r="1"/><circle cx="17" cy="15" r="1"/></svg>`;
+      
+      let iconSvg = trainSvg;
+      if (isFerry) iconSvg = ferrySvg;
+      if (isBus) iconSvg = busSvg;
 
       return L.divIcon({
         className: 'custom-vehicle-marker',
@@ -602,7 +912,7 @@ export default function MapComponent() {
     return {
       forwardMins: Math.max(1, Math.ceil(minForwardMs / 60000)),
       backwardMins: Math.max(1, Math.ceil(minBackwardMs / 60000)),
-      forwardName: line.stations[M].name,
+      forwardName: line.stations[M % line.stations.length].name,
       backwardName: line.stations[0].name
     };
   };
@@ -675,7 +985,7 @@ export default function MapComponent() {
           };
 
           transitLines.forEach(line => {
-             if (line.id === 'pnr-nscr') return;
+             if (line.isUnderConstruction) return;
              line.stations.forEach((station, idx) => {
                 const d = distSq(lat, lng, station.coords[0], station.coords[1]);
                 if (d < closestDist) {
@@ -735,7 +1045,7 @@ export default function MapComponent() {
               onChange={e => setLineViewConfig(c => ({...c, lineId: e.target.value, originStationIdx: 0}))}
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
-              {transitLines.filter(l => l.id !== 'pnr-nscr').map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              {transitLines.filter(l => !l.isUnderConstruction).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
 
@@ -1081,62 +1391,49 @@ export default function MapComponent() {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Filter Control Overlay */}
+
+      {/* Top Sheet Overlay */}
       <div style={{
         position: 'absolute',
-        top: '20px',
-        right: '20px',
+        top: '10px',
+        left: '50%',
+        transform: 'translateX(-50%)',
         zIndex: 1000,
-        background: 'rgba(15, 23, 42, 0.95)',
+        background: '#1C2436',
         backdropFilter: 'blur(10px)',
-        padding: '12px 16px',
-        borderRadius: '12px',
+        borderRadius: '16px',
         border: '1px solid var(--border-color)',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '6px',
-        transition: 'all 0.3s ease-in-out',
-        width: isPanelCollapsed ? 'auto' : '260px'
+        width: '92%',
+        maxWidth: '400px',
+        padding: '12px',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-            MAP CONTROLS
-          </label>
-          <button 
-            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            aria-label="Toggle Panel"
-          >
-            {isPanelCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </button>
-        </div>
+        {/* Collapsible Top Section */}
+        <div style={{ 
+            maxHeight: isDragging ? Math.max(0, (isPanelCollapsed ? 0 : 250) + dragY) : (isPanelCollapsed ? 0 : 250),
+            opacity: isDragging ? Math.min(1, Math.max(0.3, (isPanelCollapsed ? 0 : 1) + (dragY / 150))) : (isPanelCollapsed ? 0 : 1),
+            overflow: 'hidden',
+            transition: isDragging ? 'none' : 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            width: '100%'
+        }}>
+           <div style={{ padding: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                  MAP CONTROLS
+                </label>
+                <button 
+                  onClick={() => setIsPanelCollapsed(true)}
+                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  aria-label="Collapse Panel"
+                >
+                  <ChevronUp size={16} />
+                </button>
+              </div>
 
-        {!isPanelCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-            <select 
-              id="line-filter"
-              value={selectedLine}
-              onChange={(e) => setSelectedLine(e.target.value)}
-              style={{
-                background: '#0f172a',
-                color: '#f8fafc',
-                border: '1px solid #475569',
-                borderRadius: '4px',
-                padding: '8px',
-                fontSize: '13px',
-                outline: 'none',
-                cursor: 'pointer',
-                width: '100%'
-              }}
-            >
-              <option value="all">All Lines</option>
-              {transitLines.map(l => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-            
-            {/* Toggle Station Names */}
+              {/* Toggle Station Names */}
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
               <input 
                 id="label-toggle"
@@ -1158,7 +1455,10 @@ export default function MapComponent() {
               </label>
             </div>
 
-            {/* Toggle Live Vehicles */}
+            
+
+              {/* Toggle Live Vehicles */}
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input 
@@ -1181,12 +1481,16 @@ export default function MapComponent() {
                 </label>
               </div>
               
-              <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                <Circle size={10} fill="#22c55e" color="#22c55e" style={{ display: 'inline-block', marginRight: '4px' }} /> {vehicles.filter(v => ['lrt-1', 'lrt-2', 'mrt-3'].includes(v.lineId)).length} active trains
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#cbd5e1' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+                <span>{vehicles.length} active vehicles</span>
               </div>
             </div>
 
-            {/* Direction Filter */}
+            
+
+              {/* Direction Filter */}
+
             {showLiveVehicles && (
               <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155', marginTop: '4px' }}>
                 <button 
@@ -1204,7 +1508,10 @@ export default function MapComponent() {
               </div>
             )}
 
-            {/* Toggle Line View Button */}
+            
+
+              {/* Toggle Line View Button */}
+
             <button 
               onClick={() => {
                 if (!isLineViewOpen) {
@@ -1228,8 +1535,245 @@ export default function MapComponent() {
             >
               {isLineViewOpen ? 'Close Schematic' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Map size={16} /> Open Line View</span>}
             </button>
-          </div>
-        )}
+            
+           </div>
+        </div>
+
+
+            {/* Transit Categories Row */}
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '0', justifyContent: 'center' }}>
+              {/* Trains Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => setExpandedDropdown(expandedDropdown === 'trains' ? null : 'trains')}
+                    style={{
+                      background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'trains' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const isDeselect = selectedLine === 'category-trains';
+                      setSelectedLine(isDeselect ? 'all' : 'category-trains');
+                      if (!isDeselect) zoomToLines(['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol']);
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Trains
+                  </button>
+                </div>
+                {expandedDropdown === 'trains' && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    {transitLines.filter(l => ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(l.id)).map(l => (
+                      <button
+                        key={l.id}
+                        onClick={() => { 
+                          const isDeselect = selectedLine === l.id;
+                          setSelectedLine(isDeselect ? 'all' : l.id); 
+                          setExpandedDropdown(null); 
+                          if (!isDeselect) zoomToLines([l.id]);
+                        }}
+                        style={{
+                          background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                        }}
+                      >{l.name}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+      
+              {/* Buses Dropdown */}
+              {/* Buses Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => setExpandedDropdown(expandedDropdown === 'buses' ? null : 'buses')}
+                    style={{
+                      background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'buses' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const isDeselect = selectedLine === 'category-buses';
+                      setSelectedLine(isDeselect ? 'all' : 'category-buses');
+                      if (!isDeselect) zoomToLines(['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north']);
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Buses
+                  </button>
+                </div>
+                {expandedDropdown === 'buses' && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '180px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    {transitLines.filter(l => ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(l.id)).map(l => (
+                      <button
+                        key={l.id}
+                        onClick={() => { 
+                          const isDeselect = selectedLine === l.id;
+                          setSelectedLine(isDeselect ? 'all' : l.id); 
+                          setExpandedDropdown(null); 
+                          if (!isDeselect) zoomToLines([l.id]);
+                        }}
+                        style={{
+                          background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                        }}
+                      >{l.name}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+      
+              {/* Airplane Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: (showAirports || showLiveAircraft) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: (showAirports || showLiveAircraft) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => setExpandedDropdown(expandedDropdown === 'airplane' ? null : 'airplane')}
+                    style={{
+                      background: 'transparent', border: 'none', color: (showAirports || showLiveAircraft) ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'airplane' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const isDeselect = showAirports || showLiveAircraft;
+                      setShowAirports(!isDeselect);
+                      setShowLiveAircraft(!isDeselect);
+                      
+                      if (!isDeselect && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Airplane
+                  </button>
+                </div>
+                {expandedDropdown === 'airplane' && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    <button
+                      onClick={() => setShowAirports(!showAirports)}
+                      style={{
+                        background: showAirports ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showAirports ? 'bold' : 'normal'
+                      }}
+                    >Airports</button>
+                    <button
+                      onClick={() => setShowLiveAircraft(!showLiveAircraft)}
+                      style={{
+                        background: showLiveAircraft ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showLiveAircraft ? 'bold' : 'normal', display: 'flex', alignItems: 'center', gap: '6px'
+                      }}
+                    >Live Aircraft
+                     {showLiveAircraft && <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />}
+                    </button>
+                  </div>
+                )}
+              </div>
+      
+              {/* Ships Dropdown */}
+              {/* Ships Dropdown */}
+              
+              <div style={{ position: 'relative' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: showSeaports ? 'rgba(13, 148, 136, 0.2)' : '#0B1220',
+                  borderRadius: '9999px',
+                  border: showSeaports ? '1px solid #0d9488' : '1px solid rgba(51, 65, 85, 0.4)'
+                }}>
+                  <button
+                    onClick={() => {
+                      const nextState = !showSeaports;
+                      setShowSeaports(nextState);
+                      if (nextState && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', border: 'none', color: showSeaports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const nextState = !showSeaports;
+                      setShowSeaports(nextState);
+                      if (nextState && mapRef.current) {
+                        const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                      }
+                    }}
+                    style={{
+                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                    }}
+                  >
+                    Ships
+                  </button>
+                </div>
+              </div>
+            
+            </div>
+
+
+        {/* Drag Handle Area */}
+        <div 
+          onMouseDown={(e) => { setIsDragging(true); dragType.current = 'mouse'; dragStartY.current = e.clientY; currentDragY.current = 0; setDragY(0); }}
+          onTouchStart={(e) => { setIsDragging(true); dragType.current = 'touch'; dragStartY.current = e.touches[0].clientY; currentDragY.current = 0; setDragY(0); }}
+          onTouchMove={(e) => { 
+            if (!isDragging) return; 
+            const deltaY = e.touches[0].clientY - dragStartY.current; 
+            currentDragY.current = deltaY; 
+            setDragY(deltaY); 
+          }}
+          onTouchEnd={() => { 
+            setIsDragging(false); 
+            if (isPanelCollapsed && currentDragY.current > 40) setIsPanelCollapsed(false); 
+            else if (!isPanelCollapsed && currentDragY.current < -40) setIsPanelCollapsed(true);
+            setDragY(0); 
+          }}
+          style={{ width: '100%', padding: '8px 0 0 0', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+        >
+          <div style={{ width: '40px', height: '4px', backgroundColor: '#475569', borderRadius: '2px' }} />
+        </div>
       </div>
 
       <style>{`
@@ -1292,36 +1836,36 @@ export default function MapComponent() {
         {isLineViewOpen && (isStationSelectionMode ? renderStationSelectionPrompt() : renderLineViewContent())}
       </div>
 
-      {isOsrmLoading && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          backgroundColor: '#1e293b',
-          color: '#38bdf8',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
-          border: '1px solid #334155'
-        }}>
-          <svg style={{ animation: 'spin 1s linear infinite', width: '16px', height: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-          Loading map routes...
-        </div>
-      )}
+      <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+        {isOsrmLoading && (
+          <div style={{
+            backgroundColor: '#1e293b',
+            color: '#38bdf8',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+            border: '1px solid #334155'
+          }}>
+            <svg style={{ animation: 'spin 1s linear infinite', width: '16px', height: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
+              <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }`}</style>
+            Loading map routes...
+          </div>
+        )}
+      </div>
 
       <MapContainer 
-        center={position} 
-        zoom={12} 
+        ref={mapRef}
+        center={[14.6500, 121.0300]} 
+        zoom={11} 
+        zoomControl={false}
         scrollWheelZoom={true} 
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
@@ -1329,17 +1873,20 @@ export default function MapComponent() {
         {/* Dark mode tiles using CartoDB Dark Matter */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
         {transitLines.map((line) => {
-          const isSelected = selectedLine === 'all' || selectedLine === line.id;
-          const isFaded = selectedLine !== 'all' && selectedLine !== line.id;
+          const isSelected = selectedLine === 'all' || selectedLine === line.id || 
+            (selectedLine === 'category-trains' && ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(line.id)) ||
+            (selectedLine === 'category-buses' && ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(line.id));
+          const isFaded = selectedLine !== 'all' && !isSelected;
 
           const lineColor = isFaded ? '#4A5568' : line.color;
           const lineWeight = isFaded ? 3 : 5;
-          const lineOpacity = isFaded ? 0.35 : (line.id === 'pnr' ? 0.5 : 1.0);
-          const markerOpacity = isFaded ? 0.3 : (line.id === 'pnr' ? 0.6 : 1.0);
+          const lineOpacity = isFaded ? 0.35 : (line.isUnderConstruction ? 0.5 : 1.0);
+          const markerOpacity = isFaded ? 0.3 : (line.isUnderConstruction ? 0.6 : 1.0);
 
           return (
             <React.Fragment key={line.id}>
@@ -1364,7 +1911,7 @@ export default function MapComponent() {
                       color: lineColor, 
                       weight: lineWeight,
                       opacity: lineOpacity,
-                      dashArray: (segment.isDashed || line.id === 'pnr') ? '6, 8' : undefined
+                      dashArray: (segment.isDashed || line.isUnderConstruction) ? '6, 8' : undefined
                     }}
                   />
                 ))
@@ -1375,7 +1922,7 @@ export default function MapComponent() {
                     color: lineColor, 
                     weight: lineWeight,
                     opacity: lineOpacity,
-                    dashArray: line.id === 'pnr' ? '6, 8' : undefined
+                    dashArray: line.isUnderConstruction ? '6, 8' : undefined
                   }}
                 />
               )}
@@ -1433,11 +1980,13 @@ export default function MapComponent() {
                       </div>
 
                       {/* Status / Arrivals */}
-                      {line.id === 'pnr-nscr' ? (
+                      {line.isUnderConstruction ? (
                         <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#431407', borderRadius: '6px', textAlign: 'center', border: '1px solid #7c2d12' }}>
-                          <span style={{ color: '#fdba74', fontWeight: 'bold', fontSize: '13px' }}>Suspended / Under Renovation</span>
+                          <span style={{ color: '#fdba74', fontWeight: 'bold', fontSize: '13px' }}>Under Construction</span>
                           <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#fed7aa', lineHeight: '1.4' }}>
-                            Operations suspended due to North-South Commuter Railway (NSCR) construction.
+                            {line.id === 'pnr-nscr' 
+                              ? 'Operations suspended due to North-South Commuter Railway (NSCR) construction.'
+                              : 'Operations for this line are pending construction completion.'}
                           </p>
                         </div>
                       ) : isSystemActive() ? (() => {
@@ -1484,7 +2033,7 @@ export default function MapComponent() {
                       )}
 
                       {/* Action Buttons */}
-                      {line.id !== 'pnr-nscr' && isSystemActive() && (() => {
+                      {!line.isUnderConstruction && isSystemActive() && (() => {
                         let isLineActive = true;
                         const hours = getSimulatedTime().getHours();
                         const minutes = getSimulatedTime().getMinutes();
@@ -1594,8 +2143,8 @@ export default function MapComponent() {
                         {/* Header Row */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#0f172a' }}>
-                              {line.id === 'pasig-ferry' ? 'Ferry Details' : 'Train Details'}
+                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
+                              {line.type === 'bus' ? 'Bus Details' : line.type === 'ferry' ? 'Ferry Details' : 'Train Details'}
                             </h3>
                             <span style={{ backgroundColor: line.color, color: '#fff', padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                               {line.id.toUpperCase()}
@@ -1635,10 +2184,12 @@ export default function MapComponent() {
 
                         {/* Telemetry Grid */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                          <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>SPEED</div>
-                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{speed} km/h</div>
-                          </div>
+                          {line.type !== 'ferry' && (
+                            <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>SPEED</div>
+                              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{speed} km/h</div>
+                            </div>
+                          )}
                           <div style={{ flex: 1, backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                             <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>DIRECTION</div>
                             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>{v.headingText.split(' ')[0]}</div>
@@ -1658,6 +2209,64 @@ export default function MapComponent() {
             </React.Fragment>
           );
         })}
+        {/* Live Aircraft */}
+        {showLiveAircraft && liveAircraft.map((plane, idx) => (
+          <Marker
+            key={`plane-${plane.icao24}-${idx}`}
+            position={[plane.latitude, plane.longitude]}
+            icon={L.divIcon({
+              className: 'live-aircraft-icon',
+              html: `<div style="transform: rotate(${plane.true_track || 0}deg); color: #38bdf8; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5)); display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.35 1.35c-.2.2-.2.6 0 .8L9 12l-4.5 4.5-3.1-.8c-.4-.1-.8.2-1 .5L0 16.5c-.2.2-.2.6 0 .8l4.5 2 2 4.5c.2.2.6.2.8 0l.3-.3c.3-.2.6-.6.5-1l-.8-3.1 4.5-4.5 3.2 6.6c.2.5.6.5.8 0l1.35-1.35c.3-.3.6-.7.5-1.1z"/></svg>
+              </div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            })}
+          >
+            <Popup minWidth={220} className="custom-station-popup">
+              <AircraftPopupInfo plane={plane} />
+            </Popup>
+          </Marker>
+        ))}
+
+        {showAirports && philippineAirports.map((airport, idx) => (
+          <Marker 
+            key={`airport-${idx}`}
+            position={airport.coords}
+            icon={airportIcon}
+          >
+            <Popup className="custom-station-popup">
+              <div style={{ padding: '4px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#f8fafc', marginBottom: '4px' }}>
+                  {airport.name}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  IATA: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.iata}</span> &bull; 
+                  ICAO: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.icao}</span>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+        {showSeaports && philippineSeaports.map((seaport, idx) => (
+          <Marker 
+            key={`seaport-${idx}`}
+            position={seaport.coords}
+            icon={seaportIcon}
+          >
+            <Popup className="custom-station-popup">
+              <div style={{ padding: '4px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#f8fafc', marginBottom: '4px' }}>
+                  {seaport.name}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  LOCODE: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.locode}</span> &bull; 
+                  Region: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.region}</span>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
       
       {showCarouselBanner && (
