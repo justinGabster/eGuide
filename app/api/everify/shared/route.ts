@@ -43,7 +43,15 @@ export async function GET(request: Request) {
       }
 
       // 1. Generate the eGovPay Payment Link
-      const paymentData = await createPaymentLink(fare);
+      const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
+      const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+      
+      let appUrl = request.headers.get('origin') || `${protocol}://${host}`;
+      if (appUrl.includes('localhost') && process.env.VERCEL_URL) {
+        appUrl = `https://${process.env.VERCEL_URL}`;
+      }
+
+      const paymentData = await createPaymentLink(fare, `eGuide Transit Fare`, appUrl);
 
       const ticketMessage = `[eGovPay] 🚀 Trip Confirmed!\n\n🎟️ e-Ticket Details\n• Passenger: Commuter\n• Route: ${parsedData.line} (${parsedData.origin} ➔ ${parsedData.dest})\n• Fare: ₱${Number(parsedData.fare).toFixed(2)} (${parsedData.type})\n\n💳 eGuide Wallet\n• Balance: Updated on app\n\nThank you for moving with eGovPay!`;
 

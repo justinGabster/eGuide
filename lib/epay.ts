@@ -49,7 +49,7 @@ export async function createPaymentLink(amount: number, description: string = "e
 
   // We need absolute URLs for callbacks. In a real app, this would be an env variable.
   // We use customAppUrl passed from the route handler headers to get the dynamic host.
-  const appUrl = customAppUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = customAppUrl || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
   const payload = {
     amount: amount,
