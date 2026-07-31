@@ -27,7 +27,7 @@ eGuide brings all transit modes into a single app using the **eGovPH API Ecosyst
 2. **eGovAI Transit Assistant**: Smart assistant to answer queries like *"Puno ba MRT Cubao?"*
 3. **eGovPay (Scan-to-Pay)**: Generate a National ID-linked QR code to pay at turnstiles instantly, or remotely reload Beep cards.
 4. **Live Map**: Real-time vehicle tracking overlaid on custom map tiles (simulated via Project LIGTAS paths).
-5. **eMessage Proximity Alerts**: Get a 5-minute SMS or Push notification before your ride arrives.
+5. **eMessage SMS Receipts**: Receive an instant SMS e-Ticket and digital receipt straight to your phone when you scan to pay.
 
 ## 📈 Impact, Value & Cost-Benefit
 * **Impact**: Turns commuting from guesswork into certainty. Juan checks the app and *knows* the Carousel is 8 minutes away.
