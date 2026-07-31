@@ -38,7 +38,7 @@ const DEFAULT_WALLET_CARDS: WalletCard[] = [
     cardName: 'GCash Card',
     provider: 'GCash',
     cardNumber: '•••• 8812',
-    cardBgImage: '/assets/cards/gcash-card-bg.webp',
+    cardBgImage: '/assets/cards/gcash-card-bg.jpg',
     providerLogo: '/assets/logos/gcash-logo.png',
     networkLogo: '/assets/logos/mastercard.png',
     isDefault: false
@@ -125,7 +125,7 @@ export default function RideAndPay() {
     }
 
     const savedCards = localStorage.getItem('wallet_cards');
-    if (savedCards && !savedCards.includes('.png')) {
+    if (savedCards && !savedCards.includes('.png') && savedCards.includes('.jpg')) {
       try {
         const parsed = JSON.parse(savedCards);
         setWalletCards(parsed);
