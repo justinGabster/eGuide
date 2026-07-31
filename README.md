@@ -11,6 +11,7 @@
 * **VJ Evangelista** - Research / Brand / Presenter
 * **Mark Kenneth Galario** - Planning / Developer
 * **Denisse Jane Karim** - Coordinator / Pitch / Presenter
+
 *(2nd Year IT Students — PUP Sta. Mesa)*
 
 ---
