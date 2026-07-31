@@ -209,7 +209,7 @@ export default function Walkthrough() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: '2px solid rgba(0,0,0,0.05)'
+            border: '4px solid var(--primary-color)'
           }}>
             <video 
               src="/uiux/EG GIF.webm" 
