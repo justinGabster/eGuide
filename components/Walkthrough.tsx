@@ -201,26 +201,16 @@ export default function Walkthrough() {
             left: '-20px', 
             width: '110px', 
             height: '110px', 
-            zIndex: 2,
-            backgroundColor: 'white',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '4px solid var(--primary-color)'
+            zIndex: 2
           }}>
-            <video 
-              src="/uiux/EG GIF.webm" 
-              autoPlay 
-              loop 
-              muted 
-              playsInline
+            <img 
+              src="/uiux/EG GIF.webp" 
+              alt="E.G. Mascot"
               style={{ 
-                width: '90%', 
-                height: '90%', 
-                objectFit: 'contain'
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
               }} 
             />
           </div>
