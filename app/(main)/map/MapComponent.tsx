@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { getFlightRoute } from '@/lib/adsbdb';
+import { getFlightTime } from '@/lib/flightTime';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, Tooltip, GeoJSON, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ChevronUp, ChevronDown, MapPin, Circle, Map } from 'lucide-react';
+import { ChevronUp, ChevronDown, MapPin, Circle, Map, Plane } from 'lucide-react';
 import { transitLines } from './transitData';
 import { philippineAirports } from './philippineAirports';
 import { philippineSeaports } from './philippineSeaports';
@@ -60,6 +62,112 @@ export interface VehicleState {
   totalLegMs: number;
 }
 
+
+function AircraftPopupInfo({ plane }: { plane: any }) {
+  const [route, setRoute] = useState<any>(undefined);
+  const [flightTime, setFlightTime] = useState<any>(undefined);
+
+  useEffect(() => {
+    let mounted = true;
+    getFlightRoute(plane.callsign).then(res => {
+      if (mounted) setRoute(res);
+    });
+    getFlightTime(plane.icao24).then(res => {
+      if (mounted) setFlightTime(res);
+    });
+    return () => { mounted = false; };
+  }, [plane.callsign, plane.icao24]);
+
+  const formatTime = (unix: number) => {
+    if (!unix) return 'N/A';
+    return new Date(unix * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getArrivalInfo = () => {
+    if (plane.on_ground) return 'Arrived';
+    
+    // If no destination coords or velocity is 0, we can't calculate ETA
+    if (!route || !route.destination || !route.destination.lat || !route.destination.lng || !plane.velocity) {
+      if (flightTime !== undefined) {
+        return flightTime ? formatTime(flightTime.lastSeen) : 'Time unavailable'; // fallback to last updated if ETA impossible
+      }
+      return 'Loading...';
+    }
+    
+    // Haversine formula
+    const R = 6371;
+    const dLat = (route.destination.lat - plane.latitude) * Math.PI / 180;
+    const dLon = (route.destination.lng - plane.longitude) * Math.PI / 180;
+    const lat1 = plane.latitude * Math.PI / 180;
+    const lat2 = route.destination.lat * Math.PI / 180;
+    
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distanceKm = R * c;
+    
+    if (distanceKm < 15) return 'Landing soon';
+    
+    const velocityKmh = plane.velocity * 3.6;
+    const hoursRemaining = distanceKm / velocityKmh;
+    const secondsRemaining = hoursRemaining * 60 * 60;
+    
+    const estimatedArrivalUnix = Math.floor(Date.now() / 1000) + secondsRemaining;
+    return formatTime(estimatedArrivalUnix);
+  };
+
+  const isShowingETA = () => {
+    return !plane.on_ground && route && route.destination && route.destination.lat && route.destination.lng && plane.velocity;
+  };
+
+  return (
+    <div style={{ padding: '8px', background: '#0f172a', borderRadius: '8px', color: '#e2e8f0', minWidth: '180px' }}>
+      <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155' }}>
+        <Plane size={16} color="#38bdf8" />
+        Flight {plane.callsign}
+      </div>
+      
+      {route && (route.origin || route.destination) && (
+        <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155', textAlign: 'center', color: '#f8fafc', fontSize: '12px' }}>
+          {route.airline && <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>{route.airline}</div>}
+          <div style={{ fontWeight: 'bold' }}>
+            {route.origin ? `${route.origin.name} (${route.origin.iata})` : 'Unknown'} 
+            {' → '} 
+            {route.destination ? `${route.destination.name} (${route.destination.iata})` : 'Unknown'}
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', textAlign: 'center', fontSize: '12px' }}>
+        <div>
+          <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '2px' }}>Departure</div>
+          <div style={{ color: '#f8fafc', fontWeight: '500' }}>
+            {flightTime !== undefined ? (flightTime ? formatTime(flightTime.firstSeen) : 'Time unavailable') : 'Loading...'}
+          </div>
+        </div>
+        <div>
+          <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '2px' }}>
+            {isShowingETA() ? 'Estimated Arrival' : 'Last Updated'}
+          </div>
+          <div style={{ color: '#f8fafc', fontWeight: '500' }}>
+            {getArrivalInfo()}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
+        <div style={{ color: '#94a3b8' }}>Country:</div>
+        <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.origin_country || 'Unknown'}</div>
+        
+        <div style={{ color: '#94a3b8' }}>Altitude:</div>
+        <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.altitude ? `${Math.round(plane.altitude)} m` : 'N/A'}</div>
+        
+        <div style={{ color: '#94a3b8' }}>Velocity:</div>
+        <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.velocity ? `${Math.round(plane.velocity * 3.6)} km/h` : 'N/A'}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function MapComponent() {
   // Center map around Metro Manila
   const position: [number, number] = [14.6091, 121.0223]; 
@@ -75,6 +183,8 @@ export default function MapComponent() {
   const [showPastStations, setShowPastStations] = useState<boolean>(false);
   const [isStationSelectionMode, setIsStationSelectionMode] = useState<boolean>(true);
   const [showAirports, setShowAirports] = useState<boolean>(false);
+  const [showLiveAircraft, setShowLiveAircraft] = useState<boolean>(false);
+  const [liveAircraft, setLiveAircraft] = useState<any[]>([]);
   const [showSeaports, setShowSeaports] = useState<boolean>(false);
 
   const [lineViewConfig, setLineViewConfig] = useState<{
@@ -128,6 +238,38 @@ export default function MapComponent() {
 
   const mapRef = useRef<any>(null);
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (showLiveAircraft) {
+      const fetchFlights = async () => {
+        try {
+          const res = await fetch('/api/flights');
+          if (res.ok) {
+            const data = await res.json();
+            console.log('[FRONTEND] Received OpenSky data:', data);
+            if (data.flights) {
+              console.log('[FRONTEND] Setting liveAircraft array with length:', data.flights.length);
+              setLiveAircraft(data.flights);
+            } else {
+              console.warn('[FRONTEND] No flights array found in response');
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch live aircraft", e);
+        }
+      };
+      
+      fetchFlights();
+      intervalId = setInterval(fetchFlights, 25000);
+    } else {
+      setLiveAircraft([]);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [showLiveAircraft]);
 
   useEffect(() => {
     const mode = searchParams?.get('mode');
@@ -1508,35 +1650,29 @@ export default function MapComponent() {
               </div>
       
               {/* Airplane Dropdown */}
-              {/* Airplane Dropdown */}
               <div style={{ position: 'relative' }}>
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  background: showAirports ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+                  background: (showAirports || showLiveAircraft) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
                   borderRadius: '9999px',
-                  border: showAirports ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+                  border: (showAirports || showLiveAircraft) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
                 }}>
                   <button
-                    onClick={() => {
-                      const nextState = !showAirports;
-                      setShowAirports(nextState);
-                      if (nextState && mapRef.current) {
-                        const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
-                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                      }
-                    }}
+                    onClick={() => setExpandedDropdown(expandedDropdown === 'airplane' ? null : 'airplane')}
                     style={{
-                      background: 'transparent', border: 'none', color: showAirports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                      background: 'transparent', border: 'none', color: (showAirports || showLiveAircraft) ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
                     }}
                   >
-                    <ChevronDown size={14} />
+                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'airplane' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                   </button>
                   <button
                     onClick={() => {
-                      const nextState = !showAirports;
-                      setShowAirports(nextState);
-                      if (nextState && mapRef.current) {
+                      const isDeselect = showAirports || showLiveAircraft;
+                      setShowAirports(!isDeselect);
+                      setShowLiveAircraft(!isDeselect);
+                      
+                      if (!isDeselect && mapRef.current) {
                         const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
                         mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
                       }
@@ -1548,6 +1684,27 @@ export default function MapComponent() {
                     Airplane
                   </button>
                 </div>
+                {expandedDropdown === 'airplane' && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    <button
+                      onClick={() => setShowAirports(!showAirports)}
+                      style={{
+                        background: showAirports ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showAirports ? 'bold' : 'normal'
+                      }}
+                    >Airports</button>
+                    <button
+                      onClick={() => setShowLiveAircraft(!showLiveAircraft)}
+                      style={{
+                        background: showLiveAircraft ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showLiveAircraft ? 'bold' : 'normal', display: 'flex', alignItems: 'center', gap: '6px'
+                      }}
+                    >Live Aircraft
+                     {showLiveAircraft && <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />}
+                    </button>
+                  </div>
+                )}
               </div>
       
               {/* Ships Dropdown */}
@@ -2052,6 +2209,26 @@ export default function MapComponent() {
             </React.Fragment>
           );
         })}
+        {/* Live Aircraft */}
+        {showLiveAircraft && liveAircraft.map((plane, idx) => (
+          <Marker
+            key={`plane-${plane.icao24}-${idx}`}
+            position={[plane.latitude, plane.longitude]}
+            icon={L.divIcon({
+              className: 'live-aircraft-icon',
+              html: `<div style="transform: rotate(${plane.true_track || 0}deg); color: #38bdf8; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5)); display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.35 1.35c-.2.2-.2.6 0 .8L9 12l-4.5 4.5-3.1-.8c-.4-.1-.8.2-1 .5L0 16.5c-.2.2-.2.6 0 .8l4.5 2 2 4.5c.2.2.6.2.8 0l.3-.3c.3-.2.6-.6.5-1l-.8-3.1 4.5-4.5 3.2 6.6c.2.5.6.5.8 0l1.35-1.35c.3-.3.6-.7.5-1.1z"/></svg>
+              </div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            })}
+          >
+            <Popup minWidth={220} className="custom-station-popup">
+              <AircraftPopupInfo plane={plane} />
+            </Popup>
+          </Marker>
+        ))}
+
         {showAirports && philippineAirports.map((airport, idx) => (
           <Marker 
             key={`airport-${idx}`}
