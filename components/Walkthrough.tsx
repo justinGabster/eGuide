@@ -213,6 +213,11 @@ export default function Walkthrough() {
               playsInline
               className="mascot-video"
             />
+            <img 
+              src="/uiux/EG_static.png" 
+              alt="E.G. Mascot"
+              className="mascot-image-fallback"
+            />
           </div>
           <button 
             onClick={endTour}
