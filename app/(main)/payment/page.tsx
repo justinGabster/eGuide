@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { 
   mrt3Stations, mrt3Matrix, 
@@ -18,7 +18,7 @@ const DEFAULT_WALLET_CARDS: WalletCard[] = [
     cardName: 'Beep Transit Card',
     provider: 'Beep',
     cardNumber: '•••• 4321',
-    cardBgImage: '/assets/cards/beep-card-bg.png',
+    cardBgImage: '/assets/cards/beep-card-bg.webp',
     providerLogo: '/assets/logos/beep-logo.png',
     networkLogo: '/assets/logos/contactless.png',
     isDefault: true
@@ -28,7 +28,7 @@ const DEFAULT_WALLET_CARDS: WalletCard[] = [
     cardName: 'GoTyme Visa',
     provider: 'GoTyme Bank',
     cardNumber: '•••• 9999',
-    cardBgImage: '/assets/cards/gotyme-card-bg.png',
+    cardBgImage: '/assets/cards/gotyme-card-bg.jpg',
     providerLogo: '/assets/logos/gotyme-logo.png',
     networkLogo: '/assets/logos/visa-white.png',
     isDefault: false
@@ -38,7 +38,7 @@ const DEFAULT_WALLET_CARDS: WalletCard[] = [
     cardName: 'GCash Card',
     provider: 'GCash',
     cardNumber: '•••• 8812',
-    cardBgImage: '/assets/cards/gcash-card-bg.png',
+    cardBgImage: '/assets/cards/gcash-card-bg.webp',
     providerLogo: '/assets/logos/gcash-logo.png',
     networkLogo: '/assets/logos/mastercard.png',
     isDefault: false
@@ -47,6 +47,7 @@ const DEFAULT_WALLET_CARDS: WalletCard[] = [
 
 export default function RideAndPay() {
   const [activeTab, setActiveTab] = useState<'TICKET' | 'TOPUP'>('TICKET');
+  const carouselRef = useRef<HTMLDivElement>(null);
   
   // TICKET State
   const [passengerType, setPassengerType] = useState<PassengerType>('REGULAR');
@@ -124,7 +125,7 @@ export default function RideAndPay() {
     }
 
     const savedCards = localStorage.getItem('wallet_cards');
-    if (savedCards) {
+    if (savedCards && !savedCards.includes('.png')) {
       try {
         const parsed = JSON.parse(savedCards);
         setWalletCards(parsed);
@@ -565,6 +566,7 @@ export default function RideAndPay() {
             
             {/* Carousel Container */}
             <div 
+              ref={carouselRef}
               style={{ 
                 display: 'flex', 
                 overflowX: 'auto', 
@@ -696,8 +698,15 @@ export default function RideAndPay() {
               <select 
                 value={activeCardId}
                 onChange={(e) => {
-                  setActiveCardId(e.target.value);
-                  localStorage.setItem('active_wallet_card_id', e.target.value);
+                  const newId = e.target.value;
+                  setActiveCardId(newId);
+                  localStorage.setItem('active_wallet_card_id', newId);
+                  
+                  const cardIndex = walletCards.findIndex(c => c.id === newId);
+                  if (cardIndex !== -1 && carouselRef.current) {
+                    const cardWidth = 280 + 16;
+                    carouselRef.current.scrollTo({ left: cardIndex * cardWidth, behavior: 'smooth' });
+                  }
                 }}
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none' }}
               >
