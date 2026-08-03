@@ -634,14 +634,28 @@ export default function MapComponent() {
          line.stations.forEach(st => rawPoints.push(st.coords));
       }
 
-      // Safety check: filter out duplicate/zero-length segments gracefully
-      points = [rawPoints[0]];
-      for (let i = 1; i < rawPoints.length; i++) {
-        const p1 = rawPoints[i-1];
-        const p2 = rawPoints[i];
-        if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
-           points.push(p2);
+      if (!rawPoints || rawPoints.length === 0) {
+         rawPoints = [[0, 0]];
+      }
+
+      // Permanent Safety check: filter out invalid, duplicate, or zero-length segments gracefully
+      points = [];
+      for (let i = 0; i < rawPoints.length; i++) {
+        const p = rawPoints[i];
+        if (!p || typeof p[0] !== 'number' || typeof p[1] !== 'number' || isNaN(p[0]) || isNaN(p[1])) {
+           continue; // Skip invalid points
         }
+        if (points.length > 0) {
+           const last = points[points.length - 1];
+           if (last[0] === p[0] && last[1] === p[1]) {
+               continue; // Skip duplicates
+           }
+        }
+        points.push(p);
+      }
+      
+      if (points.length === 0) {
+         points = [[0, 0]]; // Ultimate fallback
       }
 
       for (let i = 1; i < points.length; i++) {
@@ -2207,63 +2221,67 @@ export default function MapComponent() {
                         );
                       })()}
                       {/* Notification Toggle */}
-                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e2e8f0' }}>Notify me when approaching</span>
-                          {notificationPermission === 'denied' && (
-                            <span style={{ fontSize: '10px', color: '#ef4444' }}>Notifications blocked by browser</span>
-                          )}
-                        </div>
-                        <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={!!watchedStations[`${line.id}_${station.name}`]}
-                            onChange={() => handleToggleWatch(`${line.id}_${station.name}`)}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span style={{
-                            position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: watchedStations[`${line.id}_${station.name}`] ? '#10b981' : '#475569',
-                            transition: '.4s', borderRadius: '20px'
-                          }}>
-                            <span style={{
-                              position: 'absolute', content: '""', height: '14px', width: '14px', left: '3px', bottom: '3px',
-                              backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
-                              transform: watchedStations[`${line.id}_${station.name}`] ? 'translateX(16px)' : 'none'
-                            }} />
-                          </span>
-                        </label>
-                      </div>
-                      {/* SMS Toggle */}
-                      {watchedStations[`${line.id}_${station.name}`] && (
-                        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8' }}>Also notify me via SMS</span>
-                            {!userPhone && (
-                              <span style={{ fontSize: '9px', color: '#f59e0b', marginTop: '2px' }}>Set your phone number in Account Profile</span>
-                            )}
-                          </div>
-                          <label style={{ position: 'relative', display: 'inline-block', width: '28px', height: '16px', opacity: userPhone ? 1 : 0.5 }}>
-                            <input 
-                              type="checkbox" 
-                              disabled={!userPhone}
-                              checked={!!watchedStationsSms[`${line.id}_${station.name}`]}
-                              onChange={() => handleToggleSmsWatch(`${line.id}_${station.name}`)}
-                              style={{ opacity: 0, width: 0, height: 0 }}
-                            />
-                            <span style={{
-                              position: 'absolute', cursor: userPhone ? 'pointer' : 'not-allowed', top: 0, left: 0, right: 0, bottom: 0,
-                              backgroundColor: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? '#3b82f6' : '#475569',
-                              transition: '.4s', borderRadius: '16px'
-                            }}>
+                      {!line.isUnderConstruction && (
+                        <>
+                          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e2e8f0' }}>Notify me when approaching</span>
+                              {notificationPermission === 'denied' && (
+                                <span style={{ fontSize: '10px', color: '#ef4444' }}>Notifications blocked by browser</span>
+                              )}
+                            </div>
+                            <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={!!watchedStations[`${line.id}_${station.name}`]}
+                                onChange={() => handleToggleWatch(`${line.id}_${station.name}`)}
+                                style={{ opacity: 0, width: 0, height: 0 }}
+                              />
                               <span style={{
-                                position: 'absolute', content: '""', height: '10px', width: '10px', left: '3px', bottom: '3px',
-                                backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
-                                transform: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? 'translateX(12px)' : 'none'
-                              }} />
-                            </span>
-                          </label>
-                        </div>
+                                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                                backgroundColor: watchedStations[`${line.id}_${station.name}`] ? '#10b981' : '#475569',
+                                transition: '.4s', borderRadius: '20px'
+                              }}>
+                                <span style={{
+                                  position: 'absolute', content: '""', height: '14px', width: '14px', left: '3px', bottom: '3px',
+                                  backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                  transform: watchedStations[`${line.id}_${station.name}`] ? 'translateX(16px)' : 'none'
+                                }} />
+                              </span>
+                            </label>
+                          </div>
+                          {/* SMS Toggle */}
+                          {watchedStations[`${line.id}_${station.name}`] && (
+                            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8' }}>Also notify me via SMS</span>
+                                {!userPhone && (
+                                  <span style={{ fontSize: '9px', color: '#f59e0b', marginTop: '2px' }}>Set your phone number in Account Profile</span>
+                                )}
+                              </div>
+                              <label style={{ position: 'relative', display: 'inline-block', width: '28px', height: '16px', opacity: userPhone ? 1 : 0.5 }}>
+                                <input 
+                                  type="checkbox" 
+                                  disabled={!userPhone}
+                                  checked={!!watchedStationsSms[`${line.id}_${station.name}`]}
+                                  onChange={() => handleToggleSmsWatch(`${line.id}_${station.name}`)}
+                                  style={{ opacity: 0, width: 0, height: 0 }}
+                                />
+                                <span style={{
+                                  position: 'absolute', cursor: userPhone ? 'pointer' : 'not-allowed', top: 0, left: 0, right: 0, bottom: 0,
+                                  backgroundColor: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? '#3b82f6' : '#475569',
+                                  transition: '.4s', borderRadius: '16px'
+                                }}>
+                                  <span style={{
+                                    position: 'absolute', content: '""', height: '10px', width: '10px', left: '3px', bottom: '3px',
+                                    backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                    transform: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? 'translateX(12px)' : 'none'
+                                  }} />
+                                </span>
+                              </label>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </Popup>
