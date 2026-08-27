@@ -85,7 +85,7 @@ function AircraftPopupInfo({ plane }: { plane: any }) {
 
   const getArrivalInfo = () => {
     if (plane.on_ground) return 'Arrived';
-    
+
     // If no destination coords or velocity is 0, we can't calculate ETA
     if (!route || !route.destination || !route.destination.lat || !route.destination.lng || !plane.velocity) {
       if (flightTime !== undefined) {
@@ -93,24 +93,24 @@ function AircraftPopupInfo({ plane }: { plane: any }) {
       }
       return 'Loading...';
     }
-    
+
     // Haversine formula
     const R = 6371;
     const dLat = (route.destination.lat - plane.latitude) * Math.PI / 180;
     const dLon = (route.destination.lng - plane.longitude) * Math.PI / 180;
     const lat1 = plane.latitude * Math.PI / 180;
     const lat2 = route.destination.lat * Math.PI / 180;
-    
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distanceKm = R * c;
-    
+
     if (distanceKm < 15) return 'Landing soon';
-    
+
     const velocityKmh = plane.velocity * 3.6;
     const hoursRemaining = distanceKm / velocityKmh;
     const secondsRemaining = hoursRemaining * 60 * 60;
-    
+
     const estimatedArrivalUnix = Math.floor(Date.now() / 1000) + secondsRemaining;
     return formatTime(estimatedArrivalUnix);
   };
@@ -125,13 +125,13 @@ function AircraftPopupInfo({ plane }: { plane: any }) {
         <Plane size={16} color="#38bdf8" />
         Flight {plane.callsign}
       </div>
-      
+
       {route && (route.origin || route.destination) && (
         <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #334155', textAlign: 'center', color: '#f8fafc', fontSize: '12px' }}>
           {route.airline && <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>{route.airline}</div>}
           <div style={{ fontWeight: 'bold' }}>
-            {route.origin ? `${route.origin.name} (${route.origin.iata})` : 'Unknown'} 
-            {' → '} 
+            {route.origin ? `${route.origin.name} (${route.origin.iata})` : 'Unknown'}
+            {' → '}
             {route.destination ? `${route.destination.name} (${route.destination.iata})` : 'Unknown'}
           </div>
         </div>
@@ -157,10 +157,10 @@ function AircraftPopupInfo({ plane }: { plane: any }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
         <div style={{ color: '#94a3b8' }}>Country:</div>
         <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.origin_country || 'Unknown'}</div>
-        
+
         <div style={{ color: '#94a3b8' }}>Altitude:</div>
         <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.altitude ? `${Math.round(plane.altitude)} m` : 'N/A'}</div>
-        
+
         <div style={{ color: '#94a3b8' }}>Velocity:</div>
         <div style={{ color: '#f8fafc', fontWeight: '500' }}>{plane.velocity ? `${Math.round(plane.velocity * 3.6)} km/h` : 'N/A'}</div>
       </div>
@@ -170,7 +170,7 @@ function AircraftPopupInfo({ plane }: { plane: any }) {
 
 export default function MapComponent() {
   // Center map around Metro Manila
-  const position: [number, number] = [14.6091, 121.0223]; 
+  const position: [number, number] = [14.6091, 121.0223];
 
   const [pasigFerryData, setPasigFerryData] = useState<any>(null);
   const [selectedLine, setSelectedLine] = useState<string>('all');
@@ -194,7 +194,7 @@ export default function MapComponent() {
     destinationStationIdx?: number;
     selectedVehicleId?: string;
   }>({ lineId: 'mrt-3', isForward: true });
-  
+
   const [isLineViewOpen, setIsLineViewOpen] = useState(false);
   const [showCarouselBanner, setShowCarouselBanner] = useState(false);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true);
@@ -202,7 +202,7 @@ export default function MapComponent() {
   const [dragY, setDragY] = useState(0);
   const dragStartY = useRef(0);
   const currentDragY = useRef(0);
-  const dragType = useRef<'mouse'|'touch'|null>(null);
+  const dragType = useRef<'mouse' | 'touch' | null>(null);
 
   useEffect(() => {
     if (!isDragging || dragType.current !== 'mouse') return;
@@ -256,7 +256,7 @@ export default function MapComponent() {
         const parsed = JSON.parse(savedProfile);
         if (parsed.phone) setUserPhone(parsed.phone);
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const handleToggleSmsWatch = (stationKey: string) => {
@@ -301,11 +301,11 @@ export default function MapComponent() {
         if (!notifiedVehicles.current.has(notifKey)) {
           const title = `Approaching ${stationName}`;
           const body = `A ${line.id.toUpperCase()} vehicle to ${arrivals.forwardName} is arriving in ${Math.round(arrivals.forwardMins)} mins!`;
-          
+
           // Trigger In-App Banner
           const existingNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
           localStorage.setItem('mock_notifications', JSON.stringify([{ message: `${title} - ${body}`, timestamp: Date.now() }, ...existingNotifs]));
-          
+
           // Toggle the flag so layout.tsx's 1s interval picks it up
           localStorage.setItem('has_new_notification', 'false');
           setTimeout(() => {
@@ -319,12 +319,12 @@ export default function MapComponent() {
 
           // Trigger SMS Notification if opted in
           if (watchedStationsSms[`${key}`] && userPhone) {
-             const smsBody = `eGuide Alert: A ${line.id.toUpperCase()} vehicle to ${arrivals.forwardName} is approaching ${stationName} — arriving in ${Math.round(arrivals.forwardMins)} mins!`;
-             fetch('/api/emessage', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ number: userPhone, message: smsBody })
-             }).catch(e => console.error('SMS trigger failed', e));
+            const smsBody = `eGuide Alert: A ${line.id.toUpperCase()} vehicle to ${arrivals.forwardName} is approaching ${stationName} — arriving in ${Math.round(arrivals.forwardMins)} mins!`;
+            fetch('/api/emessage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ number: userPhone, message: smsBody })
+            }).catch(e => console.error('SMS trigger failed', e));
           }
 
           notifiedVehicles.current.add(notifKey);
@@ -336,11 +336,11 @@ export default function MapComponent() {
         if (!notifiedVehicles.current.has(notifKey)) {
           const title = `Approaching ${stationName}`;
           const body = `A ${line.id.toUpperCase()} vehicle to ${arrivals.backwardName} is arriving in ${Math.round(arrivals.backwardMins)} mins!`;
-          
+
           // Trigger In-App Banner
           const existingNotifs = JSON.parse(localStorage.getItem('mock_notifications') || '[]');
           localStorage.setItem('mock_notifications', JSON.stringify([{ message: `${title} - ${body}`, timestamp: Date.now() }, ...existingNotifs]));
-          
+
           // Toggle the flag so layout.tsx's 1s interval picks it up
           localStorage.setItem('has_new_notification', 'false');
           setTimeout(() => {
@@ -354,12 +354,12 @@ export default function MapComponent() {
 
           // Trigger SMS Notification if opted in
           if (watchedStationsSms[`${key}`] && userPhone) {
-             const smsBody = `eGuide Alert: A ${line.id.toUpperCase()} vehicle to ${arrivals.backwardName} is approaching ${stationName} — arriving in ${Math.round(arrivals.backwardMins)} mins!`;
-             fetch('/api/emessage', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ number: userPhone, message: smsBody })
-             }).catch(e => console.error('SMS trigger failed', e));
+            const smsBody = `eGuide Alert: A ${line.id.toUpperCase()} vehicle to ${arrivals.backwardName} is approaching ${stationName} — arriving in ${Math.round(arrivals.backwardMins)} mins!`;
+            fetch('/api/emessage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ number: userPhone, message: smsBody })
+            }).catch(e => console.error('SMS trigger failed', e));
           }
 
           notifiedVehicles.current.add(notifKey);
@@ -393,7 +393,7 @@ export default function MapComponent() {
           console.error("Failed to fetch live aircraft", e);
         }
       };
-      
+
       fetchFlights();
       intervalId = setInterval(fetchFlights, 25000);
     } else {
@@ -428,7 +428,7 @@ export default function MapComponent() {
       } else if (['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(targetLine)) {
         setExpandedDropdown('buses');
       }
-      
+
       if (lat && lng) {
         setTimeout(() => {
           if (mapRef.current) {
@@ -520,52 +520,52 @@ export default function MapComponent() {
     const fetchOsrmRoutes = async () => {
       setIsOsrmLoading(true);
       const bgcLines = transitLines.filter(l => l.id.startsWith('bgc-bus'));
-      
+
       for (const bgcLine of bgcLines) {
         try {
           let route: [number, number][] = [];
-          
+
           if (bgcLine.outboundWaypoints && bgcLine.returnWaypoints && bgcLine.stations.length === 2) {
             // Dual-leg true loop (e.g., East Express)
             const start = bgcLine.stations[0];
             const end = bgcLine.stations[1];
-            
+
             // 1. Outbound (Start -> Outbound Vias -> End)
             const outStops = [start, ...bgcLine.outboundWaypoints, end];
             const outString = outStops.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
             const outUrl = `https://router.project-osrm.org/route/v1/driving/${outString}?overview=full&geometries=geojson`;
-            
+
             // 2. Return (End -> Return Vias -> Start)
             const retStops = [end, ...bgcLine.returnWaypoints, start];
             const retString = retStops.map(s => `${s.coords[1]},${s.coords[0]}`).join(';');
             const retUrl = `https://router.project-osrm.org/route/v1/driving/${retString}?overview=full&geometries=geojson`;
-            
+
             const [outRes, retRes] = await Promise.all([fetch(outUrl), fetch(retUrl)]);
             const outData = await outRes.json();
             const retData = await retRes.json();
-            
+
             if (outData.code !== 'Ok' || retData.code !== 'Ok') {
               throw new Error(`OSRM API Error for dual-leg route`);
             }
-            
+
             const outCoords = outData.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
             const retCoords = retData.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
-            
+
             // Combine both legs
             route = [...outCoords, ...retCoords];
           } else {
             // Standard single-call route (e.g., West Route)
             let stopsToRoute: { lat: number, lng: number, rad: string }[] = [];
-            
+
             bgcLine.stations.forEach(s => {
               // Zone 3 Fix: The user's exact HSBC coordinate falls precisely on the Southbound lane of 5th Ave (which has a median).
               // This naturally forces OSRM to U-turn around 30th/32nd streets. By dynamically nudging the routing target 
               // slightly East here (without modifying the user's base coordinate array), we snap perfectly to the Northbound lane.
               const isHSBCNorth = bgcLine.id === 'bgc-bus-north' && s.name === 'HSBC';
               const routingLng = isHSBCNorth ? 121.0486 : s.coords[1];
-              
+
               stopsToRoute.push({ lat: s.coords[0], lng: routingLng, rad: 'unlimited' });
-              
+
               // Inject generic via-points specified in transitData (using afterStation property)
               if (bgcLine.routingWaypoints) {
                 const vias = bgcLine.routingWaypoints.filter(w => w.afterStation === s.name || (s.name === 'Arya Residences' && w.name === 'Via 9th Ave'));
@@ -584,18 +584,18 @@ export default function MapComponent() {
             const coordsString = stopsToRoute.map(s => `${s.lng},${s.lat}`).join(';');
             const radiuses = stopsToRoute.map(s => s.rad).join(';');
             const url = `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson&radiuses=${radiuses}`;
-            
+
             const response = await fetch(url);
             const data = await response.json();
-            
+
             if (data.code !== 'Ok') {
               throw new Error(`OSRM API Error: ${data.code} - ${data.message || ''}`);
             }
-            
+
             const coordinates = data.routes[0].geometry.coordinates;
             route = coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
           }
-          
+
           // Hack to remove Ayala Avenue U-turn spike and zigzag for BGC Bus routes ending at EDSA
           // OSRM forces a U-turn on Ayala because it thinks the left turn into the terminal is illegal.
           // This creates a Westbound overshoot, a U-turn spike, and an Eastbound backtrack (zigzag).
@@ -607,7 +607,7 @@ export default function MapComponent() {
             (c: [number, number]) => !(c[0] > 14.5493 && c[1] < 121.0305)
           );
           route = [...route.slice(0, filterStartIdx), ...filteredArrival];
-          
+
           setOsrmPaths(prev => ({ ...prev, [bgcLine.id]: route }));
         } catch (error) {
           console.error(`Failed to get OSRM route for ${bgcLine.name}, falling back to straight lines:`, error);
@@ -627,15 +627,15 @@ export default function MapComponent() {
 
       let rawPoints: [number, number][] = [];
       if (osrmPaths[line.id]) {
-         rawPoints = osrmPaths[line.id];
+        rawPoints = osrmPaths[line.id];
       } else if (line.path) {
-         rawPoints = line.path;
+        rawPoints = line.path;
       } else {
-         line.stations.forEach(st => rawPoints.push(st.coords));
+        line.stations.forEach(st => rawPoints.push(st.coords));
       }
 
       if (!rawPoints || rawPoints.length === 0) {
-         rawPoints = [[0, 0]];
+        rawPoints = [[0, 0]];
       }
 
       // Permanent Safety check: filter out invalid, duplicate, or zero-length segments gracefully
@@ -643,23 +643,23 @@ export default function MapComponent() {
       for (let i = 0; i < rawPoints.length; i++) {
         const p = rawPoints[i];
         if (!p || typeof p[0] !== 'number' || typeof p[1] !== 'number' || isNaN(p[0]) || isNaN(p[1])) {
-           continue; // Skip invalid points
+          continue; // Skip invalid points
         }
         if (points.length > 0) {
-           const last = points[points.length - 1];
-           if (last[0] === p[0] && last[1] === p[1]) {
-               continue; // Skip duplicates
-           }
+          const last = points[points.length - 1];
+          if (last[0] === p[0] && last[1] === p[1]) {
+            continue; // Skip duplicates
+          }
         }
         points.push(p);
       }
-      
+
       if (points.length === 0) {
-         points = [[0, 0]]; // Ultimate fallback
+        points = [[0, 0]]; // Ultimate fallback
       }
 
       for (let i = 1; i < points.length; i++) {
-        const p1 = points[i-1];
+        const p1 = points[i - 1];
         const p2 = points[i];
         const d = Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
         totalDist += d;
@@ -718,7 +718,7 @@ export default function MapComponent() {
         setVehicles([]);
         return;
       }
-      
+
       const nowObj = getSimulatedTime();
       const now = nowObj.getTime();
       const isPeak = isPeakHour(nowObj);
@@ -726,7 +726,7 @@ export default function MapComponent() {
 
       transitLines.forEach(line => {
         if (line.isUnderConstruction) return;
-        
+
         const config = LINE_CONFIGS[line.id];
         if (!config) return;
 
@@ -741,7 +741,7 @@ export default function MapComponent() {
           // Perfectly space trains across the full track loop
           const offsetMs = (i / fleetSize) * ROUND_TRIP_MS;
           const t = (now + offsetMs) % ROUND_TRIP_MS;
-          
+
           const pos = getVehiclePosition(t, line.id);
           if (!pos) continue;
 
@@ -749,10 +749,10 @@ export default function MapComponent() {
           // if a route's leg config doesn't perfectly match its station array size
           const validStartIdx = pos.startStationIdx % pathInfo.stationDists.length;
           const validEndIdx = pos.endStationIdx % pathInfo.stationDists.length;
-          
+
           const startDist = pathInfo.stationDists[validStartIdx];
           const endDist = pathInfo.stationDists[validEndIdx];
-          
+
           let baseCoords: [number, number] = pathInfo.points[0];
           let p0 = pathInfo.points[0];
           let p1 = pathInfo.points[0];
@@ -808,7 +808,7 @@ export default function MapComponent() {
             shiftLat = (-dLng / norm) * OFFSET;
             shiftLng = (dLat / norm) * OFFSET;
           }
-          
+
           const coords: [number, number] = [
             baseCoords[0] + shiftLat,
             baseCoords[1] + shiftLng
@@ -816,13 +816,13 @@ export default function MapComponent() {
 
           // Additional safety check
           if (isNaN(coords[0]) || isNaN(coords[1])) {
-             continue; // Do not render if completely invalid
+            continue; // Do not render if completely invalid
           }
 
           const angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
           const isFerry = line.id === 'pasig-ferry';
           const isEastWest = line.id === 'lrt-2' || isFerry || line.id === 'bgc-bus-east-express' || line.id === 'bgc-bus-west';
-          
+
           let headingText = pos.isForward ? 'Southbound' : 'Northbound';
           if (isFerry) {
             headingText = pos.isForward ? 'Upstream (Eastbound)' : 'Downstream (Westbound)';
@@ -839,12 +839,12 @@ export default function MapComponent() {
           const boundFor = pos.isForward ? line.stations[safeM].name : line.stations[0].name;
 
           const minsToNext = Math.max(1, Math.ceil(pos.nextStationEtaMs / 60000));
-          let statusText = pos.isDwelling 
-            ? `Boarding at ${startName}` 
+          let statusText = pos.isDwelling
+            ? `Boarding at ${startName}`
             : `Approaching ${endName} in ${minsToNext} min`;
 
           if (pos.isDwelling && (pos.startStationIdx === 0 || pos.startStationIdx === M)) {
-             statusText = `Standby at ${startName}`;
+            statusText = `Standby at ${startName}`;
           }
 
           let logicalFraction = 0;
@@ -886,7 +886,7 @@ export default function MapComponent() {
     const isTrain = line?.type === 'rail';
     const isFerry = line?.type === 'ferry';
     const isBus = line?.type === 'bus';
-    
+
     let dirCode = 'NB';
     if (headingText.includes('Southbound')) dirCode = 'SB';
     else if (headingText.includes('Eastbound')) dirCode = 'EB';
@@ -913,7 +913,7 @@ export default function MapComponent() {
       const trainSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2.23v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm6 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z"/></svg>`;
       const ferrySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16px" height="16px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg>`;
       const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14px" height="14px" style="z-index: 2; position: relative; margin-top: 1px"><path d="M4 6 5.2 3.6a2 2 0 0 1 1.8-1.1h10a2 2 0 0 1 1.8 1.1L20 6"/><path d="M2.5 12h19"/><path d="M18 6H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Z"/><path d="M6 19v2"/><path d="M18 19v2"/><circle cx="7" cy="15" r="1"/><circle cx="17" cy="15" r="1"/></svg>`;
-      
+
       let iconSvg = trainSvg;
       if (isFerry) iconSvg = ferrySvg;
       if (isBus) iconSvg = busSvg;
@@ -961,7 +961,7 @@ export default function MapComponent() {
   // Snap station coordinates to the nearest point on the GeoJSON river geometry
   const snappedFerryStations = useMemo(() => {
     if (!pasigFerryData) return null;
-    
+
     // Extract all geometry coordinates from GeoJSON
     const allPoints: [number, number][] = []; // [lat, lng]
     if (pasigFerryData.features) {
@@ -1025,22 +1025,22 @@ export default function MapComponent() {
     const fleetSize = isPeak ? config.fleetSizePeak : config.fleetSizeOffPeak;
     const headwayMs = (isPeak ? config.peakHeadwaySec : config.offPeakHeadwaySec) * 1000;
     const ROUND_TRIP_MS = getLineRoundTripMs(lineId);
-    
+
     const now = nowObj.getTime();
-    
+
     let forwardTargetTime = 0;
     const dwellMs = config.dwellTimeSec * 1000;
     for (let i = 0; i < stationIdx; i++) {
-        forwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
+      forwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
     }
-    
+
     let backwardTargetTime = 0;
     for (let i = 0; i < M; i++) {
-        backwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
+      backwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
     }
     backwardTargetTime += dwellMs;
     for (let i = M - 1; i >= stationIdx; i--) {
-        backwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
+      backwardTargetTime += dwellMs + (config.legDurations[i] * 1000);
     }
 
     let minForwardMs = Infinity;
@@ -1049,7 +1049,7 @@ export default function MapComponent() {
     for (let i = 0; i < fleetSize; i++) {
       const offsetMs = i * headwayMs;
       const t = (now + offsetMs) % ROUND_TRIP_MS;
-      
+
       let diffFwd = (forwardTargetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
       if (diffFwd < minForwardMs) minForwardMs = diffFwd;
 
@@ -1068,45 +1068,45 @@ export default function MapComponent() {
   const getUpcomingDepartures = (lineId: string, stationIdx: number, isForward: boolean, count: number = 4) => {
     const config = LINE_CONFIGS[lineId];
     if (!config) return [];
-    
+
     const nowObj = getSimulatedTime();
     const isPeak = isPeakHour(nowObj);
     const fleetSize = isPeak ? config.fleetSizePeak : config.fleetSizeOffPeak;
     const headwayMs = (isPeak ? config.peakHeadwaySec : config.offPeakHeadwaySec) * 1000;
     const ROUND_TRIP_MS = getLineRoundTripMs(lineId);
-    
+
     const now = nowObj.getTime();
     let targetTime = 0;
     const M = config.legDurations.length;
     const dwellMs = config.dwellTimeSec * 1000;
-    
+
     if (isForward) {
-        for (let i = 0; i < stationIdx; i++) {
-            targetTime += dwellMs + (config.legDurations[i] * 1000);
-        }
+      for (let i = 0; i < stationIdx; i++) {
+        targetTime += dwellMs + (config.legDurations[i] * 1000);
+      }
     } else {
-        // Forward trip
-        for (let i = 0; i < M; i++) {
-            targetTime += dwellMs + (config.legDurations[i] * 1000);
-        }
-        targetTime += dwellMs; // Terminal dwell
-        
-        // Backward trip up to stationIdx
-        for (let i = M - 1; i >= stationIdx; i--) {
-            targetTime += dwellMs + (config.legDurations[i] * 1000);
-        }
+      // Forward trip
+      for (let i = 0; i < M; i++) {
+        targetTime += dwellMs + (config.legDurations[i] * 1000);
+      }
+      targetTime += dwellMs; // Terminal dwell
+
+      // Backward trip up to stationIdx
+      for (let i = M - 1; i >= stationIdx; i--) {
+        targetTime += dwellMs + (config.legDurations[i] * 1000);
+      }
     }
-    
+
     const departures = [];
     for (let i = 0; i < fleetSize; i++) {
-       const offsetMs = i * headwayMs;
-       const t = (now + offsetMs) % ROUND_TRIP_MS;
-       let diffMs = (targetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
-       departures.push({
-           vehicleId: `${lineId}-v${i + 1}`,
-           etaMs: diffMs,
-           etaMins: Math.max(1, Math.ceil(diffMs / 60000))
-       });
+      const offsetMs = i * headwayMs;
+      const t = (now + offsetMs) % ROUND_TRIP_MS;
+      let diffMs = (targetTime - t + ROUND_TRIP_MS) % ROUND_TRIP_MS;
+      departures.push({
+        vehicleId: `${lineId}-v${i + 1}`,
+        etaMs: diffMs,
+        etaMins: Math.max(1, Math.ceil(diffMs / 60000))
+      });
     }
     return departures.sort((a, b) => a.etaMs - b.etaMs).slice(0, count);
   };
@@ -1121,27 +1121,27 @@ export default function MapComponent() {
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          
+
           let closestDist = Infinity;
           let closestStationIdx = 0;
           let closestLineId = 'lrt-1';
-          
+
           const distSq = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-             const dLat = lat1 - lat2;
-             const dLng = lng1 - lng2;
-             return dLat * dLat + dLng * dLng;
+            const dLat = lat1 - lat2;
+            const dLng = lng1 - lng2;
+            return dLat * dLat + dLng * dLng;
           };
 
           transitLines.forEach(line => {
-             if (line.isUnderConstruction) return;
-             line.stations.forEach((station, idx) => {
-                const d = distSq(lat, lng, station.coords[0], station.coords[1]);
-                if (d < closestDist) {
-                   closestDist = d;
-                   closestStationIdx = idx;
-                   closestLineId = line.id;
-                }
-             });
+            if (line.isUnderConstruction) return;
+            line.stations.forEach((station, idx) => {
+              const d = distSq(lat, lng, station.coords[0], station.coords[1]);
+              if (d < closestDist) {
+                closestDist = d;
+                closestStationIdx = idx;
+                closestLineId = line.id;
+              }
+            });
           });
 
           setLineViewConfig({
@@ -1167,12 +1167,12 @@ export default function MapComponent() {
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Select Your Station</h2>
           <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
-        
+
         <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>
           Where are you starting your journey?
         </p>
 
-        <button 
+        <button
           onClick={handleUseMyLocation}
           style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
         >
@@ -1188,9 +1188,9 @@ export default function MapComponent() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRANSIT LINE</label>
-            <select 
-              value={lineViewConfig.lineId} 
-              onChange={e => setLineViewConfig(c => ({...c, lineId: e.target.value, originStationIdx: 0}))}
+            <select
+              value={lineViewConfig.lineId}
+              onChange={e => setLineViewConfig(c => ({ ...c, lineId: e.target.value, originStationIdx: 0 }))}
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               {transitLines.filter(l => !l.isUnderConstruction).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
@@ -1199,9 +1199,9 @@ export default function MapComponent() {
 
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>ORIGIN STATION</label>
-            <select 
-              value={lineViewConfig.originStationIdx ?? ''} 
-              onChange={e => setLineViewConfig(c => ({...c, originStationIdx: parseInt(e.target.value)}))}
+            <select
+              value={lineViewConfig.originStationIdx ?? ''}
+              onChange={e => setLineViewConfig(c => ({ ...c, originStationIdx: parseInt(e.target.value) }))}
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               <option value="" disabled>Select Origin</option>
@@ -1211,9 +1211,9 @@ export default function MapComponent() {
 
           <div>
             <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 'bold', letterSpacing: '0.5px' }}>DESTINATION STATION</label>
-            <select 
-              value={lineViewConfig.destinationStationIdx ?? ''} 
-              onChange={e => setLineViewConfig(c => ({...c, destinationStationIdx: parseInt(e.target.value)}))}
+            <select
+              value={lineViewConfig.destinationStationIdx ?? ''}
+              onChange={e => setLineViewConfig(c => ({ ...c, destinationStationIdx: parseInt(e.target.value) }))}
               style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
             >
               <option value="" disabled>Select Destination</option>
@@ -1222,27 +1222,27 @@ export default function MapComponent() {
           </div>
 
           <div style={{ position: 'sticky', bottom: '-20px', backgroundColor: '#0f172a', paddingTop: '10px', paddingBottom: '10px', marginTop: 'auto', zIndex: 10 }}>
-            <button 
+            <button
               onClick={() => {
-                 const originStationName = lineViewConfig.originStationIdx !== undefined ? activeLine.stations[lineViewConfig.originStationIdx]?.name || '' : '';
-                 const destinationStationName = lineViewConfig.destinationStationIdx !== undefined ? activeLine.stations[lineViewConfig.destinationStationIdx]?.name || '' : '';
-                 
-                 const isCarouselDemo = lineViewConfig.lineId === 'edsa-carousel' && originStationName.toLowerCase().includes('trinoma') && destinationStationName.toLowerCase().includes('main ave');
-                 
-                 if (isCarouselDemo) {
-                    setShowCarouselBanner(true);
-                    setTimeout(() => setShowCarouselBanner(false), 5000); // auto dismiss
-                 }
+                const originStationName = lineViewConfig.originStationIdx !== undefined ? activeLine.stations[lineViewConfig.originStationIdx]?.name || '' : '';
+                const destinationStationName = lineViewConfig.destinationStationIdx !== undefined ? activeLine.stations[lineViewConfig.destinationStationIdx]?.name || '' : '';
 
-                 if (lineViewConfig.originStationIdx === undefined) {
-                   setLineViewConfig(c => ({...c, originStationIdx: 0}));
-                 }
-                 if (lineViewConfig.originStationIdx !== undefined && lineViewConfig.destinationStationIdx !== undefined) {
-                    const isForward = lineViewConfig.destinationStationIdx >= lineViewConfig.originStationIdx;
-                    setLineViewConfig(c => ({...c, isForward}));
-                 }
-                 setIsStationSelectionMode(false);
-                 setShowPastStations(false);
+                const isCarouselDemo = lineViewConfig.lineId === 'edsa-carousel' && originStationName.toLowerCase().includes('trinoma') && destinationStationName.toLowerCase().includes('main ave');
+
+                if (isCarouselDemo) {
+                  setShowCarouselBanner(true);
+                  setTimeout(() => setShowCarouselBanner(false), 5000); // auto dismiss
+                }
+
+                if (lineViewConfig.originStationIdx === undefined) {
+                  setLineViewConfig(c => ({ ...c, originStationIdx: 0 }));
+                }
+                if (lineViewConfig.originStationIdx !== undefined && lineViewConfig.destinationStationIdx !== undefined) {
+                  const isForward = lineViewConfig.destinationStationIdx >= lineViewConfig.originStationIdx;
+                  setLineViewConfig(c => ({ ...c, isForward }));
+                }
+                setIsStationSelectionMode(false);
+                setShowPastStations(false);
               }}
               style={{ width: '100%', padding: '14px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 -4px 10px rgba(0,0,0,0.2)' }}
             >
@@ -1268,47 +1268,47 @@ export default function MapComponent() {
     const isContextual = lineViewConfig.originStationIdx !== undefined;
     let originRenderIdx = 0;
     if (isContextual) {
-      originRenderIdx = lineViewConfig.isForward 
-         ? lineViewConfig.originStationIdx! 
-         : M - lineViewConfig.originStationIdx!;
+      originRenderIdx = lineViewConfig.isForward
+        ? lineViewConfig.originStationIdx!
+        : M - lineViewConfig.originStationIdx!;
     }
 
     const activeVehicles = vehicles.filter(v => {
-       if (v.lineId !== line.id || v.isForward !== lineViewConfig.isForward) return false;
-       if (isContextual) {
-          const vehicleRenderIdx = v.logicalFraction * M;
-          // Hide trains that have already passed the origin station
-          if (vehicleRenderIdx > originRenderIdx) return false;
-       }
-       return true;
+      if (v.lineId !== line.id || v.isForward !== lineViewConfig.isForward) return false;
+      if (isContextual) {
+        const vehicleRenderIdx = v.logicalFraction * M;
+        // Hide trains that have already passed the origin station
+        if (vehicleRenderIdx > originRenderIdx) return false;
+      }
+      return true;
     });
 
     let departures: { vehicleId: string, etaMs: number, etaMins: number }[] = [];
     let selectedDep: any = undefined;
 
     if (isContextual) {
-       departures = getUpcomingDepartures(line.id, lineViewConfig.originStationIdx!, lineViewConfig.isForward, 4);
-       
-       if (lineViewConfig.selectedVehicleId) {
-          selectedDep = departures.find(d => d.vehicleId === lineViewConfig.selectedVehicleId) || { vehicleId: lineViewConfig.selectedVehicleId };
-       } else {
-          // Find the nearest incoming train physically behind the origin station
-          let nearestVehicleId = undefined;
-          let minDistance = Infinity;
-          for (const v of activeVehicles) {
-             const vehicleRenderIdx = v.logicalFraction * M;
-             const dist = originRenderIdx - vehicleRenderIdx;
-             // activeVehicles already filters out vehicleRenderIdx > originRenderIdx, so dist >= 0 is guaranteed
-             if (dist >= 0 && dist < minDistance) {
-                 minDistance = dist;
-                 nearestVehicleId = v.id;
-             }
+      departures = getUpcomingDepartures(line.id, lineViewConfig.originStationIdx!, lineViewConfig.isForward, 4);
+
+      if (lineViewConfig.selectedVehicleId) {
+        selectedDep = departures.find(d => d.vehicleId === lineViewConfig.selectedVehicleId) || { vehicleId: lineViewConfig.selectedVehicleId };
+      } else {
+        // Find the nearest incoming train physically behind the origin station
+        let nearestVehicleId = undefined;
+        let minDistance = Infinity;
+        for (const v of activeVehicles) {
+          const vehicleRenderIdx = v.logicalFraction * M;
+          const dist = originRenderIdx - vehicleRenderIdx;
+          // activeVehicles already filters out vehicleRenderIdx > originRenderIdx, so dist >= 0 is guaranteed
+          if (dist >= 0 && dist < minDistance) {
+            minDistance = dist;
+            nearestVehicleId = v.id;
           }
-          
-          if (nearestVehicleId) {
-              selectedDep = departures.find(d => d.vehicleId === nearestVehicleId) || { vehicleId: nearestVehicleId };
-          }
-       }
+        }
+
+        if (nearestVehicleId) {
+          selectedDep = departures.find(d => d.vehicleId === nearestVehicleId) || { vehicleId: nearestVehicleId };
+        }
+      }
     }
 
     let renderStations = stations;
@@ -1316,30 +1316,30 @@ export default function MapComponent() {
 
     if (isContextual) {
       if (!showPastStations) {
-         let targetVehicleRenderIdx = originRenderIdx;
-         if (selectedDep) {
-            const sv = activeVehicles.find(v => v.id === selectedDep.vehicleId);
-            if (sv) {
-               targetVehicleRenderIdx = sv.logicalFraction * M;
-            }
-         }
-         
-         hiddenCount = Math.floor(targetVehicleRenderIdx);
-         // Don't hide more than the origin (so we always show the origin station)
-         hiddenCount = Math.min(hiddenCount, originRenderIdx);
-         
-         renderStations = stations.slice(hiddenCount);
+        let targetVehicleRenderIdx = originRenderIdx;
+        if (selectedDep) {
+          const sv = activeVehicles.find(v => v.id === selectedDep.vehicleId);
+          if (sv) {
+            targetVehicleRenderIdx = sv.logicalFraction * M;
+          }
+        }
+
+        hiddenCount = Math.floor(targetVehicleRenderIdx);
+        // Don't hide more than the origin (so we always show the origin station)
+        hiddenCount = Math.min(hiddenCount, originRenderIdx);
+
+        renderStations = stations.slice(hiddenCount);
       }
     }
 
     const formatAbsoluteTime = (addedMs: number) => {
-       const d = new Date(getSimulatedTime().getTime() + addedMs);
-       return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const d = new Date(getSimulatedTime().getTime() + addedMs);
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     };
 
-    const headerTitle = isContextual 
-       ? `${line.name.split(' ')[0]} - ${stations[stations.length - 1].name}`
-       : `${line.name.split(' ')[0]} Schematic`;
+    const headerTitle = isContextual
+      ? `${line.name.split(' ')[0]} - ${stations[stations.length - 1].name}`
+      : `${line.name.split(' ')[0]} Schematic`;
 
     return (
       <>
@@ -1352,8 +1352,8 @@ export default function MapComponent() {
                 {headerTitle}
               </h2>
               <span style={{ display: 'inline-block', marginTop: '6px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#334155', color: '#cbd5e1', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                {lineViewConfig.isForward 
-                  ? (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'EASTBOUND' : 'SOUTHBOUND') 
+                {lineViewConfig.isForward
+                  ? (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'EASTBOUND' : 'SOUTHBOUND')
                   : (line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'WESTBOUND' : 'NORTHBOUND')}
               </span>
               {isContextual && (
@@ -1364,7 +1364,7 @@ export default function MapComponent() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {isContextual && (
-                <button 
+                <button
                   onClick={() => setIsStationSelectionMode(true)}
                   style={{ fontSize: '11px', background: '#334155', color: '#e2e8f0', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
@@ -1374,162 +1374,163 @@ export default function MapComponent() {
               <button onClick={() => setIsLineViewOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>✕</button>
             </div>
           </div>
-          
+
           {isContextual && departures.length > 0 && (
-             <div style={{ marginTop: '16px' }}>
-               <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
-               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-                 {departures.map((dep, idx) => {
-                    const isSelected = selectedDep?.vehicleId === dep.vehicleId;
-                    return (
-                      <button 
-                        key={dep.vehicleId}
-                        onClick={() => setLineViewConfig(c => ({...c, selectedVehicleId: dep.vehicleId}))}
-                        style={{ 
-                          padding: '8px 12px', 
-                          borderRadius: '6px', 
-                          border: isSelected ? `1px solid ${line.color}` : '1px solid #334155', 
-                          background: isSelected ? `${line.color}20` : '#0f172a', 
-                          color: isSelected ? '#fff' : '#94a3b8', 
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          minWidth: '80px'
-                        }}
-                      >
-                        <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
-                        <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748b', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
-                      </button>
-                    );
-                 })}
-               </div>
-             </div>
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming Departures</div>
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                {departures.map((dep, idx) => {
+                  const isSelected = selectedDep?.vehicleId === dep.vehicleId;
+                  return (
+                    <button
+                      key={dep.vehicleId}
+                      onClick={() => setLineViewConfig(c => ({ ...c, selectedVehicleId: dep.vehicleId }))}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: isSelected ? `1px solid ${line.color}` : '1px solid #334155',
+                        background: isSelected ? `${line.color}20` : '#0f172a',
+                        color: isSelected ? '#fff' : '#94a3b8',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        minWidth: '80px'
+                      }}
+                    >
+                      <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{formatAbsoluteTime(dep.etaMs)}</span>
+                      <span style={{ fontSize: '10px', color: isSelected ? line.color : '#64748b', marginTop: '2px' }}>{idx === 0 ? 'Next' : `in ${dep.etaMins}m`}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
 
         {/* Timeline Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', position: 'relative' }}>
           {isContextual && hiddenCount > 0 && (
-             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                <button 
-                  onClick={() => setShowPastStations(true)}
-                  style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s' }}
-                >
-                  ↑ Show {hiddenCount} previous stops
-                </button>
-             </div>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <button
+                onClick={() => setShowPastStations(true)}
+                style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                ↑ Show {hiddenCount} previous stops
+              </button>
+            </div>
           )}
 
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: `${renderStations.length * 70}px`, zIndex: 5 }}>
             {/* Vertical Track Line */}
             <div style={{ position: 'absolute', top: '20px', bottom: '20px', left: '26px', transform: 'translateX(-50%)', width: '4px', backgroundColor: line.color, borderRadius: '2px', zIndex: -1 }}>
-               {activeVehicles.map(v => {
-                  const isFaded = isContextual && v.id !== selectedDep?.vehicleId;
-                  
-                  let topPct = v.logicalFraction * 100;
-                  
-                  if (hiddenCount > 0) {
-                     const startFrac = hiddenCount / M;
-                     topPct = (v.logicalFraction - startFrac) / (1 - startFrac) * 100;
-                  }
-                  
-                  if (topPct < 0 || topPct > 100) return null;
+              {activeVehicles.map(v => {
+                const isFaded = isContextual && v.id !== selectedDep?.vehicleId;
 
-                  return (
-                    <div key={v.id} style={{
-                      position: 'absolute',
-                      top: `${topPct}%`,
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      transition: 'top 1s linear',
-                      zIndex: isFaded ? 5 : 30,
-                      opacity: isFaded ? 0.15 : 1
+                let topPct = v.logicalFraction * 100;
+
+                if (hiddenCount > 0) {
+                  const startFrac = hiddenCount / M;
+                  topPct = (v.logicalFraction - startFrac) / (1 - startFrac) * 100;
+                }
+
+                if (topPct < 0 || topPct > 100) return null;
+
+                return (
+                  <div key={v.id} style={{
+                    position: 'absolute',
+                    top: `${topPct}%`,
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    transition: 'top 1s linear',
+                    zIndex: isFaded ? 5 : 30,
+                    opacity: isFaded ? 0.15 : 1
+                  }}>
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      backgroundColor: line.color,
+                      border: '2px solid #FFFFFF',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
                     }}>
-                      <div style={{ 
-                        width: '28px', 
-                        height: '28px', 
-                        backgroundColor: line.color, 
-                        border: '2px solid #FFFFFF', 
-                        borderRadius: '50%', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' 
-                      }}>
-                        {line.id === 'pasig-ferry' 
-                          ? <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.93V3c0-1.1-.9-2-2-2h-1c-1.1 0-2 .9-2 2v2h-1V3c0-1.1-.9-2-2-2H9C7.9 0 7 .9 7 2v5H6V3c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v7.93l-1.29.11c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM11 2h2v4h-2V2z"/></svg>
-                          : <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm4 0V6h5v4h-5zm1.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-                        }
-                      </div>
+                      {line.id === 'pasig-ferry'
+                        ? <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.93V3c0-1.1-.9-2-2-2h-1c-1.1 0-2 .9-2 2v2h-1V3c0-1.1-.9-2-2-2H9C7.9 0 7 .9 7 2v5H6V3c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v7.93l-1.29.11c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM11 2h2v4h-2V2z" /></svg>
+                        : <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm4 0V6h5v4h-5zm1.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" /></svg>
+                      }
                     </div>
-                  );
-               })}
+                  </div>
+                );
+              })}
             </div>
-            
+
             {(() => {
-               let cumulativeMs = 0;
-               return renderStations.map((st, i) => {
-                 const globalRenderIdx = hiddenCount + i;
-                 const originalIdx = lineViewConfig.isForward ? globalRenderIdx : (stations.length - 1 - globalRenderIdx);
-                 
-                 let etaText = '---';
-                 
-                 if (isContextual && selectedDep) {
-                    if (i > 0) {
-                      const prevOriginalIdx = lineViewConfig.isForward ? (globalRenderIdx - 1) : (stations.length - 1 - (globalRenderIdx - 1));
-                      const legMs = getTravelTimeMs(line.id, prevOriginalIdx, originalIdx, lineViewConfig.isForward);
-                      cumulativeMs += legMs;
-                    }
-                    const stationEtaMs = selectedDep.etaMs + cumulativeMs;
-                    etaText = formatAbsoluteTime(stationEtaMs);
-                 } else if (!isContextual) {
-                 const arrivals = getUpcomingArrivals(line.id, originalIdx);
-                 if (arrivals) {
-                   const mins = lineViewConfig.isForward ? arrivals.forwardMins : arrivals.backwardMins;
-                   etaText = formatArrivalTime(mins);
-                 }
-              }
+              let cumulativeMs = 0;
+              return renderStations.map((st, i) => {
+                const globalRenderIdx = hiddenCount + i;
+                const originalIdx = lineViewConfig.isForward ? globalRenderIdx : (stations.length - 1 - globalRenderIdx);
 
-              const isOrigin = isContextual && globalRenderIdx === originRenderIdx;
+                let etaText = '---';
 
-              const approachingVehicle = activeVehicles.find(v => {
-                if (isContextual && v.id !== selectedDep?.vehicleId) return false;
-                const distance = v.logicalFraction * M - globalRenderIdx;
-                return distance >= -0.1 && distance <= 1.0;
-              });
-              const isApproaching = !!approachingVehicle;
+                if (isContextual && selectedDep) {
+                  if (i > 0) {
+                    const prevOriginalIdx = lineViewConfig.isForward ? (globalRenderIdx - 1) : (stations.length - 1 - (globalRenderIdx - 1));
+                    const legMs = getTravelTimeMs(line.id, prevOriginalIdx, originalIdx, lineViewConfig.isForward);
+                    cumulativeMs += legMs;
+                  }
+                  const stationEtaMs = selectedDep.etaMs + cumulativeMs;
+                  etaText = formatAbsoluteTime(stationEtaMs);
+                } else if (!isContextual) {
+                  const arrivals = getUpcomingArrivals(line.id, originalIdx);
+                  if (arrivals) {
+                    const mins = lineViewConfig.isForward ? arrivals.forwardMins : arrivals.backwardMins;
+                    etaText = formatArrivalTime(mins);
+                  }
+                }
 
-              return (
-                <div key={st.name} style={{ display: 'flex', alignItems: 'center', height: '40px', cursor: 'pointer', opacity: (isApproaching || isOrigin) ? 1 : 0.7, transition: 'opacity 0.2s' }} onClick={() => {
-                  if (mapRef.current) mapRef.current.flyTo(st.coords, 16);
-                }}>
-                  <div style={{ width: '52px', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5 }}>
-                    <div style={{ 
-                        width: isOrigin ? '14px' : '10px', 
-                        height: isOrigin ? '14px' : '10px', 
-                        backgroundColor: '#fff', 
-                        border: isOrigin ? `3px solid ${line.color}` : 'none', 
-                        borderRadius: '50%', 
-                        transition: 'all 0.3s', 
-                        transform: isApproaching && !isOrigin ? 'scale(1.3)' : (isOrigin ? 'scale(1.2)' : 'scale(1)'), 
+                const isOrigin = isContextual && globalRenderIdx === originRenderIdx;
+
+                const approachingVehicle = activeVehicles.find(v => {
+                  if (isContextual && v.id !== selectedDep?.vehicleId) return false;
+                  const distance = v.logicalFraction * M - globalRenderIdx;
+                  return distance >= -0.1 && distance <= 1.0;
+                });
+                const isApproaching = !!approachingVehicle;
+
+                return (
+                  <div key={st.name} style={{ display: 'flex', alignItems: 'center', height: '40px', cursor: 'pointer', opacity: (isApproaching || isOrigin) ? 1 : 0.7, transition: 'opacity 0.2s' }} onClick={() => {
+                    if (mapRef.current) mapRef.current.flyTo(st.coords, 16);
+                  }}>
+                    <div style={{ width: '52px', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5 }}>
+                      <div style={{
+                        width: isOrigin ? '14px' : '10px',
+                        height: isOrigin ? '14px' : '10px',
+                        backgroundColor: '#fff',
+                        border: isOrigin ? `3px solid ${line.color}` : 'none',
+                        borderRadius: '50%',
+                        transition: 'all 0.3s',
+                        transform: isApproaching && !isOrigin ? 'scale(1.3)' : (isOrigin ? 'scale(1.2)' : 'scale(1)'),
                         boxSizing: 'content-box',
                         boxShadow: isOrigin ? '0 0 8px rgba(255,255,255,0.5)' : 'none'
-                    }}></div>
-                  </div>
-                  <div style={{ flex: 1, paddingLeft: '4px' }}>
-                    <div style={{ fontSize: (isApproaching || isOrigin) ? '15px' : '14px', fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal', color: (isApproaching || isOrigin) ? '#fff' : '#e2e8f0', transition: 'all 0.2s' }}>
-                      {st.name} {isOrigin && <span style={{ fontSize: '10px', backgroundColor: line.color, color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle' }}>ORIGIN</span>}
+                      }}></div>
+                    </div>
+                    <div style={{ flex: 1, paddingLeft: '4px' }}>
+                      <div style={{ fontSize: (isApproaching || isOrigin) ? '15px' : '14px', fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal', color: (isApproaching || isOrigin) ? '#fff' : '#e2e8f0', transition: 'all 0.2s' }}>
+                        {st.name} {isOrigin && <span style={{ fontSize: '10px', backgroundColor: line.color, color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle' }}>ORIGIN</span>}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '12px', color: isApproaching ? '#38bdf8' : (isOrigin ? '#fff' : '#94a3b8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
+                      {etaText}
                     </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: isApproaching ? '#38bdf8' : (isOrigin ? '#fff' : '#94a3b8'), fontWeight: (isApproaching || isOrigin) ? 'bold' : 'normal' }}>
-                    {etaText}
-                  </div>
-                </div>
-              );
-            })})()}
+                );
+              })
+            })()}
           </div>
         </div>
       </>
@@ -1559,42 +1560,42 @@ export default function MapComponent() {
         padding: '12px',
       }}>
         {/* Collapsible Top Section */}
-        <div style={{ 
-            maxHeight: isDragging ? Math.max(0, (isPanelCollapsed ? 0 : 250) + dragY) : (isPanelCollapsed ? 0 : 250),
-            opacity: isDragging ? Math.min(1, Math.max(0.3, (isPanelCollapsed ? 0 : 1) + (dragY / 150))) : (isPanelCollapsed ? 0 : 1),
-            overflow: 'hidden',
-            transition: isDragging ? 'none' : 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            width: '100%'
+        <div style={{
+          maxHeight: isDragging ? Math.max(0, (isPanelCollapsed ? 0 : 250) + dragY) : (isPanelCollapsed ? 0 : 250),
+          opacity: isDragging ? Math.min(1, Math.max(0.3, (isPanelCollapsed ? 0 : 1) + (dragY / 150))) : (isPanelCollapsed ? 0 : 1),
+          overflow: 'hidden',
+          transition: isDragging ? 'none' : 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          width: '100%'
         }}>
-           <div style={{ padding: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                  MAP CONTROLS
-                </label>
-                <button 
-                  onClick={() => setIsPanelCollapsed(true)}
-                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                  aria-label="Collapse Panel"
-                >
-                  <ChevronUp size={16} />
-                </button>
-              </div>
+          <div style={{ padding: '0 0 16px 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                MAP CONTROLS
+              </label>
+              <button
+                onClick={() => setIsPanelCollapsed(true)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                aria-label="Collapse Panel"
+              >
+                <ChevronUp size={16} />
+              </button>
+            </div>
 
-              {/* Toggle Station Names */}
+            {/* Toggle Station Names */}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-              <input 
+              <input
                 id="label-toggle"
-                type="checkbox" 
+                type="checkbox"
                 checked={showAllLabels}
                 onChange={(e) => setShowAllLabels(e.target.checked)}
                 style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#38bdf8' }}
               />
-              <label 
+              <label
                 htmlFor="label-toggle"
-                style={{ 
-                  color: '#f8fafc', 
-                  fontSize: '13px', 
+                style={{
+                  color: '#f8fafc',
+                  fontSize: '13px',
                   cursor: 'pointer',
                   userSelect: 'none'
                 }}
@@ -1603,71 +1604,71 @@ export default function MapComponent() {
               </label>
             </div>
 
-            
 
-              {/* Toggle Live Vehicles */}
+
+            {/* Toggle Live Vehicles */}
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="liveVehiclesToggle"
                   checked={showLiveVehicles}
                   onChange={(e) => setShowLiveVehicles(e.target.checked)}
                   style={{ cursor: 'pointer', accentColor: '#38bdf8', width: '16px', height: '16px' }}
                 />
-                <label 
-                  htmlFor="liveVehiclesToggle" 
-                  style={{ 
-                    color: '#f8fafc', 
-                    fontSize: '13px', 
+                <label
+                  htmlFor="liveVehiclesToggle"
+                  style={{
+                    color: '#f8fafc',
+                    fontSize: '13px',
                     cursor: 'pointer',
-                    userSelect: 'none' 
+                    userSelect: 'none'
                   }}
                 >
                   Show Live Vehicles
                 </label>
               </div>
-              
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#cbd5e1' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
                 <span>{vehicles.length} active vehicles</span>
               </div>
             </div>
 
-            
 
-              {/* Direction Filter */}
+
+            {/* Direction Filter */}
 
             {showLiveVehicles && (
               <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden', border: '1px solid #334155', marginTop: '4px' }}>
-                <button 
+                <button
                   onClick={() => setDirectionFilter('ALL')}
                   style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'ALL' ? '#3b82f6' : 'transparent', color: directionFilter === 'ALL' ? 'white' : '#94a3b8' }}
                 >All</button>
-                <button 
+                <button
                   onClick={() => setDirectionFilter('NB')}
                   style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', borderLeft: '1px solid #334155', borderRight: '1px solid #334155', cursor: 'pointer', backgroundColor: directionFilter === 'NB' ? '#3b82f6' : 'transparent', color: directionFilter === 'NB' ? 'white' : '#94a3b8' }}
                 >▲ NB/EB</button>
-                <button 
+                <button
                   onClick={() => setDirectionFilter('SB')}
                   style={{ flex: 1, padding: '6px 4px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer', backgroundColor: directionFilter === 'SB' ? '#3b82f6' : 'transparent', color: directionFilter === 'SB' ? 'white' : '#94a3b8' }}
                 >▼ SB/WB</button>
               </div>
             )}
 
-            
 
-              {/* Toggle Line View Button */}
 
-            <button 
+            {/* Toggle Line View Button */}
+
+            <button
               onClick={() => {
                 if (!isLineViewOpen) {
                   setIsStationSelectionMode(true); // Open directly to selection wizard when launched globally
                 }
                 setIsLineViewOpen(prev => !prev);
               }}
-              style={{ 
+              style={{
                 marginTop: '6px',
                 width: '100%',
                 padding: '10px',
@@ -1683,240 +1684,240 @@ export default function MapComponent() {
             >
               {isLineViewOpen ? 'Close Schematic' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Map size={16} /> Open Line View</span>}
             </button>
-            
-           </div>
+
+          </div>
         </div>
 
 
-            {/* Transit Categories Row */}
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '0', justifyContent: 'center' }}>
-              {/* Trains Dropdown */}
-              <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  background: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
-                  borderRadius: '9999px',
-                  border: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
-                }}>
-                  <button
-                    onClick={() => setExpandedDropdown(expandedDropdown === 'trains' ? null : 'trains')}
-                    style={{
-                      background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-                    }}
-                  >
-                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'trains' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const isDeselect = selectedLine === 'category-trains';
-                      setSelectedLine(isDeselect ? 'all' : 'category-trains');
-                      if (!isDeselect) zoomToLines(['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol']);
-                    }}
-                    style={{
-                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-                    }}
-                  >
-                    Trains
-                  </button>
-                </div>
-                {expandedDropdown === 'trains' && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
-                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-                  }}>
-                    {transitLines.filter(l => ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(l.id)).map(l => (
-                      <button
-                        key={l.id}
-                        onClick={() => { 
-                          const isDeselect = selectedLine === l.id;
-                          setSelectedLine(isDeselect ? 'all' : l.id); 
-                          setExpandedDropdown(null); 
-                          if (!isDeselect) zoomToLines([l.id]);
-                        }}
-                        style={{
-                          background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
-                        }}
-                      >{l.name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-      
-              {/* Buses Dropdown */}
-              {/* Buses Dropdown */}
-              <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  background: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
-                  borderRadius: '9999px',
-                  border: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
-                }}>
-                  <button
-                    onClick={() => setExpandedDropdown(expandedDropdown === 'buses' ? null : 'buses')}
-                    style={{
-                      background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-                    }}
-                  >
-                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'buses' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const isDeselect = selectedLine === 'category-buses';
-                      setSelectedLine(isDeselect ? 'all' : 'category-buses');
-                      if (!isDeselect) zoomToLines(['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north']);
-                    }}
-                    style={{
-                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-                    }}
-                  >
-                    Buses
-                  </button>
-                </div>
-                {expandedDropdown === 'buses' && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
-                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '180px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-                  }}>
-                    {transitLines.filter(l => ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(l.id)).map(l => (
-                      <button
-                        key={l.id}
-                        onClick={() => { 
-                          const isDeselect = selectedLine === l.id;
-                          setSelectedLine(isDeselect ? 'all' : l.id); 
-                          setExpandedDropdown(null); 
-                          if (!isDeselect) zoomToLines([l.id]);
-                        }}
-                        style={{
-                          background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
-                        }}
-                      >{l.name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-      
-              {/* Airplane Dropdown */}
-              <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  background: (showAirports || showLiveAircraft) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
-                  borderRadius: '9999px',
-                  border: (showAirports || showLiveAircraft) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
-                }}>
-                  <button
-                    onClick={() => setExpandedDropdown(expandedDropdown === 'airplane' ? null : 'airplane')}
-                    style={{
-                      background: 'transparent', border: 'none', color: (showAirports || showLiveAircraft) ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-                    }}
-                  >
-                    <ChevronDown size={14} style={{ transform: expandedDropdown === 'airplane' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const isDeselect = showAirports || showLiveAircraft;
-                      setShowAirports(!isDeselect);
-                      setShowLiveAircraft(!isDeselect);
-                      
-                      if (!isDeselect && mapRef.current) {
-                        const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
-                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                      }
-                    }}
-                    style={{
-                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-                    }}
-                  >
-                    Airplane
-                  </button>
-                </div>
-                {expandedDropdown === 'airplane' && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
-                    border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-                  }}>
-                    <button
-                      onClick={() => setShowAirports(!showAirports)}
-                      style={{
-                        background: showAirports ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showAirports ? 'bold' : 'normal'
-                      }}
-                    >Airports</button>
-                    <button
-                      onClick={() => setShowLiveAircraft(!showLiveAircraft)}
-                      style={{
-                        background: showLiveAircraft ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showLiveAircraft ? 'bold' : 'normal', display: 'flex', alignItems: 'center', gap: '6px'
-                      }}
-                    >Live Aircraft
-                     {showLiveAircraft && <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />}
-                    </button>
-                  </div>
-                )}
-              </div>
-      
-              {/* Ships Dropdown */}
-              {/* Ships Dropdown */}
-              
-              <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  background: showSeaports ? 'rgba(13, 148, 136, 0.2)' : '#0B1220',
-                  borderRadius: '9999px',
-                  border: showSeaports ? '1px solid #0d9488' : '1px solid rgba(51, 65, 85, 0.4)'
-                }}>
-                  <button
-                    onClick={() => {
-                      const nextState = !showSeaports;
-                      setShowSeaports(nextState);
-                      if (nextState && mapRef.current) {
-                        const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
-                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                      }
-                    }}
-                    style={{
-                      background: 'transparent', border: 'none', color: showSeaports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
-                    }}
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const nextState = !showSeaports;
-                      setShowSeaports(nextState);
-                      if (nextState && mapRef.current) {
-                        const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
-                        mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-                      }
-                    }}
-                    style={{
-                      background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
-                    }}
-                  >
-                    Ships
-                  </button>
-                </div>
-              </div>
-            
+        {/* Transit Categories Row */}
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '0', justifyContent: 'center' }}>
+          {/* Trains Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+              borderRadius: '9999px',
+              border: selectedLine === 'category-trains' || ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+            }}>
+              <button
+                onClick={() => setExpandedDropdown(expandedDropdown === 'trains' ? null : 'trains')}
+                style={{
+                  background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                }}
+              >
+                <ChevronDown size={14} style={{ transform: expandedDropdown === 'trains' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+              <button
+                onClick={() => {
+                  const isDeselect = selectedLine === 'category-trains';
+                  setSelectedLine(isDeselect ? 'all' : 'category-trains');
+                  if (!isDeselect) zoomToLines(['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol']);
+                }}
+                style={{
+                  background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                }}
+              >
+                Trains
+              </button>
             </div>
+            {expandedDropdown === 'trains' && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+              }}>
+                {transitLines.filter(l => ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(l.id)).map(l => (
+                  <button
+                    key={l.id}
+                    onClick={() => {
+                      const isDeselect = selectedLine === l.id;
+                      setSelectedLine(isDeselect ? 'all' : l.id);
+                      setExpandedDropdown(null);
+                      if (!isDeselect) zoomToLines([l.id]);
+                    }}
+                    style={{
+                      background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                    }}
+                  >{l.name}</button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Buses Dropdown */}
+          {/* Buses Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+              borderRadius: '9999px',
+              border: selectedLine === 'category-buses' || ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(selectedLine) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+            }}>
+              <button
+                onClick={() => setExpandedDropdown(expandedDropdown === 'buses' ? null : 'buses')}
+                style={{
+                  background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                }}
+              >
+                <ChevronDown size={14} style={{ transform: expandedDropdown === 'buses' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+              <button
+                onClick={() => {
+                  const isDeselect = selectedLine === 'category-buses';
+                  setSelectedLine(isDeselect ? 'all' : 'category-buses');
+                  if (!isDeselect) zoomToLines(['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north']);
+                }}
+                style={{
+                  background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                }}
+              >
+                Buses
+              </button>
+            </div>
+            {expandedDropdown === 'buses' && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '180px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+              }}>
+                {transitLines.filter(l => ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(l.id)).map(l => (
+                  <button
+                    key={l.id}
+                    onClick={() => {
+                      const isDeselect = selectedLine === l.id;
+                      setSelectedLine(isDeselect ? 'all' : l.id);
+                      setExpandedDropdown(null);
+                      if (!isDeselect) zoomToLines([l.id]);
+                    }}
+                    style={{
+                      background: selectedLine === l.id ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: selectedLine === l.id ? 'bold' : 'normal'
+                    }}
+                  >{l.name}</button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Airplane Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: (showAirports || showLiveAircraft) ? 'rgba(59, 130, 246, 0.2)' : '#0B1220',
+              borderRadius: '9999px',
+              border: (showAirports || showLiveAircraft) ? '1px solid #3b82f6' : '1px solid rgba(51, 65, 85, 0.4)'
+            }}>
+              <button
+                onClick={() => setExpandedDropdown(expandedDropdown === 'airplane' ? null : 'airplane')}
+                style={{
+                  background: 'transparent', border: 'none', color: (showAirports || showLiveAircraft) ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                }}
+              >
+                <ChevronDown size={14} style={{ transform: expandedDropdown === 'airplane' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+              <button
+                onClick={() => {
+                  const isDeselect = showAirports || showLiveAircraft;
+                  setShowAirports(!isDeselect);
+                  setShowLiveAircraft(!isDeselect);
+
+                  if (!isDeselect && mapRef.current) {
+                    const bounds = L.latLngBounds(philippineAirports.map(a => a.coords));
+                    mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                  }
+                }}
+                style={{
+                  background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                }}
+              >
+                Airplane
+              </button>
+            </div>
+            {expandedDropdown === 'airplane' && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: '8px', background: '#1C2436', backdropFilter: 'blur(10px)',
+                border: '1px solid #334155', borderRadius: '8px', padding: '6px', minWidth: '140px', zIndex: 1001, display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+              }}>
+                <button
+                  onClick={() => setShowAirports(!showAirports)}
+                  style={{
+                    background: showAirports ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showAirports ? 'bold' : 'normal'
+                  }}
+                >Airports</button>
+                <button
+                  onClick={() => setShowLiveAircraft(!showLiveAircraft)}
+                  style={{
+                    background: showLiveAircraft ? '#3b82f6' : 'transparent', color: 'white', border: 'none', padding: '8px 10px', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: showLiveAircraft ? 'bold' : 'normal', display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >Live Aircraft
+                  {showLiveAircraft && <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Ships Dropdown */}
+          {/* Ships Dropdown */}
+
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: showSeaports ? 'rgba(13, 148, 136, 0.2)' : '#0B1220',
+              borderRadius: '9999px',
+              border: showSeaports ? '1px solid #0d9488' : '1px solid rgba(51, 65, 85, 0.4)'
+            }}>
+              <button
+                onClick={() => {
+                  const nextState = !showSeaports;
+                  setShowSeaports(nextState);
+                  if (nextState && mapRef.current) {
+                    const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                    mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                  }
+                }}
+                style={{
+                  background: 'transparent', border: 'none', color: showSeaports ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '6px 4px 6px 8px', display: 'flex', alignItems: 'center'
+                }}
+              >
+                <ChevronDown size={14} />
+              </button>
+              <button
+                onClick={() => {
+                  const nextState = !showSeaports;
+                  setShowSeaports(nextState);
+                  if (nextState && mapRef.current) {
+                    const bounds = L.latLngBounds(philippineSeaports.map(s => s.coords));
+                    mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                  }
+                }}
+                style={{
+                  background: 'transparent', color: 'white', border: 'none', padding: '6px 12px 6px 4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px'
+                }}
+              >
+                Ships
+              </button>
+            </div>
+          </div>
+
+        </div>
 
 
         {/* Drag Handle Area */}
-        <div 
+        <div
           onMouseDown={(e) => { setIsDragging(true); dragType.current = 'mouse'; dragStartY.current = e.clientY; currentDragY.current = 0; setDragY(0); }}
           onTouchStart={(e) => { setIsDragging(true); dragType.current = 'touch'; dragStartY.current = e.touches[0].clientY; currentDragY.current = 0; setDragY(0); }}
-          onTouchMove={(e) => { 
-            if (!isDragging) return; 
-            const deltaY = e.touches[0].clientY - dragStartY.current; 
-            currentDragY.current = deltaY; 
-            setDragY(deltaY); 
+          onTouchMove={(e) => {
+            if (!isDragging) return;
+            const deltaY = e.touches[0].clientY - dragStartY.current;
+            currentDragY.current = deltaY;
+            setDragY(deltaY);
           }}
-          onTouchEnd={() => { 
-            setIsDragging(false); 
-            if (isPanelCollapsed && currentDragY.current > 40) setIsPanelCollapsed(false); 
+          onTouchEnd={() => {
+            setIsDragging(false);
+            if (isPanelCollapsed && currentDragY.current > 40) setIsPanelCollapsed(false);
             else if (!isPanelCollapsed && currentDragY.current < -40) setIsPanelCollapsed(true);
-            setDragY(0); 
+            setDragY(0);
           }}
           style={{ width: '100%', padding: '8px 0 0 0', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
         >
@@ -2009,24 +2010,29 @@ export default function MapComponent() {
         )}
       </div>
 
-      <MapContainer 
+      <MapContainer
         ref={mapRef}
-        center={[14.6500, 121.0300]} 
-        zoom={11} 
+        center={[14.6500, 121.0300]}
+        zoom={11}
         zoomControl={false}
-        scrollWheelZoom={true} 
+        scrollWheelZoom={true}
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
         <MapResizer />
         {/* Dark mode tiles using CartoDB Dark Matter */}
+        <style>{`
+          .leaflet-tile {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
+            -webkit-filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
+          }
+        `}</style>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {transitLines.map((line) => {
-          const isSelected = selectedLine === 'all' || selectedLine === line.id || 
+          const isSelected = selectedLine === 'all' || selectedLine === line.id ||
             (selectedLine === 'category-trains' && ['lrt-1', 'lrt-2', 'mrt-3', 'mrt-7', 'pnr-nscr', 'pnr-south', 'pnr-bicol'].includes(line.id)) ||
             (selectedLine === 'category-buses' && ['edsa-carousel', 'bgc-bus-west', 'bgc-bus-east-express', 'bgc-bus-north'].includes(line.id));
           const isFaded = selectedLine !== 'all' && !isSelected;
@@ -2041,8 +2047,8 @@ export default function MapComponent() {
               {/* Render the polyline path */}
               {line.id === 'pasig-ferry' ? (
                 pasigFerryData && (
-                  <GeoJSON 
-                    data={pasigFerryData} 
+                  <GeoJSON
+                    data={pasigFerryData}
                     style={{
                       color: lineColor,
                       weight: lineWeight,
@@ -2052,11 +2058,11 @@ export default function MapComponent() {
                 )
               ) : line.segments ? (
                 line.segments.map((segment, sIdx) => (
-                  <Polyline 
+                  <Polyline
                     key={`${line.id}-seg-${sIdx}`}
                     positions={segment.stations.map((s) => s.coords)}
-                    pathOptions={{ 
-                      color: lineColor, 
+                    pathOptions={{
+                      color: lineColor,
                       weight: lineWeight,
                       opacity: lineOpacity,
                       dashArray: (segment.isDashed || line.isUnderConstruction) ? '6, 8' : undefined
@@ -2064,235 +2070,235 @@ export default function MapComponent() {
                   />
                 ))
               ) : (
-                <Polyline 
+                <Polyline
                   positions={osrmPaths[line.id] || line.path || line.stations.map((s) => s.coords)}
-                  pathOptions={{ 
-                    color: lineColor, 
+                  pathOptions={{
+                    color: lineColor,
                     weight: lineWeight,
                     opacity: lineOpacity,
                     dashArray: line.isUnderConstruction ? '6, 8' : undefined
                   }}
                 />
               )}
-              
+
               {/* Render the station markers */}
               {(line.id === 'pasig-ferry' ? (snappedFerryStations || []) : line.stations)
                 .filter(s => !s.isVia)
                 .map((station, idx) => (
-                <CircleMarker
-                  key={`${line.id}-${idx}-${showAllLabels}-${isFaded}`}
-                  center={station.coords}
-                  radius={5}
-                  pathOptions={{ 
-                    color: isFaded ? '#4A5568' : '#ffffff', // white border if active, grey if muted
-                    opacity: markerOpacity,
-                    fillColor: lineColor,
-                    fillOpacity: markerOpacity,
-                    weight: 2
-                  }}
-                >
-                  <Tooltip 
-                    direction="top" 
-                    offset={[0, -5]} 
-                    permanent={showAllLabels && !isFaded}
-                    className="dark-station-tooltip"
-                    key={`tooltip-${showAllLabels}-${isFaded}`}
+                  <CircleMarker
+                    key={`${line.id}-${idx}-${showAllLabels}-${isFaded}`}
+                    center={station.coords}
+                    radius={5}
+                    pathOptions={{
+                      color: isFaded ? '#4A5568' : '#ffffff', // white border if active, grey if muted
+                      opacity: markerOpacity,
+                      fillColor: lineColor,
+                      fillOpacity: markerOpacity,
+                      weight: 2
+                    }}
                   >
-                    <span style={{ color: line.color, fontWeight: 'bold' }}>
-                      {station.name}
-                    </span>
-                  </Tooltip>
-                  <Popup minWidth={220} className="custom-station-popup">
-                    <div style={{ padding: '4px', fontFamily: 'sans-serif' }}>
-                      {/* Header */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
-                          {station.name}
-                        </h3>
-                        <span style={{ 
-                          backgroundColor: line.color, 
-                          color: '#fff', 
-                          padding: '2px 6px', 
-                          borderRadius: '8px',
-                          fontSize: '10px',
-                          fontWeight: 'bold',
-                          letterSpacing: '0.5px'
-                        }}>
-                          {line.id.toUpperCase()}
-                        </span>
-                        {(line.id === 'pnr-south' || line.id === 'pnr-bicol') && (
-                          <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                            Operational
+                    <Tooltip
+                      direction="top"
+                      offset={[0, -5]}
+                      permanent={showAllLabels && !isFaded}
+                      className="dark-station-tooltip"
+                      key={`tooltip-${showAllLabels}-${isFaded}`}
+                    >
+                      <span style={{ color: line.color, fontWeight: 'bold' }}>
+                        {station.name}
+                      </span>
+                    </Tooltip>
+                    <Popup minWidth={220} className="custom-station-popup">
+                      <div style={{ padding: '4px', fontFamily: 'sans-serif' }}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#f8fafc' }}>
+                            {station.name}
+                          </h3>
+                          <span style={{
+                            backgroundColor: line.color,
+                            color: '#fff',
+                            padding: '2px 6px',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            letterSpacing: '0.5px'
+                          }}>
+                            {line.id.toUpperCase()}
                           </span>
-                        )}
-                      </div>
-
-                      {/* Status / Arrivals */}
-                      {line.isUnderConstruction ? (
-                        <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#431407', borderRadius: '6px', textAlign: 'center', border: '1px solid #7c2d12' }}>
-                          <span style={{ color: '#fdba74', fontWeight: 'bold', fontSize: '13px' }}>Under Construction</span>
-                          <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#fed7aa', lineHeight: '1.4' }}>
-                            {line.id === 'pnr-nscr' 
-                              ? 'Operations suspended due to North-South Commuter Railway (NSCR) construction.'
-                              : 'Operations for this line are pending construction completion.'}
-                          </p>
+                          {(line.id === 'pnr-south' || line.id === 'pnr-bicol') && (
+                            <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                              Operational
+                            </span>
+                          )}
                         </div>
-                      ) : isSystemActive() ? (() => {
-                        let isLineActive = true;
-                        const hours = getSimulatedTime().getHours();
-                        const minutes = getSimulatedTime().getMinutes();
-                        const timeVal = hours + minutes / 60;
-                        if (line.id === 'pnr-south' && (timeVal < 5 || timeVal > 18.5)) isLineActive = false;
-                        if (line.id === 'pnr-bicol' && (timeVal < 4.5 || timeVal > 17.16)) isLineActive = false;
 
-                        if (!isLineActive) {
+                        {/* Status / Arrivals */}
+                        {line.isUnderConstruction ? (
+                          <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#431407', borderRadius: '6px', textAlign: 'center', border: '1px solid #7c2d12' }}>
+                            <span style={{ color: '#fdba74', fontWeight: 'bold', fontSize: '13px' }}>Under Construction</span>
+                            <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#fed7aa', lineHeight: '1.4' }}>
+                              {line.id === 'pnr-nscr'
+                                ? 'Operations suspended due to North-South Commuter Railway (NSCR) construction.'
+                                : 'Operations for this line are pending construction completion.'}
+                            </p>
+                          </div>
+                        ) : isSystemActive() ? (() => {
+                          let isLineActive = true;
+                          const hours = getSimulatedTime().getHours();
+                          const minutes = getSimulatedTime().getMinutes();
+                          const timeVal = hours + minutes / 60;
+                          if (line.id === 'pnr-south' && (timeVal < 5 || timeVal > 18.5)) isLineActive = false;
+                          if (line.id === 'pnr-bicol' && (timeVal < 4.5 || timeVal > 17.16)) isLineActive = false;
+
+                          if (!isLineActive) {
+                            return (
+                              <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#0f172a', borderRadius: '6px', textAlign: 'center', border: '1px solid #334155' }}>
+                                <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '13px' }}>Off Hours</span>
+                                <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                                  Train operations run between specific hours.
+                                </p>
+                              </div>
+                            );
+                          }
+
+                          const arrivals = getUpcomingArrivals(line.id, idx);
+                          if (!arrivals) return null;
                           return (
-                            <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#0f172a', borderRadius: '6px', textAlign: 'center', border: '1px solid #334155' }}>
-                              <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '13px' }}>Off Hours</span>
-                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
-                                Train operations run between specific hours.
-                              </p>
-                            </div>
-                          );
-                        }
-
-                        const arrivals = getUpcomingArrivals(line.id, idx);
-                        if (!arrivals) return null;
-                        return (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                            {idx < line.stations.length - 1 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'NB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
-                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.forwardName}</strong></span>
-                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.forwardMins)}</span>
-                              </div>
-                            )}
-                            {idx > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'SB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
-                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.backwardName}</strong></span>
-                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.backwardMins)}</span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })() : (
-                        <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#fee2e2', borderRadius: '6px', textAlign: 'center' }}>
-                          <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '13px' }}>Service Closed</span>
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      {!line.isUnderConstruction && isSystemActive() && (() => {
-                        let isLineActive = true;
-                        const hours = getSimulatedTime().getHours();
-                        const minutes = getSimulatedTime().getMinutes();
-                        const timeVal = hours + minutes / 60;
-                        if (line.id === 'pnr-south' && (timeVal < 5 || timeVal > 18.5)) isLineActive = false;
-                        if (line.id === 'pnr-bicol' && (timeVal < 4.5 || timeVal > 17.16)) isLineActive = false;
-                        
-                        if (!isLineActive) return null;
-                        
-                        return (
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                            {idx < line.stations.length - 1 && (
-                              <button 
-                                onClick={() => {
-                                  setLineViewConfig({ lineId: line.id, isForward: true, originStationIdx: idx });
-                                  setIsLineViewOpen(true);
-                                  setShowPastStations(false);
-                                }}
-                                style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
-                              >
-                                ▼ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
-                              </button>
-                            )}
-                            {idx > 0 && (
-                              <button 
-                                onClick={() => {
-                                  setLineViewConfig({ lineId: line.id, isForward: false, originStationIdx: idx });
-                                  setIsLineViewOpen(true);
-                                  setShowPastStations(false);
-                                }}
-                                style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
-                              >
-                                ▲ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })()}
-                      {/* Notification Toggle */}
-                      {!line.isUnderConstruction && (
-                        <>
-                          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e2e8f0' }}>Notify me when approaching</span>
-                              {notificationPermission === 'denied' && (
-                                <span style={{ fontSize: '10px', color: '#ef4444' }}>Notifications blocked by browser</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                              {idx < line.stations.length - 1 && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'NB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
+                                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.forwardName}</strong></span>
+                                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.forwardMins)}</span>
+                                </div>
+                              )}
+                              {idx > 0 && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', opacity: (directionFilter === 'SB' ? 0.3 : 1), transition: 'opacity 0.2s' }}>
+                                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>To <strong>{arrivals.backwardName}</strong></span>
+                                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: line.color }}>{formatArrivalTime(arrivals.backwardMins)}</span>
+                                </div>
                               )}
                             </div>
-                            <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
-                              <input 
-                                type="checkbox" 
-                                checked={!!watchedStations[`${line.id}_${station.name}`]}
-                                onChange={() => handleToggleWatch(`${line.id}_${station.name}`)}
-                                style={{ opacity: 0, width: 0, height: 0 }}
-                              />
-                              <span style={{
-                                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                                backgroundColor: watchedStations[`${line.id}_${station.name}`] ? '#10b981' : '#475569',
-                                transition: '.4s', borderRadius: '20px'
-                              }}>
-                                <span style={{
-                                  position: 'absolute', content: '""', height: '14px', width: '14px', left: '3px', bottom: '3px',
-                                  backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
-                                  transform: watchedStations[`${line.id}_${station.name}`] ? 'translateX(16px)' : 'none'
-                                }} />
-                              </span>
-                            </label>
+                          );
+                        })() : (
+                          <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#fee2e2', borderRadius: '6px', textAlign: 'center' }}>
+                            <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '13px' }}>Service Closed</span>
                           </div>
-                          {/* SMS Toggle */}
-                          {watchedStations[`${line.id}_${station.name}`] && (
-                            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        )}
+
+                        {/* Action Buttons */}
+                        {!line.isUnderConstruction && isSystemActive() && (() => {
+                          let isLineActive = true;
+                          const hours = getSimulatedTime().getHours();
+                          const minutes = getSimulatedTime().getMinutes();
+                          const timeVal = hours + minutes / 60;
+                          if (line.id === 'pnr-south' && (timeVal < 5 || timeVal > 18.5)) isLineActive = false;
+                          if (line.id === 'pnr-bicol' && (timeVal < 4.5 || timeVal > 17.16)) isLineActive = false;
+
+                          if (!isLineActive) return null;
+
+                          return (
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                              {idx < line.stations.length - 1 && (
+                                <button
+                                  onClick={() => {
+                                    setLineViewConfig({ lineId: line.id, isForward: true, originStationIdx: idx });
+                                    setIsLineViewOpen(true);
+                                    setShowPastStations(false);
+                                  }}
+                                  style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
+                                >
+                                  ▼ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Eastbound' : 'Southbound'}
+                                </button>
+                              )}
+                              {idx > 0 && (
+                                <button
+                                  onClick={() => {
+                                    setLineViewConfig({ lineId: line.id, isForward: false, originStationIdx: idx });
+                                    setIsLineViewOpen(true);
+                                    setShowPastStations(false);
+                                  }}
+                                  style={{ flex: 1, padding: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }}
+                                >
+                                  ▲ {line.id === 'lrt-2' || line.id === 'pasig-ferry' ? 'Westbound' : 'Northbound'}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })()}
+                        {/* Notification Toggle */}
+                        {!line.isUnderConstruction && (
+                          <>
+                            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8' }}>Also notify me via SMS</span>
-                                {!userPhone && (
-                                  <span style={{ fontSize: '9px', color: '#f59e0b', marginTop: '2px' }}>Set your phone number in Account Profile</span>
+                                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e2e8f0' }}>Notify me when approaching</span>
+                                {notificationPermission === 'denied' && (
+                                  <span style={{ fontSize: '10px', color: '#ef4444' }}>Notifications blocked by browser</span>
                                 )}
                               </div>
-                              <label style={{ position: 'relative', display: 'inline-block', width: '28px', height: '16px', opacity: userPhone ? 1 : 0.5 }}>
-                                <input 
-                                  type="checkbox" 
-                                  disabled={!userPhone}
-                                  checked={!!watchedStationsSms[`${line.id}_${station.name}`]}
-                                  onChange={() => handleToggleSmsWatch(`${line.id}_${station.name}`)}
+                              <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!watchedStations[`${line.id}_${station.name}`]}
+                                  onChange={() => handleToggleWatch(`${line.id}_${station.name}`)}
                                   style={{ opacity: 0, width: 0, height: 0 }}
                                 />
                                 <span style={{
-                                  position: 'absolute', cursor: userPhone ? 'pointer' : 'not-allowed', top: 0, left: 0, right: 0, bottom: 0,
-                                  backgroundColor: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? '#3b82f6' : '#475569',
-                                  transition: '.4s', borderRadius: '16px'
+                                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                                  backgroundColor: watchedStations[`${line.id}_${station.name}`] ? '#10b981' : '#475569',
+                                  transition: '.4s', borderRadius: '20px'
                                 }}>
                                   <span style={{
-                                    position: 'absolute', content: '""', height: '10px', width: '10px', left: '3px', bottom: '3px',
+                                    position: 'absolute', content: '""', height: '14px', width: '14px', left: '3px', bottom: '3px',
                                     backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
-                                    transform: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? 'translateX(12px)' : 'none'
+                                    transform: watchedStations[`${line.id}_${station.name}`] ? 'translateX(16px)' : 'none'
                                   }} />
                                 </span>
                               </label>
                             </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
+                            {/* SMS Toggle */}
+                            {watchedStations[`${line.id}_${station.name}`] && (
+                              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8' }}>Also notify me via SMS</span>
+                                  {!userPhone && (
+                                    <span style={{ fontSize: '9px', color: '#f59e0b', marginTop: '2px' }}>Set your phone number in Account Profile</span>
+                                  )}
+                                </div>
+                                <label style={{ position: 'relative', display: 'inline-block', width: '28px', height: '16px', opacity: userPhone ? 1 : 0.5 }}>
+                                  <input
+                                    type="checkbox"
+                                    disabled={!userPhone}
+                                    checked={!!watchedStationsSms[`${line.id}_${station.name}`]}
+                                    onChange={() => handleToggleSmsWatch(`${line.id}_${station.name}`)}
+                                    style={{ opacity: 0, width: 0, height: 0 }}
+                                  />
+                                  <span style={{
+                                    position: 'absolute', cursor: userPhone ? 'pointer' : 'not-allowed', top: 0, left: 0, right: 0, bottom: 0,
+                                    backgroundColor: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? '#3b82f6' : '#475569',
+                                    transition: '.4s', borderRadius: '16px'
+                                  }}>
+                                    <span style={{
+                                      position: 'absolute', content: '""', height: '10px', width: '10px', left: '3px', bottom: '3px',
+                                      backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                      transform: watchedStationsSms[`${line.id}_${station.name}`] && userPhone ? 'translateX(12px)' : 'none'
+                                    }} />
+                                  </span>
+                                </label>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                ))}
 
               {/* Render Live Vehicles */}
               {showLiveVehicles && vehicles.filter(v => {
                 if (v.lineId !== line.id) return false;
                 if (directionFilter === 'ALL') return true;
-                
+
                 let dirCode = 'NB';
                 if (v.headingText.includes('Southbound')) dirCode = 'SB';
                 else if (v.headingText.includes('Eastbound')) dirCode = 'EB';
@@ -2303,10 +2309,10 @@ export default function MapComponent() {
                 return false;
               }).map(v => {
                 const M = line.stations.length - 1;
-                let nextIdx = v.isForward 
-                  ? Math.floor(v.logicalFraction * M) + 1 
+                let nextIdx = v.isForward
+                  ? Math.floor(v.logicalFraction * M) + 1
                   : Math.ceil(v.logicalFraction * M) - 1;
-                
+
                 if (nextIdx > M) nextIdx = M;
                 if (nextIdx < 0) nextIdx = 0;
 
@@ -2324,7 +2330,7 @@ export default function MapComponent() {
                 let baseSpeed = 45;
                 if (line.id.includes('pnr')) baseSpeed = 65;
                 else if (line.id === 'pasig-ferry') baseSpeed = 22;
-                
+
                 // Add tiny deterministic variance based on ID string
                 let hash = 0;
                 for (let i = 0; i < v.id.length; i++) hash = (hash << 5) - hash + v.id.charCodeAt(i);
@@ -2332,9 +2338,9 @@ export default function MapComponent() {
                 const speed = v.isDwelling ? 0 : baseSpeed + variance;
 
                 return (
-                  <Marker 
+                  <Marker
                     key={`vehicle-${v.lineId}-${v.id}-${v.isForward ? 'FWD' : 'BWD'}`}
-                    position={v.coords} 
+                    position={v.coords}
                     icon={createVehicleIcon(line.id, line.color, isFaded, v.headingText)}
                     zIndexOffset={1000}
                   >
@@ -2344,7 +2350,7 @@ export default function MapComponent() {
                       </span>
                       <span style={{ color: '#94a3b8', fontWeight: 'normal', fontSize: '11px', marginLeft: '6px' }}>
                         (Bound for {v.boundFor})
-                      </span><br/>
+                      </span><br />
                       <span style={{ color: '#e2e8f0', fontWeight: 'normal', fontSize: '11px', marginTop: '4px', display: 'inline-block' }}>
                         {v.statusText}
                       </span>
@@ -2373,12 +2379,12 @@ export default function MapComponent() {
                             <div style={{ borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '8px' }}>
                               <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Next Stop</div>
                               <div style={{ fontSize: '15px', fontWeight: 'bold', color: line.color }}>
-                                {stops[0].etaMs < 60000 
+                                {stops[0].etaMs < 60000
                                   ? `${Math.floor(stops[0].etaMs / 1000)} sec to ${stops[0].name}`
                                   : `${formatArrivalTime(Math.ceil(stops[0].etaMs / 60000))} to ${stops[0].name}`}
                               </div>
                             </div>
-                            
+
                             {/* Subsequent Stops */}
                             {stops.length > 1 && (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -2441,7 +2447,7 @@ export default function MapComponent() {
         ))}
 
         {showAirports && philippineAirports.map((airport, idx) => (
-          <Marker 
+          <Marker
             key={`airport-${idx}`}
             position={airport.coords}
             icon={airportIcon}
@@ -2452,7 +2458,7 @@ export default function MapComponent() {
                   {airport.name}
                 </div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  IATA: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.iata}</span> &bull; 
+                  IATA: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.iata}</span> &bull;
                   ICAO: <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>{airport.icao}</span>
                 </div>
               </div>
@@ -2460,7 +2466,7 @@ export default function MapComponent() {
           </Marker>
         ))}
         {showSeaports && philippineSeaports.map((seaport, idx) => (
-          <Marker 
+          <Marker
             key={`seaport-${idx}`}
             position={seaport.coords}
             icon={seaportIcon}
@@ -2471,7 +2477,7 @@ export default function MapComponent() {
                   {seaport.name}
                 </div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  LOCODE: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.locode}</span> &bull; 
+                  LOCODE: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.locode}</span> &bull;
                   Region: <span style={{ fontWeight: 'bold', color: '#0d9488' }}>{seaport.region}</span>
                 </div>
               </div>
@@ -2479,7 +2485,7 @@ export default function MapComponent() {
           </Marker>
         ))}
       </MapContainer>
-      
+
       {showCarouselBanner && (
         <div style={{
           position: 'fixed',

@@ -19,6 +19,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     name: 'Commuter',
     phone: '',
     email: '',
+    address: '',
     emergencyContact: ''
   });
   const [editForm, setEditForm] = useState(profileData);
@@ -38,18 +39,49 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const savedImage = localStorage.getItem('profileImage');
     if (savedImage) setProfileImage(savedImage);
 
+    let currentProfile = { 
+      name: 'Commuter', phone: '', email: '', address: '', emergencyContact: '',
+      birthDate: '', gender: '', nationality: '', nationalId: '', passport: '', occupation: ''
+    };
+
     const savedProfile = localStorage.getItem('profileData');
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile);
-        if (parsed.name === 'DENISSE' && parsed.email === 'dendenissejane@gmail.com') {
-          localStorage.removeItem('profileData');
-        } else {
-          setProfileData(parsed);
-          setEditForm(parsed);
+        if (parsed.name !== 'DENISSE' || parsed.email !== 'dendenissejane@gmail.com') {
+          currentProfile = { ...currentProfile, ...parsed };
         }
       } catch(e) {}
     }
+
+    const savedEgovUser = localStorage.getItem('egov_user');
+    if (savedEgovUser) {
+      try {
+        const egovUser = JSON.parse(savedEgovUser);
+        const fullName = [egovUser.first_name, egovUser.middle_name, egovUser.last_name, egovUser.suffix].filter(Boolean).join(' ').trim();
+        
+        currentProfile = {
+          ...currentProfile,
+          name: fullName || currentProfile.name,
+          phone: egovUser.mobile || currentProfile.phone,
+          email: egovUser.email || currentProfile.email,
+          address: egovUser.address || currentProfile.address,
+          birthDate: egovUser.birth_date || currentProfile.birthDate,
+          gender: egovUser.gender || currentProfile.gender,
+          nationality: egovUser.nationality || currentProfile.nationality,
+          nationalId: egovUser.national_id?.code || currentProfile.nationalId,
+          passport: egovUser.passport?.passport_number || currentProfile.passport,
+          occupation: egovUser.additional_information?.occupation?.occupation || currentProfile.occupation
+        };
+        
+        if (egovUser.photo) {
+           setProfileImage(egovUser.photo);
+        }
+      } catch (e) {}
+    }
+    
+    setProfileData(currentProfile);
+    setEditForm(currentProfile);
 
     const savedBeep = localStorage.getItem('linked_beep_card');
     if (savedBeep) {
@@ -419,9 +451,63 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
                 <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>HOME ADDRESS</label>
+                  <input type="text" value={editForm.address || ''} onChange={(e) => setEditForm({...editForm, address: e.target.value})} placeholder="Enter address" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                </div>
+                <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMERGENCY CONTACT</label>
                   <input type="text" maxLength={13} value={editForm.emergencyContact || ''} onChange={(e) => setEditForm({...editForm, emergencyContact: e.target.value})} placeholder="+639XXXXXXXXX" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Emergency Contact') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
+
+                {/* Read-Only Verified eGov Metadata */}
+                {editForm.birthDate && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> DATE OF BIRTH
+                      </label>
+                      <input type="text" value={editForm.birthDate} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> GENDER
+                      </label>
+                      <input type="text" value={editForm.gender} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none', textTransform: 'capitalize' }} />
+                    </div>
+                  </div>
+                )}
+                {editForm.nationality && (
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                      <Shield size={12}/> NATIONALITY
+                    </label>
+                    <input type="text" value={editForm.nationality} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                  </div>
+                )}
+                {editForm.nationalId && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> NATIONAL ID
+                      </label>
+                      <input type="text" value={editForm.nationalId} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> PASSPORT NO.
+                      </label>
+                      <input type="text" value={editForm.passport || 'N/A'} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                    </div>
+                  </div>
+                )}
+                {editForm.occupation && (
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                      <Shield size={12}/> OCCUPATION
+                    </label>
+                    <input type="text" value={editForm.occupation} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                  </div>
+                )}
                 
                 {profileError && (
                   <div style={{ color: 'var(--danger)', fontSize: '12px', fontWeight: 'bold', marginTop: '-8px' }}>

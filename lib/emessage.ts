@@ -20,7 +20,7 @@
 
 export async function sendTransitAlert(phoneNumber: string, message: string) {
   const apiToken = process.env.EGOV_EMESSAGE_API_TOKEN;
-  const baseUrl = process.env.EGOV_EMESSAGE_BASE_URL || 'https://hackathon-emessage-api.e.gov.ph';
+  const baseUrl = process.env.EGOV_EMESSAGE_BASE_URL || 'https://platforms-api.e.gov.ph/emessage';
 
   if (!apiToken || apiToken === 'your_emessage_api_token_here') {
     console.warn("eMessage API token not found, returning mock success.");
@@ -61,7 +61,7 @@ export async function sendDynamicTransitAlert(
 ) {
   // Step 1: Generate the natural language message using AI
   const aiMessage = await generateDynamicAlert(vehicleType, distanceStr, speedStr);
-  
+
   // Step 2: Send the AI-generated message via eMessage SMS
   return await sendTransitAlert(phoneNumber, aiMessage);
 }
