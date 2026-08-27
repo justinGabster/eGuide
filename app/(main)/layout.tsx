@@ -20,7 +20,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     phone: '',
     email: '',
     address: '',
-    emergencyContact: ''
+    emergencyContact: '',
+    birthDate: '',
+    gender: '',
+    nationality: '',
+    nationalId: '',
+    passport: '',
+    occupation: ''
   });
   const [editForm, setEditForm] = useState(profileData);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
