@@ -4,14 +4,14 @@
  * Handles authentication and communication with the eGov AI API endpoints.
  */
 
-const getAiBaseUrl = () => process.env.EGOV_AI_BASE_URL || 'https://egov-ai-core-ws.oueg.info';
+const getAiBaseUrl = () => process.env.EGOV_AI_BASE_URL || 'https://platforms-api.e.gov.ph/egov-ai';
 
 /**
  * Generates a short-lived access token for authenticating with the eGov AI API.
  */
 export async function getAiAccessToken(): Promise<string> {
   const accessCode = process.env.EGOV_AI_ACCESS_CODE;
-  
+
   if (!accessCode || accessCode.includes('your_ai_access_code_here')) {
     console.warn("eGov AI access code not found in environment variables. Returning mock token.");
     return "mock_ai_token";
@@ -36,12 +36,12 @@ export async function getAiAccessToken(): Promise<string> {
  * Generates a dynamic transit alert message using the AI Assistant endpoint.
  */
 export async function generateDynamicAlert(
-  vehicleType: string, 
-  distanceStr: string, 
+  vehicleType: string,
+  distanceStr: string,
   speedStr: string
 ): Promise<string> {
   const token = await getAiAccessToken();
-  
+
   if (token === "mock_ai_token") {
     return `Heads up! Your ${vehicleType} is moving at ${speedStr} and is just ${distanceStr} away. See you at the stop! (Mock AI)`;
   }
