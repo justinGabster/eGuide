@@ -2018,11 +2018,10 @@ export default function MapComponent() {
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
         <MapResizer />
-        {/* Dark mode tiles using CartoDB Dark Matter */}
+        {/* Stadia Maps Dark tiles */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; Stadia Maps &copy; OpenStreetMap contributors'
+          url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         />
 
         {transitLines.map((line) => {
