@@ -2019,16 +2019,10 @@ export default function MapComponent() {
         style={{ width: '100%', height: '100%', background: '#1e293b' }}
       >
         <MapResizer />
-        {/* Dark mode tiles using CartoDB Dark Matter */}
-        <style>{`
-          .leaflet-tile {
-            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
-            -webkit-filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
-          }
-        `}</style>
+        {/* Stadia Maps Dark tiles */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; Stadia Maps &copy; OpenStreetMap contributors'
+          url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         />
 
         {transitLines.map((line) => {
