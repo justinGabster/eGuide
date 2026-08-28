@@ -7,6 +7,7 @@ import { User, HelpCircle, Info, Shield, Phone, ThumbsUp, Settings, LogOut, Mess
 
 import SplashScreen from '@/components/SplashScreen';
 import AiChatWidget from '@/components/AiChatWidget';
+import Walkthrough from '@/components/Walkthrough';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,7 +19,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     name: 'Commuter',
     phone: '',
     email: '',
-    emergencyContact: ''
+    address: '',
+    emergencyContact: '',
+    birthDate: '',
+    gender: '',
+    nationality: '',
+    nationalId: '',
+    passport: '',
+    occupation: ''
   });
   const [editForm, setEditForm] = useState(profileData);
   const [aiCredits, setAiCredits] = useState<number | null>(null);
@@ -31,23 +39,55 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [profileError, setProfileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, toggleTheme } = useTheme();
+  const [globalEgPoints, setGlobalEgPoints] = useState(0);
 
   useEffect(() => {
     const savedImage = localStorage.getItem('profileImage');
     if (savedImage) setProfileImage(savedImage);
 
+    let currentProfile = { 
+      name: 'Commuter', phone: '', email: '', address: '', emergencyContact: '',
+      birthDate: '', gender: '', nationality: '', nationalId: '', passport: '', occupation: ''
+    };
+
     const savedProfile = localStorage.getItem('profileData');
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile);
-        if (parsed.name === 'DENISSE' && parsed.email === 'dendenissejane@gmail.com') {
-          localStorage.removeItem('profileData');
-        } else {
-          setProfileData(parsed);
-          setEditForm(parsed);
+        if (parsed.name !== 'DENISSE' || parsed.email !== 'dendenissejane@gmail.com') {
+          currentProfile = { ...currentProfile, ...parsed };
         }
       } catch(e) {}
     }
+
+    const savedEgovUser = localStorage.getItem('egov_user');
+    if (savedEgovUser) {
+      try {
+        const egovUser = JSON.parse(savedEgovUser);
+        const fullName = [egovUser.first_name, egovUser.middle_name, egovUser.last_name, egovUser.suffix].filter(Boolean).join(' ').trim();
+        
+        currentProfile = {
+          ...currentProfile,
+          name: fullName || currentProfile.name,
+          phone: egovUser.mobile || currentProfile.phone,
+          email: egovUser.email || currentProfile.email,
+          address: egovUser.address || currentProfile.address,
+          birthDate: egovUser.birth_date || currentProfile.birthDate,
+          gender: egovUser.gender || currentProfile.gender,
+          nationality: egovUser.nationality || currentProfile.nationality,
+          nationalId: egovUser.national_id?.code || currentProfile.nationalId,
+          passport: egovUser.passport?.passport_number || currentProfile.passport,
+          occupation: egovUser.additional_information?.occupation?.occupation || currentProfile.occupation
+        };
+        
+        if (egovUser.photo) {
+           setProfileImage(egovUser.photo);
+        }
+      } catch (e) {}
+    }
+    
+    setProfileData(currentProfile);
+    setEditForm(currentProfile);
 
     const savedBeep = localStorage.getItem('linked_beep_card');
     if (savedBeep) {
@@ -67,6 +107,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
     const checkNewData = () => {
       setHasNewTransaction(localStorage.getItem('has_new_transaction') === 'true');
+      setGlobalEgPoints(Number(localStorage.getItem('mock_eg_points')) || 120);
       
       const newNotifFlag = localStorage.getItem('has_new_notification') === 'true';
       if (newNotifFlag !== lastNotifFlag.current) {
@@ -167,6 +208,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   const menuItems = [
     { label: 'Personal Information', icon: <User size={20} />, action: () => { setEditForm(profileData); setIsEditingProfile(true); } },
+    { label: 'Meet E.G. (App Tour)', icon: <HelpCircle size={20} />, action: () => { 
+      setIsProfileOpen(false);
+      window.dispatchEvent(new Event('trigger-walkthrough'));
+    } },
     { label: 'FAQs', icon: <HelpCircle size={20} /> },
     { label: 'About eGovPH', icon: <Info size={20} /> },
     { label: 'Privacy Notice', icon: <Shield size={20} /> },
@@ -193,7 +238,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { label: 'Log out', icon: <LogOut size={20} />, path: '/' },
   ];
 
-  const settingsSections = [
+  type SettingsItem = { label: string; icon: React.ReactNode; value?: string; action?: () => void };
+  const settingsSections: { title: string, items: SettingsItem[] }[] = [
     {
       title: 'PRIVACY AND SECURITY',
       items: [
@@ -214,6 +260,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className={`layout-container theme-${theme}`}>
       <SplashScreen />
+      <Walkthrough />
       <header className="header fade-in" style={{ padding: '20px 24px', paddingTop: 'max(32px, env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img 
@@ -222,7 +269,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             style={{ height: '28px', objectFit: 'contain' }} 
           />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div id="tour-theme-profile" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}>
+            <span style={{ fontSize: '14px', lineHeight: '1' }}>🪙</span>
+            <span style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1' }}>{globalEgPoints}</span>
+          </div>
           <button 
             onClick={toggleTheme}
             style={{ 
@@ -267,10 +327,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <nav className="bottom-nav fade-in">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
+          let id = '';
+          if (item.name === 'Home') id = 'tour-home';
+          if (item.name === 'Ride & Pay') id = 'tour-ride-pay';
+          if (item.name === 'Maps') id = 'tour-map';
+          if (item.name === 'Notifications') id = 'tour-notifications';
+          if (item.name === 'Transactions') id = 'tour-transactions';
+
           return (
             <Link 
               key={item.path} 
               href={item.path} 
+              id={id}
               className={`nav-item ${isActive ? 'active' : ''}`}
             >
               <div className={item.name === 'Maps' ? 'nav-icon-map' : 'nav-icon'}>
@@ -389,9 +457,63 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
                 <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>HOME ADDRESS</label>
+                  <input type="text" value={editForm.address || ''} onChange={(e) => setEditForm({...editForm, address: e.target.value})} placeholder="Enter address" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
+                </div>
+                <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', fontWeight: 'bold' }}>EMERGENCY CONTACT</label>
                   <input type="text" maxLength={13} value={editForm.emergencyContact || ''} onChange={(e) => setEditForm({...editForm, emergencyContact: e.target.value})} placeholder="+639XXXXXXXXX" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: `1px solid ${profileError && profileError.includes('Emergency Contact') ? 'var(--danger)' : 'var(--border-color)'}`, background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none' }} />
                 </div>
+
+                {/* Read-Only Verified eGov Metadata */}
+                {editForm.birthDate && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> DATE OF BIRTH
+                      </label>
+                      <input type="text" value={editForm.birthDate} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> GENDER
+                      </label>
+                      <input type="text" value={editForm.gender} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none', textTransform: 'capitalize' }} />
+                    </div>
+                  </div>
+                )}
+                {editForm.nationality && (
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                      <Shield size={12}/> NATIONALITY
+                    </label>
+                    <input type="text" value={editForm.nationality} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                  </div>
+                )}
+                {editForm.nationalId && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> NATIONAL ID
+                      </label>
+                      <input type="text" value={editForm.nationalId} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        <Shield size={12}/> PASSPORT NO.
+                      </label>
+                      <input type="text" value={editForm.passport || 'N/A'} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                    </div>
+                  </div>
+                )}
+                {editForm.occupation && (
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                      <Shield size={12}/> OCCUPATION
+                    </label>
+                    <input type="text" value={editForm.occupation} readOnly style={{ boxSizing: 'border-box', width: '100%', height: '48px', padding: '0 14px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-secondary)', outline: 'none' }} />
+                  </div>
+                )}
                 
                 {profileError && (
                   <div style={{ color: 'var(--danger)', fontSize: '12px', fontWeight: 'bold', marginTop: '-8px' }}>
@@ -447,7 +569,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                    <div key={itemIdx} onClick={item.action} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: item.action ? 'pointer' : 'default' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: '600' }}>
                         <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         {item.label}

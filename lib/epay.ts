@@ -7,7 +7,7 @@ import crypto from 'crypto';
  * with the eGovPay gateway.
  */
 
-const getEpayBaseUrl = () => process.env.EGOV_PAY_BASE_URL || 'https://egovpay-pgi-ws-dev.oueg.info';
+const getEpayBaseUrl = () => process.env.EGOV_PAY_BASE_URL || 'https://platforms-api.e.gov.ph/egovpay';
 const getEpayToken = () => process.env.EGOV_PAY_TOKEN || 'test_your_epay_token_here';
 const getEpayTemplateId = () => process.env.EGOV_PAY_TEMPLATE_ID || 'your_template_uuid_here';
 
@@ -34,7 +34,7 @@ function generateTxnId(): string {
  */
 export async function createPaymentLink(amount: number, description: string = "eGuide Wallet Top-up", customAppUrl?: string) {
   const token = getEpayToken();
-  
+
   if (token.includes('your_epay_token_here')) {
     console.warn("eGovPay token not found, returning mock payment URL.");
     return {
@@ -49,7 +49,7 @@ export async function createPaymentLink(amount: number, description: string = "e
 
   // We need absolute URLs for callbacks. In a real app, this would be an env variable.
   // We use customAppUrl passed from the route handler headers to get the dynamic host.
-  const appUrl = customAppUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = customAppUrl || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
   const payload = {
     amount: amount,
@@ -97,7 +97,7 @@ export async function createPaymentLink(amount: number, description: string = "e
  */
 export async function checkTransactionStatus(uuid: string) {
   const token = getEpayToken();
-  
+
   if (token.includes('your_epay_token_here')) {
     return { payment_status: "SUCCESS", amount: "100" };
   }

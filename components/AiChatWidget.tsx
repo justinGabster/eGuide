@@ -94,6 +94,7 @@ export default function AiChatWidget() {
       {/* Floating Action Button */}
       {!isOpen && (
         <button
+          id="tour-eg-ai"
           onClick={() => setIsOpen(true)}
           className="slide-up"
           style={{

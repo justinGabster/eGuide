@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# eGuide: Gabay mo, saan ka man patungo. 🚇 🚍
+> **eGov2026 Hackathon | Team eGovibes**
 
-## Getting Started
+**eGuide** is a unified transit tracking and scan-to-pay mobile platform designed as a Progressive Web App (PWA) for Metro Manila commuters. It replaces the guesswork in commuting with certainty, powered by the **eGovPH ecosystem**.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 👥 The Team: eGovibes
+* **Justin Gabriel Jose** - Project Lead / Backend Dev
+* **Antonio Rene Casison** - Frontend Dev / UI-UX
+* **VJ Evangelista** - Research / Brand / Presenter
+* **Mark Kenneth Galario** - Planning / Developer
+* **Denisse Jane Karim** - Coordinator / Pitch / Presenter
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+*(2nd Year IT Students — PUP Sta. Mesa)*
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ⚠️ The Problem
+The Philippines' mobility challenge is no longer traffic alone—it is **unpredictability**. Commuters cannot reliably estimate travel time, vehicle arrivals, transport costs, or even how crowded a ride will be. The absence of a unified platform across LRT-1, LRT-2, MRT-3, P2P buses, and the EDSA Carousel forces commuters to rely on fragmented sources—or travel without reliable information altogether.
 
-## Learn More
+* **The Scale**: MRT-3 served 135M+ riders last year. LRT-2 reached over 208,000 riders in a single day. The EDSA Carousel moved 10M+ in two months.
+* **The Impact**: 72% of commuters say daily commute harms their work-life balance. Metro Manila loses an estimated **₱3.5 billion daily** in productivity due to unreliable mobility.
 
-To learn more about Next.js, take a look at the following resources:
+## 💡 Our Solution
+eGuide brings all transit modes into a single app using the **eGovPH API Ecosystem**:
+1. **eGovPH SSO & eVerify**: Single sign-on and mandatory eKYC verification to link your National ID.
+2. **eGovAI Transit Assistant**: Smart assistant to answer queries like *"Puno ba MRT Cubao?"*
+3. **eGovPay (Scan-to-Pay)**: Generate a National ID-linked QR code to pay at turnstiles instantly, or remotely reload Beep cards.
+4. **Live Map**: Real-time vehicle tracking overlaid on custom map tiles.
+5. **eMessage SMS Receipts**: Receive an instant SMS e-Ticket and digital receipt straight to your phone when you scan to pay.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📈 Impact, Value & Cost-Benefit
+* **Impact**: Turns commuting from guesswork into certainty. Juan checks the app and *knows* the Carousel is 8 minutes away.
+* **Value**: Commuters save time and gain peace of mind. Government agencies (LRTA, MRT-3, DOTr) receive a unified data layer instead of fragmented systems—a true working example of eGovPH interoperability.
+* **Cost-Benefit**: Shared infrastructure is significantly cheaper than each agency building and maintaining separate apps.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Technical Architecture & Implementation
+While initially planned as a native Android app, we pivoted to a **Progressive Web App (PWA)** to ensure cross-platform compatibility (iOS, Android, Web) within the strict 7.5-hour hackathon sprint.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Tech Stack
+* **Core**: Next.js 16 (App Router) + React 19 + TypeScript
+* **PWA Engine**: `@ducanh2912/next-pwa`
+* **Geospatial**: `Leaflet` / `react-leaflet` for map overlays.
+* **Middleware (Backend)**: Node.js (Next.js API Routes) acting as an orchestration layer for eGov APIs.

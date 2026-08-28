@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AiChatWidget from '@/components/AiChatWidget';
-import { BeepCard } from '@/lib/fareTypes';
+import { WalletCard } from '@/lib/fareTypes';
 import { useTheme } from '@/components/ThemeProvider';
 import { CreditCard } from 'lucide-react';
 import { transitLines } from '@/app/(main)/map/transitData';
@@ -12,7 +12,7 @@ import { transitLines } from '@/app/(main)/map/transitData';
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [beepCard, setBeepCard] = useState<BeepCard | null>(null);
+  const [activeCard, setActiveCard] = useState<WalletCard | null>(null);
   const [egPoints, setEgPoints] = useState(0);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [recentNotifs, setRecentNotifs] = useState<any[]>([
@@ -67,10 +67,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const savedBeep = localStorage.getItem('linked_beep_card');
-    if (savedBeep) {
+    const savedCards = localStorage.getItem('wallet_cards');
+    if (savedCards) {
       try {
-        setBeepCard(JSON.parse(savedBeep));
+        const parsed = JSON.parse(savedCards);
+        const activeId = localStorage.getItem('active_wallet_card_id');
+        let card = parsed.find((c: WalletCard) => c.id === activeId);
+        if (!card) card = parsed.find((c: WalletCard) => c.isDefault) || parsed[0];
+        if (card) setActiveCard(card);
       } catch (e) { }
     }
 
@@ -86,6 +90,12 @@ export default function Home() {
     if (savedNotifs) {
       setRecentNotifs(JSON.parse(savedNotifs).slice(0, 2));
     }
+
+    const handlePointsUpdate = () => {
+      setEgPoints(Number(localStorage.getItem('mock_eg_points')) || 120);
+    };
+    window.addEventListener('eg-points-updated', handlePointsUpdate);
+    return () => window.removeEventListener('eg-points-updated', handlePointsUpdate);
   }, []);
 
   return (
@@ -183,7 +193,7 @@ export default function Home() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-        {/* EG Points Tile */}
+        {/* E.G. Points Tile */}
         <Link href="/rewards" style={{ display: 'block', textDecoration: 'none', height: '100%' }}>
           <div className="glass-card fade-in" style={{ padding: '16px', background: 'linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%)', color: 'white', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -204,32 +214,67 @@ export default function Home() {
                 {egPoints < 100 ? 'Commuter' : egPoints < 500 ? 'Transit Ranger' : 'Train Master'}
               </div>
               <div style={{ fontSize: '24px', fontWeight: 'bold', lineHeight: '1' }}>{egPoints}</div>
-              <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>EG Points</div>
+              <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>E.G. Points</div>
             </div>
           </div>
         </Link>
 
-        {/* Linked Beep Card Tile */}
-        {beepCard ? (
-          <div className="glass-card fade-in" style={{ padding: '16px', background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', color: 'white', borderRadius: '16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '18px', fontStyle: 'italic', letterSpacing: '-0.5px' }}>beep</div>
-              <Link href="/payment" style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px', color: 'white', textDecoration: 'none', fontSize: '10px', fontWeight: 'bold' }}>
-                Reload
+        {/* Linked Wallet Card Tile */}
+        {activeCard ? (
+          <div 
+            className="glass-card fade-in" 
+            style={{ 
+              padding: '16px', 
+              background: `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%), ${
+                activeCard.provider === 'Beep' ? 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)' :
+                activeCard.provider === 'GoTyme Bank' ? 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)' :
+                activeCard.provider === 'GCash' ? 'linear-gradient(135deg, #007DFE 0%, #005bb5 100%)' :
+                '#333'
+              }`,
+              color: 'white', 
+              borderRadius: '16px', 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {activeCard.cardBgImage && (
+              <div 
+                style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundImage: `url('${activeCard.cardBgImage}')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: 0.8,
+                  zIndex: 0
+                }}
+              />
+            )}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '14px', fontStyle: 'italic', display: 'flex', alignItems: 'center' }}>
+                {activeCard.providerLogo ? (
+                   <img src={activeCard.providerLogo} alt={activeCard.provider} style={{ height: '16px', objectFit: 'contain' }} onError={(e) => e.currentTarget.style.display = 'none'} />
+                ) : activeCard.provider}
+              </div>
+              <Link href="/payment?tab=topup" style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px', color: 'white', textDecoration: 'none', fontSize: '10px', fontWeight: 'bold' }}>
+                Manage
               </Link>
             </div>
-            <div style={{ marginTop: '16px' }}>
-              <div style={{ fontSize: '10px', opacity: 0.8, marginBottom: '4px' }}>Linked Card</div>
+            <div style={{ position: 'relative', zIndex: 1, marginTop: '16px' }}>
+              <div style={{ fontSize: '10px', opacity: 0.8, marginBottom: '4px' }}>Active Card</div>
               <div style={{ fontSize: '13px', letterSpacing: '1px', fontFamily: 'monospace' }}>
-                **** {beepCard.cardNumber.slice(-4)}
+                **** {activeCard.cardNumber.slice(-4)}
               </div>
             </div>
           </div>
         ) : (
-          <Link href="/payment" style={{ display: 'block', textDecoration: 'none', height: '100%' }}>
+          <Link href="/payment?tab=topup" style={{ display: 'block', textDecoration: 'none', height: '100%' }}>
             <div className="glass-card fade-in" style={{ padding: '16px', background: 'var(--card-bg)', border: '2px dashed var(--border-color)', borderRadius: '16px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                <div style={{ marginBottom: '8px' }}><CreditCard size={28} strokeWidth={1.5} /></div>
-               <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Link Beep Card</div>
+               <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Link Wallet</div>
             </div>
           </Link>
         )}

@@ -11,8 +11,13 @@ export async function POST(request: Request) {
     }
 
     const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http');
-    const host = request.headers.get('host') || 'localhost:3000';
-    const appUrl = `${protocol}://${host}`;
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+    const origin = request.headers.get('origin');
+    
+    let appUrl = origin || `${protocol}://${host}`;
+    if (appUrl.includes('localhost') && process.env.VERCEL_URL) {
+      appUrl = `https://${process.env.VERCEL_URL}`;
+    }
 
     const paymentData = await createPaymentLink(Number(amount), "eGuide Wallet Top-up", appUrl);
 

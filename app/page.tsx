@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [exchangeCode, setExchangeCode] = useState('');
+  const [expectedName, setExpectedName] = useState('');
   const router = useRouter();
 
   const [apiError, setApiError] = useState<string | null>(null);
@@ -50,6 +51,16 @@ export default function Login() {
       const profileData = await profileRes.json();
       
       if (profileRes.ok && profileData.status === 200) {
+        // Double Authentication Check
+        const user = profileData.data;
+        const fullName = [user.first_name, user.middle_name, user.last_name, user.suffix].filter(Boolean).join(' ').trim().toLowerCase();
+        
+        if (expectedName && !fullName.includes(expectedName.toLowerCase().trim())) {
+          setApiError(`Authentication Failed: The SSO identity (${fullName.toUpperCase()}) does not match your inputted name.`);
+          setLoading(false);
+          return;
+        }
+
         // Save the real user data
         localStorage.setItem('egov_user', JSON.stringify(profileData.data));
         router.push('/ekyc');
@@ -108,7 +119,25 @@ export default function Login() {
         </div>
 
         <div style={{ marginBottom: '16px', textAlign: 'left' }}>
-           <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Sandbox Exchange Code:</label>
+           <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Input Name of Test Account:</label>
+           <input 
+             type="text" 
+             value={expectedName}
+             onChange={(e) => setExpectedName(e.target.value)}
+             placeholder="e.g. JOSE CRUZ"
+             style={{ 
+               width: '100%', 
+               padding: '12px', 
+               marginTop: '4px',
+               marginBottom: '12px',
+               borderRadius: '8px',
+               border: '1px solid var(--border-color)',
+               background: 'rgba(0,0,0,0.2)',
+               color: 'white'
+             }}
+           />
+
+           <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Generate and Input Exchange Code:</label>
            
            {apiError && (
              <div style={{ 
@@ -144,9 +173,9 @@ export default function Login() {
 
         <button 
           onClick={handleSSOLogin} 
-          disabled={loading || !exchangeCode}
+          disabled={loading || !exchangeCode || !expectedName}
           className="btn-primary"
-          style={{ width: '100%', opacity: (loading || !exchangeCode) ? 0.7 : 1, marginBottom: '12px' }}
+          style={{ width: '100%', opacity: (loading || !exchangeCode || !expectedName) ? 0.7 : 1, marginBottom: '12px' }}
         >
           {loading ? 'Authenticating...' : 'Login via eGovPH SSO'}
         </button>

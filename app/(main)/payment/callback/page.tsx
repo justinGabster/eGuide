@@ -7,6 +7,7 @@ export default function PaymentCallback() {
   const router = useRouter();
   const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
   const [isTopup, setIsTopup] = useState(true);
+  const [earnedPoints, setEarnedPoints] = useState(0);
 
   useEffect(() => {
     // In a real app, the eGov gateway might pass the UUID or TxnID back in the URL search params.
@@ -40,12 +41,21 @@ export default function PaymentCallback() {
           localStorage.setItem('has_new_transaction', 'true');
           localStorage.removeItem('pending_topup');
 
+          // Add E.G. Points for top-up! (Boosted for demo)
+          const topupAmt = Number(pendingAmount);
+          const topupPoints = Math.max(25, Math.floor(topupAmt / 10)); // Generous top-up points
+          const currentPoints = Number(localStorage.getItem('mock_eg_points')) || 120;
+          const newPoints = Math.min(500, currentPoints + topupPoints);
+          localStorage.setItem('mock_eg_points', newPoints.toString());
+          window.dispatchEvent(new Event('eg-points-updated'));
+          setEarnedPoints(topupPoints);
+
           // Send SMS Receipt for Top-up!
           try {
             const pData = localStorage.getItem('profileData');
             const parsed = pData ? JSON.parse(pData) : null;
             const phones = parsed && parsed.phone ? [parsed.phone] : [];
-            const message = `eGuide Wallet:\nYou successfully added P${pendingAmount} via eGovPay.\nNew Balance: P${newBalance.toFixed(2)}`;
+            const message = `[eGovPay] 🚀 Top-Up Confirmed!\n\n💳 eGuide Wallet\n• Top-Up: +₱${Number(pendingAmount).toFixed(2)}\n• Balance: ₱${newBalance.toFixed(2)}\n\nThank you for moving with eGovPay!`;
             
             phones.forEach(p => {
               fetch('/api/emessage', {
@@ -59,6 +69,11 @@ export default function PaymentCallback() {
           }
         } else {
           setIsTopup(false);
+          const pts = localStorage.getItem('latest_earned_points');
+          if (pts) {
+            setEarnedPoints(Number(pts));
+            localStorage.removeItem('latest_earned_points'); // clear it
+          }
         }
 
         setStatus('success');
@@ -86,6 +101,11 @@ export default function PaymentCallback() {
           <h2 className="title mb-2">Payment Successful!</h2>
           <p className="text-muted mb-6">
             {isTopup ? 'Your eGuide Wallet has been topped up.' : 'Your transaction was processed successfully.'}
+            {earnedPoints > 0 && (
+              <span style={{ display: 'block', color: 'var(--primary-color)', fontWeight: 'bold', marginTop: '8px' }}>
+                You earned {earnedPoints} E.G. Points!
+              </span>
+            )}
           </p>
           
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', marginBottom: '24px', textAlign: 'left' }}>
@@ -97,10 +117,16 @@ export default function PaymentCallback() {
               <span className="text-muted">Gateway</span>
               <span style={{ color: 'white' }}>eGovPay</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span className="text-muted">Time</span>
               <span style={{ color: 'white' }}>{new Date().toLocaleTimeString()}</span>
             </div>
+            {earnedPoints > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <span className="text-muted">E.G. Points Earned</span>
+                <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>+{earnedPoints}</span>
+              </div>
+            )}
           </div>
 
           <button 
