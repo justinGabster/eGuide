@@ -6,11 +6,11 @@
 ---
 
 ## 👥 The Team: eGovibes
-* **Justin Gabriel Jose** - Project Lead / Backend Dev
+* **Justin Gabriel A Jose** - Project Lead / Backend Dev
 * **Antonio Rene Casison** - Frontend Dev / UI-UX
 * **VJ Evangelista** - Research / Brand / Presenter
 * **Mark Kenneth Galario** - Planning / Developer
-* **Denisse Jane Karim** - Coordinator / Pitch / Presenter
+* **Denisse Jane Karim** - Project Coordinator / Pitch / Presenter
 
 *(2nd Year IT Students — PUP Sta. Mesa)*
 
